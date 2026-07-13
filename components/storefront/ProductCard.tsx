@@ -2,23 +2,39 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, ShoppingBag } from 'lucide-react'
+import { Heart, ShoppingBag, MessageCircle } from 'lucide-react'
+import { useCartStore } from '@/store/cart-store'
+import { useRouter } from 'next/navigation'
 
 export function ProductCard({ product, variant = 'vertical' }: { product: any, variant?: 'vertical' | 'horizontal' }) {
+  const router = useRouter()
+  const { addItem, openCart } = useCartStore()
+  
   const primaryImage = product.product_images?.find((img: any) => img.is_primary)?.url || product.product_images?.[0]?.url || '/placeholder.png'
+  const secondaryImage = product.product_images?.find((img: any) => img.url !== primaryImage)?.url || primaryImage
 
   return (
-    <Link href={`/product/${product.slug}`} className={`group flex flex-col h-full bg-white p-2.5 sm:p-4 rounded-[1.25rem] sm:rounded-[2rem] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl border border-gray-100 transition-all duration-300 ${variant === 'horizontal' ? 'lg:flex-row lg:p-4 lg:gap-6 lg:items-center' : ''}`}>
+    <Link href={`/product/${product.slug}`} className={`group flex flex-col h-full bg-white transition-all duration-300 ${variant === 'horizontal' ? 'flex-row gap-4' : ''}`}>
       {/* Image Container */}
-      <div className={`relative aspect-[4/5] w-full overflow-hidden bg-gray-50 rounded-xl sm:rounded-[1.5rem] mb-3 sm:mb-4 ${variant === 'horizontal' ? 'lg:w-[45%] lg:mb-0 lg:shrink-0' : ''}`}>
+      <div className={`relative aspect-[4/5] w-full overflow-hidden rounded-xl sm:rounded-2xl mb-3 sm:mb-4 bg-gray-50 border border-gray-100 ${variant === 'horizontal' ? 'w-[40%] mb-0 shrink-0' : ''}`}>
         {primaryImage !== '/placeholder.png' ? (
-          <Image
-            src={primaryImage}
-            alt={product.name}
-            fill
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out"
-            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-          />
+          <>
+            <Image
+              src={primaryImage}
+              alt={product.name}
+              fill
+              className="object-cover object-center transition-opacity duration-700 ease-in-out group-hover:opacity-0"
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+            />
+            {/* Secondary image on hover */}
+            <Image
+              src={secondaryImage}
+              alt={product.name}
+              fill
+              className="object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-in-out"
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
              <span className="font-sans font-bold text-gray-400 text-sm tracking-widest uppercase">No Image</span>
@@ -26,61 +42,76 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
         )}
         
         {/* Badges Overlay */}
-        <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 flex justify-between items-start z-10">
-          {/* Left Badge (Sale / Featured) */}
+        <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex justify-between items-start z-10 pointer-events-none">
+          {/* Left Badge */}
           <div>
-            {(product.sale_price || product.featured) ? (
-              <span className="bg-white text-gray-900 text-[10px] font-bold px-2.5 py-1 sm:px-4 sm:py-2 rounded-full shadow-sm uppercase tracking-widest">
-                {product.sale_price ? 'Sale' : 'Best Seller'}
+            {product.sale_price ? (
+              <span className="bg-[#6B46C1] text-white text-[8px] sm:text-[10px] font-bold px-3 py-1 rounded-full shadow-sm tracking-wider">
+                Sale
               </span>
-            ) : (
-               <span className="bg-white/0"></span>
-            )}
+            ) : product.is_enquiry_only ? (
+               <span className="bg-black text-white text-[8px] sm:text-[10px] font-bold px-3 py-1 rounded-full shadow-sm tracking-wider">
+                Pre-Order
+              </span>
+            ) : null}
           </div>
-          
-          {/* Right Wishlist Icon */}
-          <button 
-            type="button"
-            className="bg-white/90 backdrop-blur-sm p-1.5 sm:p-2.5 rounded-full shadow-sm hover:scale-110 transition-transform text-[#FF7A00]"
-            onClick={(e) => {
-              e.preventDefault(); // Prevent navigating to product page
-            }}
-          >
-            <Heart className="w-4 h-4 fill-current" />
-          </button>
         </div>
 
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.02] transition-colors duration-300 z-0 pointer-events-none" />
+        {/* Quick Action Button */}
+        <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 md:translate-y-4 md:group-hover:translate-y-0">
+           <button 
+             onClick={(e) => {
+               e.preventDefault();
+               if (product.is_enquiry_only) {
+                 router.push(`/product/${product.slug}/enquiry`)
+               } else {
+                 addItem({
+                   id: product.id,
+                   productId: product.id,
+                   name: product.name,
+                   price: product.price,
+                   salePrice: product.sale_price,
+                   quantity: 1,
+                   image: primaryImage
+                 })
+                 openCart()
+               }
+             }}
+             className="bg-white text-gray-900 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:scale-110 transition-transform"
+             title={product.is_enquiry_only ? "Enquire Now" : "Add to Cart"}
+           >
+             {product.is_enquiry_only ? (
+               <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+             ) : (
+               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+             )}
+           </button>
+        </div>
       </div>
 
       {/* Content */}
-      <div className={`px-0.5 sm:px-2 pb-1 text-center flex flex-col flex-1 ${variant === 'horizontal' ? 'lg:justify-center lg:w-[55%] lg:text-left lg:px-6 lg:py-6' : ''}`}>
-        {/* Category/Brand */}
-        <div className={`text-[10px] text-[#FF7A00] font-bold mb-1 sm:mb-2 tracking-[0.2em] uppercase ${variant === 'horizontal' ? 'lg:mb-3 lg:text-[11px]' : ''}`}>
-          {product.categories?.name || 'Streetwear'}
-        </div>
+      <div className={`px-1 text-center flex flex-col flex-1 ${variant === 'horizontal' ? 'justify-center text-left px-4' : ''}`}>
         
         {/* Title */}
-        <h3 className={`text-[13px] sm:text-base font-bold text-gray-900 leading-snug mb-2 sm:mb-2 line-clamp-2 min-h-[38px] sm:min-h-[48px] ${variant === 'horizontal' ? 'lg:text-2xl lg:whitespace-normal lg:mb-4 lg:leading-tight lg:min-h-0' : ''}`}>
+        <h3 className={`text-[12px] sm:text-[14px] font-semibold text-gray-900 leading-snug mb-1.5 sm:mb-2 line-clamp-2 ${variant === 'horizontal' ? 'text-[14px] sm:text-[16px]' : ''}`}>
           {product.name}
         </h3>
         
-        <div className="mt-auto pt-2">
+        <div className="mt-auto">
           {/* Price */}
-          <div className={`mb-3 sm:mb-4 ${variant === 'horizontal' ? 'lg:mb-8' : ''}`}>
-            {product.sale_price ? (
-              <div className={`flex flex-wrap items-center justify-center gap-x-2 ${variant === 'horizontal' ? 'lg:justify-start' : ''}`}>
-                <span className={`text-[13px] sm:text-[15px] font-black text-gray-900 ${variant === 'horizontal' ? 'lg:text-xl' : ''}`}>₹{product.sale_price.toFixed(2)}</span>
-                <span className={`text-[10px] sm:text-xs font-bold text-gray-400 line-through ${variant === 'horizontal' ? 'lg:text-sm' : ''}`}>₹{product.price.toFixed(2)}</span>
+          <div className="mb-1">
+            {product.is_enquiry_only ? (
+              <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">
+                Starting from Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </span>
+            ) : product.sale_price ? (
+              <div className={`flex flex-wrap items-center justify-center gap-x-2 ${variant === 'horizontal' ? 'justify-start' : ''}`}>
+                <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">Rs. {product.sale_price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="text-[11px] sm:text-[12px] font-medium text-gray-400 line-through">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             ) : (
-              <span className={`text-[13px] sm:text-[15px] font-black text-gray-900 ${variant === 'horizontal' ? 'lg:text-xl' : ''}`}>₹{product.price.toFixed(2)}</span>
+              <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             )}
-          </div>
-
-          {/* Button */}
-          <div className={`w-full bg-[#1C1C1C] text-white text-center py-2.5 sm:py-4 rounded-full text-[10px] sm:text-[11px] lg:text-xs font-black uppercase tracking-widest sm:hover:bg-[#FF7A00] active:scale-95 transition-all duration-300 ${variant === 'horizontal' ? 'lg:w-fit lg:px-10 lg:py-4' : ''}`}>
-            Buy Now
           </div>
         </div>
       </div>

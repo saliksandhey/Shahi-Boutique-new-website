@@ -1,12 +1,22 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 
 export function Footer({ categories }: { categories: any[] }) {
+  const [openSection, setOpenSection] = useState<string | null>(null)
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section)
+  }
+
   return (
     <footer className="bg-white pt-16 md:pt-24 pb-8 md:pb-12 px-6 sm:px-8 lg:px-12 border-t border-gray-100">
       <div className="mx-auto max-w-[1400px]">
         
-        {/* Top Section: 4 Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 lg:gap-8 mb-12 md:mb-20 text-center md:text-left">
+        {/* Top Section: Grid */}
+        <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 gap-0 md:gap-12 lg:gap-8 mb-12 md:mb-20 text-center md:text-left">
           
           {/* Column 1: Brand Story */}
           <div className="lg:pr-8 flex flex-col items-center md:items-start">
@@ -35,12 +45,18 @@ export function Footer({ categories }: { categories: any[] }) {
             </div>
           </div>
 
-          {/* Quick Links & Policies (Grid on mobile to save vertical space) */}
-          <div className="grid grid-cols-2 md:grid-cols-1 gap-8 md:gap-0 lg:col-span-2 lg:grid-cols-2 text-left md:text-left mx-auto md:mx-0 w-full">
+          {/* Navigation Links & Policies */}
+          <div className="flex flex-col md:grid md:grid-cols-2 lg:col-span-3 lg:grid-cols-3 gap-0 md:gap-8 lg:gap-8 text-left md:text-left w-full mt-10 md:mt-0">
             {/* Column 2: Quick Links */}
-            <div>
-              <h3 className="font-sans font-bold text-gray-900 text-lg mb-4 md:mb-6 tracking-wide">Quick Links</h3>
-              <ul className="space-y-3 md:space-y-4">
+            <div className="border-b border-gray-100 md:border-none py-4 md:py-0">
+              <button 
+                onClick={() => toggleSection('quick-links')} 
+                className="flex justify-between w-full items-center md:cursor-auto"
+              >
+                <h3 className="font-sans font-bold text-gray-900 text-lg md:mb-6 tracking-wide">Quick Links</h3>
+                <ChevronDown className={`w-5 h-5 md:hidden transition-transform ${openSection === 'quick-links' ? 'rotate-180' : ''}`} />
+              </button>
+              <ul className={`space-y-3 md:space-y-4 mt-4 md:mt-0 ${openSection === 'quick-links' ? 'block' : 'hidden md:block'}`}>
                 <li><Link href="/shop" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Shop All</Link></li>
                 <li><Link href="/shop?collection=new" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">New Arrivals</Link></li>
                 <li><Link href="/about" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Our Story</Link></li>
@@ -50,9 +66,15 @@ export function Footer({ categories }: { categories: any[] }) {
             </div>
 
             {/* Column 3: Policies */}
-            <div>
-              <h3 className="font-sans font-bold text-gray-900 text-lg mb-4 md:mb-6 tracking-wide">Policies</h3>
-              <ul className="space-y-3 md:space-y-4">
+            <div className="border-b border-gray-100 md:border-none py-4 md:py-0">
+              <button 
+                onClick={() => toggleSection('policies')} 
+                className="flex justify-between w-full items-center md:cursor-auto"
+              >
+                <h3 className="font-sans font-bold text-gray-900 text-lg md:mb-6 tracking-wide">Policies</h3>
+                <ChevronDown className={`w-5 h-5 md:hidden transition-transform ${openSection === 'policies' ? 'rotate-180' : ''}`} />
+              </button>
+              <ul className={`space-y-3 md:space-y-4 mt-4 md:mt-0 ${openSection === 'policies' ? 'block' : 'hidden md:block'}`}>
                 <li><Link href="/shipping" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Shipping</Link></li>
                 <li><Link href="/returns" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Returns</Link></li>
                 <li><Link href="/privacy" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Privacy</Link></li>
@@ -60,29 +82,35 @@ export function Footer({ categories }: { categories: any[] }) {
                 <li><Link href="/faq" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">FAQ</Link></li>
               </ul>
             </div>
-          </div>
 
-          {/* Column 4: Customer Care */}
-          <div className="flex flex-col items-center md:items-start pt-4 md:pt-0">
-            <h3 className="font-sans font-bold text-gray-900 text-lg mb-4 md:mb-6 tracking-wide">Customer Care</h3>
-            <ul className="space-y-4">
-              <li className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Email Us</span>
-                <a href="mailto:contact.shahiboutique@gmail.com" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">contact.shahiboutique@gmail.com</a>
-              </li>
-              <li className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Call Us</span>
-                <a href="tel:+919217890060" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">+91 9217890060</a>
-              </li>
-              <li className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">WhatsApp</span>
-                <a href="https://wa.me/919041762820" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">+91 9041762820</a>
-              </li>
-              <li className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Working Hours</span>
-                <span className="text-sm font-medium text-gray-500">Mon - Fri: 9:00 AM - 6:00 PM EST</span>
-              </li>
-            </ul>
+            {/* Column 4: Customer Care */}
+            <div className="border-b border-gray-100 md:border-none py-4 md:py-0 w-full">
+              <button 
+                onClick={() => toggleSection('customer-care')} 
+                className="flex justify-between w-full items-center md:cursor-auto"
+              >
+                <h3 className="font-sans font-bold text-gray-900 text-lg md:mb-6 tracking-wide">Customer Care</h3>
+                <ChevronDown className={`w-5 h-5 md:hidden transition-transform ${openSection === 'customer-care' ? 'rotate-180' : ''}`} />
+              </button>
+              <ul className={`space-y-4 mt-4 md:mt-0 ${openSection === 'customer-care' ? 'block' : 'hidden md:block'}`}>
+                <li className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Email Us</span>
+                  <a href="mailto:contact.shahiboutique@gmail.com" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">contact.shahiboutique@gmail.com</a>
+                </li>
+                <li className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Call Us</span>
+                  <a href="tel:+919217890060" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">+91 9217890060</a>
+                </li>
+                <li className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">WhatsApp</span>
+                  <a href="https://wa.me/919041762820" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">+91 9041762820</a>
+                </li>
+                <li className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gray-900 font-bold mb-1">Working Hours</span>
+                  <span className="text-sm font-medium text-gray-500">Mon - Fri: 9:00 AM - 6:00 PM EST</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
         </div>
@@ -94,7 +122,7 @@ export function Footer({ categories }: { categories: any[] }) {
             &copy; {new Date().getFullYear()} Shahi Boutique. All Rights Reserved.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-6 order-2">
+          <div className="hidden md:flex flex-col sm:flex-row items-center gap-6 order-2">
             {/* Payment Icons */}
             <div className="flex items-center justify-center gap-4">
               {/* UPI */}

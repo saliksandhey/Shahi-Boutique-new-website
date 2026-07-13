@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useCartStore } from '@/store/cart-store'
-import { ShoppingBag, Heart } from 'lucide-react'
+import { ShoppingBag, Heart, MessageSquare } from 'lucide-react'
+import Link from 'next/link'
 
 export function AddToCart({ product, variants = [] }: { product: any, variants?: any[] }) {
   const [quantity, setQuantity] = useState(1)
@@ -124,43 +125,55 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
       )}
 
       <div className="fixed lg:static bottom-0 inset-x-0 bg-white lg:bg-transparent p-3 sm:p-6 lg:p-0 border-t lg:border-none border-gray-200 z-50 lg:z-auto shadow-[0_-10px_40px_rgba(0,0,0,0.08)] lg:shadow-none flex flex-row items-center gap-2 sm:gap-3 lg:pt-4 w-full">
-        <div className="flex shrink-0 gap-2 sm:gap-3">
-          {/* Quantity Selector */}
-          <div className="flex items-center justify-between rounded-full border border-gray-200 h-12 sm:h-14 w-[100px] sm:w-36 bg-gray-50 px-1 sm:px-2">
-            <button 
-              type="button" 
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
-            >
-              -
-            </button>
-            <span className="text-xs sm:text-sm font-bold text-gray-900 w-6 sm:w-8 text-center">{quantity}</span>
-            <button 
-              type="button" 
-              onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
-              disabled={outOfStock || quantity >= currentStock}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
-            >
-              +
+        {!product.is_enquiry_only && (
+          <div className="flex shrink-0 gap-2 sm:gap-3">
+            {/* Quantity Selector */}
+            <div className="flex items-center justify-between rounded-full border border-gray-200 h-12 sm:h-14 w-[100px] sm:w-36 bg-gray-50 px-1 sm:px-2">
+              <button 
+                type="button" 
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
+              >
+                -
+              </button>
+              <span className="text-xs sm:text-sm font-bold text-gray-900 w-6 sm:w-8 text-center">{quantity}</span>
+              <button 
+                type="button" 
+                onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
+                disabled={outOfStock || quantity >= currentStock}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Wishlist Button */}
+            <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border border-gray-200 hover:border-[#FF7A00] hover:text-[#FF7A00] hover:bg-[#FF7A00]/5 transition-colors bg-white text-gray-500 shadow-sm">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
+              <span className="sr-only">Add to Wishlist</span>
             </button>
           </div>
+        )}
 
-          {/* Wishlist Button */}
-          <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border border-gray-200 hover:border-[#FF7A00] hover:text-[#FF7A00] hover:bg-[#FF7A00]/5 transition-colors bg-white text-gray-500 shadow-sm">
-            <Heart className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
-            <span className="sr-only">Add to Wishlist</span>
+        {/* Action Button */}
+        {product.is_enquiry_only ? (
+          <Link
+            href={`/product/${product.slug}/enquiry`}
+            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-12 sm:h-14 flex items-center justify-center text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-[#1C1C1C] transition-colors duration-300 shadow-sm px-2"
+          >
+            <MessageSquare className="w-4 h-4 sm:mr-3 mr-2 shrink-0" />
+            <span className="truncate">Enquire Now</span>
+          </Link>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-12 sm:h-14 flex items-center justify-center text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm px-2"
+          >
+            <ShoppingBag className="w-4 h-4 sm:mr-3 mr-2 shrink-0" />
+            <span className="truncate">{outOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
           </button>
-        </div>
-
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={outOfStock}
-          className="flex-1 rounded-full bg-[#1C1C1C] text-white h-12 sm:h-14 flex items-center justify-center text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm px-2"
-        >
-          <ShoppingBag className="w-4 h-4 sm:mr-3 mr-2 shrink-0" />
-          <span className="truncate">{outOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
-        </button>
+        )}
       </div>
 
       {currentStock > 0 && currentStock <= 5 && (

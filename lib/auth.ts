@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { UserProfile } from '@/store/user-store'
@@ -11,6 +11,7 @@ const JWT_SECRET = new TextEncoder().encode(
 // Define session type
 export type CustomSessionUser = {
   email: string
+  id?: string
 }
 
 // Mint a new JWT and set it in HTTP-only cookies
@@ -39,9 +40,16 @@ export async function destroySession() {
 
 // Get and verify the current user session
 export async function getCurrentUser(): Promise<CustomSessionUser | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (user && user.email) {
+    return { email: user.email, id: user.id }
+  }
+
+  // Fallback to old JWT cookie if Supabase auth fails (for backwards compatibility)
   const cookieStore = await cookies()
   const token = cookieStore.get('shahi_session')?.value
-
   if (!token) return null
 
   try {
@@ -51,7 +59,6 @@ export async function getCurrentUser(): Promise<CustomSessionUser | null> {
     }
     return null
   } catch (error) {
-    // Invalid or expired token
     return null
   }
 }
@@ -60,13 +67,25 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   const user = await getCurrentUser()
   if (!user || !user.email) return null
 
-  // Since the user is verified, we can use the admin client to fetch their profile securely
   const supabase = createAdminClient()
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('customer_profiles')
     .select('*')
     .eq('email', user.email)
     .single()
+
+  // Auto-insert if signing up via OAuth or for the first time and record is missing
+  if (!profile) {
+    const { data: newProfile, error } = await supabase
+      .from('customer_profiles')
+      .insert({ email: user.email })
+      .select()
+      .single()
+    
+    if (!error && newProfile) {
+      profile = newProfile
+    }
+  }
 
   if (profile) {
     return {
@@ -83,10 +102,10 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   return null
 }
 
-export async function requireAuth() {
+export async function requireAuth(nextUrl: string = '/checkout') {
   const user = await getCurrentUser()
   if (!user) {
-    redirect('/login')
+    redirect(`/login?next=${nextUrl}`)
   }
   return user
 }

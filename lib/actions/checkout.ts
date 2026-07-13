@@ -35,14 +35,6 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
     let availableStock = product.stock
 
     let variantNameStr = ''
-    if (item.variantId) {
-      const { data: variant } = await supabase.from('product_variants').select('*').eq('id', item.variantId).single()
-      if (variant) {
-        if (variant.price_override) price = variant.price_override
-        availableStock = variant.stock
-        variantNameStr = ` (${[variant.color, variant.size].filter(Boolean).join(' | ')})`
-      }
-    }
 
     if (availableStock < item.quantity) {
       throw new Error(`Insufficient stock for ${product.name}${variantNameStr}`)
@@ -189,6 +181,12 @@ async function createFinalOrder(
   couponCode?: string
 ) {
   const supabaseAdmin = await createAdminClient()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    throw new Error("You must be logged in to place an order.")
+  }
   
   // 1. Recalculate and validate again
   const totals = await calculateOrderTotal(items, shippingMethod, couponCode)
@@ -216,6 +214,31 @@ async function createFinalOrder(
       name: fullName,
       phone: address.phone
     })
+  }
+
+  // 3.5 Save or update default address
+  const { data: existingAddress } = await supabaseAdmin
+    .from('addresses')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  const addressData = {
+    user_id: user.id,
+    full_name: fullName,
+    phone: address.phone,
+    address_line1: address.street,
+    city: address.city,
+    state: address.state,
+    postal_code: address.zip,
+    country: address.country || 'US',
+    is_default: true
+  }
+
+  if (existingAddress) {
+    await supabaseAdmin.from('addresses').update(addressData).eq('id', existingAddress.id)
+  } else {
+    await supabaseAdmin.from('addresses').insert(addressData)
   }
 
   // 4. Insert Order (Flat schema)
@@ -252,21 +275,20 @@ async function createFinalOrder(
 
   // 5. Insert Order Items and Deduct Stock
   for (const item of totals.validatedItems) {
-    await supabaseAdmin.from('order_items').insert({
+    const { error: itemError } = await supabaseAdmin.from('order_items').insert({
       order_id: order.id,
       product_id: item.productId,
-      variant_id: item.variantId || null,
       price: item.price,
       quantity: item.quantity,
     })
 
-    if (item.variantId) {
-      const { data: vData } = await supabaseAdmin.from('product_variants').select('stock').eq('id', item.variantId).single()
-      if (vData) await supabaseAdmin.from('product_variants').update({ stock: vData.stock - item.quantity }).eq('id', item.variantId)
-    } else {
-      const { data: pData } = await supabaseAdmin.from('products').select('stock').eq('id', item.productId).single()
-      if (pData) await supabaseAdmin.from('products').update({ stock: pData.stock - item.quantity }).eq('id', item.productId)
+    if (itemError) {
+      console.error("Failed to insert order item:", itemError)
+      throw new Error("Failed to create order items: " + itemError.message)
     }
+
+    const { data: pData } = await supabaseAdmin.from('products').select('stock').eq('id', item.productId).single()
+    if (pData) await supabaseAdmin.from('products').update({ stock: pData.stock - item.quantity }).eq('id', item.productId)
   }
 
   // 6. Send Order Confirmation Email

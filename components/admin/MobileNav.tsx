@@ -16,13 +16,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tags, Ticket, Star, Megaphone, Settings } from 'lucide-react'
+import { Tags, Ticket, Star, Megaphone, Settings, Calendar, MessageSquare, PenTool } from 'lucide-react'
 
 const mainTabs = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Customers', href: '/admin/customers', icon: Users },
+]
+
+const moreTabs = [
+  { name: 'Categories', href: '/admin/categories', icon: Tags },
+  { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+  { name: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
+  { name: 'Feed', href: '/admin/blogs', icon: PenTool },
+  { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { name: 'Reviews', href: '/admin/reviews', icon: Star },
+  { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 export function MobileNav() {
@@ -60,6 +71,16 @@ export function MobileNav() {
             <DropdownMenuItem className="p-0 cursor-pointer">
               <Link href="/admin/categories" className="flex items-center w-full px-2 py-1.5">
                 <Tags className="w-4 h-4 mr-2" /> Categories
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="p-0 cursor-pointer">
+              <Link href="/admin/appointments" className="flex items-center w-full px-2 py-1.5">
+                <Calendar className="w-4 h-4 mr-2" /> Appointments
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="p-0 cursor-pointer">
+              <Link href="/admin/enquiries" className="flex items-center w-full px-2 py-1.5">
+                <MessageSquare className="w-4 h-4 mr-2" /> Enquiries
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="p-0 cursor-pointer">

@@ -107,6 +107,13 @@ export async function verifyOTP(formData: FormData) {
 }
 
 export async function signout() {
-  await destroySession()
+  const supabase = createAdminClient() // Or better, we should use createClient to clear the user's cookies.
+  
+  // Actually, we must use createClient from @supabase/ssr to clear cookies properly
+  const { createClient } = await import('@/lib/supabase/server')
+  const client = await createClient()
+  await client.auth.signOut()
+  
+  await destroySession() // Keep old fallback cleanup
   redirect('/login')
 }

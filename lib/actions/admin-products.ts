@@ -16,6 +16,7 @@ export type ProductPayload = {
   stock: number
   featured: boolean
   status: string
+  is_enquiry_only?: boolean
   // Details
   fabric?: string
   material?: string

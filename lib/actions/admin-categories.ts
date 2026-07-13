@@ -20,8 +20,22 @@ export async function createCategory(formData: FormData) {
 
   const validated = categorySchema.safeParse(rawData)
   if (!validated.success) return { error: (validated as any).error.errors[0].message }
+  
+  let imageUrl = null;
+  const imageFile = formData.get('imageFile') as File;
+  if (imageFile && imageFile.size > 0) {
+    const fileExt = imageFile.name.includes('.') ? imageFile.name.split('.').pop() : 'jpg'
+    const filePath = `categories/${validated.data.slug}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const arrayBuffer = await imageFile.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    
+    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, buffer, { contentType: imageFile.type || 'image/jpeg', upsert: true })
+    if (uploadError) return { error: uploadError.message }
+    const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(filePath)
+    imageUrl = publicUrlData.publicUrl
+  }
 
-  const { error } = await supabase.from('categories').insert([validated.data])
+  const { error } = await supabase.from('categories').insert([{ ...validated.data, image: imageUrl }])
   if (error) return { error: error.message }
 
   revalidatePath('/admin/categories')
@@ -38,8 +52,23 @@ export async function updateCategory(id: string, formData: FormData) {
 
   const validated = categorySchema.safeParse(rawData)
   if (!validated.success) return { error: (validated as any).error.errors[0].message }
+  
+  let updateData: any = { ...validated.data }
+  const imageFile = formData.get('imageFile') as File;
+  
+  if (imageFile && imageFile.size > 0) {
+    const fileExt = imageFile.name.includes('.') ? imageFile.name.split('.').pop() : 'jpg'
+    const filePath = `categories/${validated.data.slug}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const arrayBuffer = await imageFile.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    
+    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, buffer, { contentType: imageFile.type || 'image/jpeg', upsert: true })
+    if (uploadError) return { error: uploadError.message }
+    const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(filePath)
+    updateData.image = publicUrlData.publicUrl
+  }
 
-  const { error } = await supabase.from('categories').update(validated.data).eq('id', id)
+  const { error } = await supabase.from('categories').update(updateData).eq('id', id)
   if (error) return { error: error.message }
 
   revalidatePath('/admin/categories')

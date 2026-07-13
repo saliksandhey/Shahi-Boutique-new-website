@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server'
-import { ProductForm } from '@/components/admin/ProductForm'
+import { NewProductFlow } from '@/components/admin/NewProductFlow'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
@@ -18,7 +18,7 @@ export default async function NewProductPage() {
           <p className="mt-1 text-sm text-gray-500">Add a new product to your inventory.</p>
         </div>
       </div>
-      <ProductForm categories={categories || []} />
+      <NewProductFlow categories={categories || []} />
     </div>
   )
 }

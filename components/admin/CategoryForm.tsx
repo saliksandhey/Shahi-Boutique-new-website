@@ -20,6 +20,8 @@ type CategoryFormValues = z.infer<typeof categorySchema>
 
 export function CategoryForm({ category }: { category?: any }) {
   const [error, setError] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(category?.image || null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -43,6 +45,9 @@ export function CategoryForm({ category }: { category?: any }) {
     const formData = new FormData()
     formData.append('name', data.name)
     formData.append('slug', data.slug)
+    if (imageFile) {
+      formData.append('imageFile', imageFile)
+    }
 
     let res;
     if (category) {
@@ -79,6 +84,26 @@ export function CategoryForm({ category }: { category?: any }) {
               <Input id="slug" {...form.register('slug')} className={inputClass} placeholder="sarees" />
               {form.formState.errors.slug && <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mt-2">{form.formState.errors.slug.message}</p>}
             </div>
+          </div>
+
+          <div>
+            <Label className={labelClass}>Category Image</Label>
+            {imagePreview && (
+              <div className="mb-4">
+                <img src={imagePreview} alt="Preview" className="w-24 h-24 rounded-full object-cover border-2 border-gray-100 shadow-sm" />
+              </div>
+            )}
+            <Input 
+              type="file" 
+              accept="image/*" 
+              className={inputClass}
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  setImageFile(e.target.files[0])
+                  setImagePreview(URL.createObjectURL(e.target.files[0]))
+                }
+              }}
+            />
           </div>
 
           {error && <div className="bg-red-50 text-red-600 p-4 border border-red-100 rounded-[2rem] text-[10px] font-bold tracking-widest uppercase">{error}</div>}

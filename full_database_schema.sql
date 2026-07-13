@@ -361,3 +361,32 @@ WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can delete product-images" 
 ON storage.objects FOR DELETE 
 USING (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+- -   U p d a t e   t h e   p r o d u c t s   t a b l e   t o   s u p p o r t   e n q u i r y   m o d e  
+ A L T E R   T A B L E   p r o d u c t s   A D D   C O L U M N   I F   N O T   E X I S T S   i s _ e n q u i r y _ o n l y   B O O L E A N   D E F A U L T   f a l s e ;  
+  
+ - -   C r e a t e   t h e   p r o d u c t _ e n q u i r i e s   t a b l e  
+ C R E A T E   T A B L E   I F   N O T   E X I S T S   p r o d u c t _ e n q u i r i e s   (  
+         i d   U U I D   D E F A U L T   u u i d _ g e n e r a t e _ v 4 ( )   P R I M A R Y   K E Y ,  
+         p r o d u c t _ i d   U U I D   R E F E R E N C E S   p r o d u c t s ( i d )   O N   D E L E T E   C A S C A D E ,  
+         f u l l _ n a m e   T E X T   N O T   N U L L ,  
+         c o u n t r y   T E X T   N O T   N U L L ,  
+         s t a t e   T E X T   N O T   N U L L ,  
+         p h o n e _ n u m b e r   T E X T   N O T   N U L L ,  
+         m e s s a g e   T E X T ,  
+         s t a t u s   T E X T   D E F A U L T   ' P E N D I N G ' ,  
+         c r e a t e d _ a t   T I M E S T A M P   W I T H   T I M E   Z O N E   D E F A U L T   t i m e z o n e ( ' u t c ' : : t e x t ,   n o w ( ) )   N O T   N U L L  
+ ) ;  
+  
+ - -   R L S   P o l i c i e s   f o r   p r o d u c t _ e n q u i r i e s  
+ A L T E R   T A B L E   p r o d u c t _ e n q u i r i e s   E N A B L E   R O W   L E V E L   S E C U R I T Y ;  
+  
+ - -   A l l o w   p u b l i c   i n s e r t i o n   ( s o   a n y o n e   c a n   s u b m i t   a n   e n q u i r y   f r o m   t h e   s t o r e f r o n t )  
+ C R E A T E   P O L I C Y   " P u b l i c   c a n   i n s e r t   p r o d u c t   e n q u i r i e s "    
+ O N   p r o d u c t _ e n q u i r i e s   F O R   I N S E R T    
+ W I T H   C H E C K   ( t r u e ) ;  
+  
+ - -   A l l o w   a u t h e n t i c a t e d   a d m i n s   t o   v i e w / m a n a g e   e n q u i r i e s  
+ C R E A T E   P O L I C Y   " A d m i n s   c a n   m a n a g e   p r o d u c t   e n q u i r i e s "    
+ O N   p r o d u c t _ e n q u i r i e s   F O R   A L L    
+ U S I N G   ( a u t h . r o l e ( )   =   ' a u t h e n t i c a t e d ' ) ;  
+ 

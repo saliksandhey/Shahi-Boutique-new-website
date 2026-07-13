@@ -1,23 +1,95 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cart-store'
 import { X, Trash2, ShoppingBag } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore()
+  const router = useRouter()
+  const [showLoginSheet, setShowLoginSheet] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   // Prevent background scrolling when cart is open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || showLoginSheet) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
     return () => { document.body.style.overflow = 'unset' }
-  }, [isOpen])
+  }, [isOpen, showLoginSheet])
+
+  const handleCheckoutClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsCheckingAuth(true)
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    setIsCheckingAuth(false)
+    
+    if (session) {
+      closeCart()
+      router.push('/checkout')
+    } else {
+      setShowLoginSheet(true)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setLoginError(null)
+    const supabase = createClient()
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/checkout&mode=popup`,
+        skipBrowserRedirect: true
+      }
+    })
+    
+    if (error) {
+      setLoginError(error.message)
+      return
+    }
+
+    if (data?.url) {
+      // Open a popup "card" for Google Login
+      const width = 500
+      const height = 600
+      const left = window.screen.width / 2 - width / 2
+      const top = window.screen.height / 2 - height / 2
+      const popup = window.open(
+        data.url,
+        'Google Login',
+        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
+      )
+
+      // Listen for the success message from the popup
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return
+        if (event.data === 'auth_success') {
+          window.removeEventListener('message', handleMessage)
+          setShowLoginSheet(false)
+          closeCart()
+          router.push('/checkout')
+          router.refresh()
+        }
+      }
+      window.addEventListener('message', handleMessage)
+
+      // Check periodically if user closed popup manually
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed)
+          window.removeEventListener('message', handleMessage)
+        }
+      }, 1000)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -127,17 +199,52 @@ export function CartDrawer() {
               <span className="font-black text-2xl">₹{getSubtotal().toFixed(2)}</span>
             </div>
             <p className="text-xs text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
-            <Link 
-              href="/checkout"
-              onClick={closeCart}
-              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-14 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-lg"
+            <button 
+              onClick={handleCheckoutClick}
+              disabled={isCheckingAuth}
+              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-14 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-lg disabled:opacity-50"
             >
-              Proceed to Checkout
-            </Link>
+              {isCheckingAuth ? 'Processing...' : 'Proceed to Checkout'}
+            </button>
           </div>
         )}
 
       </div>
+
+      {/* Mobile Login Bottom Sheet */}
+      {showLoginSheet && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLoginSheet(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-t-[2rem] p-8 pb-12 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
+            <button 
+              onClick={() => setShowLoginSheet(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 bg-gray-50 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-center mt-4 mb-8">
+              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">Sign in to Checkout</h3>
+              <p className="text-sm text-gray-500 font-medium mt-2">Sign in to access your saved addresses and faster checkout.</p>
+            </div>
+            
+            <button 
+              onClick={handleGoogleLogin}
+              className="w-full bg-white text-gray-900 border border-gray-300 rounded-full h-14 flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
+                <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"/>
+                <path d="M5.26498 14.2949C5.02498 13.5699 4.87998 12.7999 4.87998 12.0049C4.87998 11.2099 5.01998 10.4399 5.26498 9.71497L1.275 6.61997C0.465 8.22997 0 10.0599 0 12.0049C0 13.9499 0.465 15.7799 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"/>
+                <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.87037 19.245 6.21537 17.135 5.26537 14.29L1.27539 17.385C3.25539 21.31 7.31037 24.0001 12.0004 24.0001Z" fill="#34A853"/>
+              </svg>
+              <span className="font-bold tracking-widest text-xs uppercase">Continue with Google</span>
+            </button>
+            
+            {loginError && <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200 mt-4 text-center">{loginError}</p>}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

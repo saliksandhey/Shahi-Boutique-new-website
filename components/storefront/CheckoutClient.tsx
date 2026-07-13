@@ -4,10 +4,21 @@ import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cart-store'
 import { useRouter } from 'next/navigation'
 import { calculateOrderTotal, createRazorpayOrderAction, verifyAndCreateOrder, createCODOrderAction, getPublicCoupons } from '@/lib/actions/checkout'
+import { saveAddress } from '@/lib/actions/address'
 import Script from 'next/script'
 import { Ticket, X, Gift, ShoppingCart, ChevronDown } from 'lucide-react'
 
-export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: boolean, razorpayKeyId: string }) {
+export function CheckoutClient({ 
+  codEnabled, 
+  razorpayKeyId,
+  savedAddresses = [],
+  userEmail
+}: { 
+  codEnabled: boolean, 
+  razorpayKeyId: string,
+  savedAddresses?: any[],
+  userEmail: string
+}) {
   const { items, clearCart } = useCartStore()
   const router = useRouter()
   
@@ -16,14 +27,37 @@ export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: bool
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const defaultAddress = savedAddresses.find((a: any) => a.is_default) || savedAddresses[0] || null
+  
   // Order State
   const [address, setAddress] = useState({
-    firstName: '', lastName: '', email: '', phone: '', street: '', city: '', state: '', zip: '', country: 'US'
+    firstName: defaultAddress?.full_name?.split(' ')[0] || '',
+    lastName: defaultAddress?.full_name?.split(' ').slice(1).join(' ') || '',
+    email: userEmail || '',
+    phone: defaultAddress?.phone || '',
+    street: defaultAddress?.address_line1 || '',
+    city: defaultAddress?.city || '',
+    state: defaultAddress?.state || '',
+    zip: defaultAddress?.postal_code || '',
+    country: defaultAddress?.country || 'US'
   })
   const [shippingMethod, setShippingMethod] = useState('standard') // only standard now
   const [paymentMethod, setPaymentMethod] = useState('razorpay') // razorpay | cod
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number, isFreeGift?: boolean} | null>(null)
+
+  // New Address State
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [isSavingAddress, setIsSavingAddress] = useState(false)
+  const [newAddress, setNewAddress] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: ''
+  })
 
   // Live Totals (fetched from server)
   const [totals, setTotals] = useState({ subtotal: 0, shipping: 0, discount: 0, total: 0 })
@@ -47,7 +81,7 @@ export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: bool
 
   const updateTotals = async (currentShipping = shippingMethod, currentCoupon = appliedCoupon?.code) => {
     try {
-      const inputItems = items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity }))
+      const inputItems = items.map(i => ({ productId: i.productId || i.id, variantId: i.variantId, quantity: i.quantity }))
       const result = await calculateOrderTotal(inputItems, currentShipping, currentCoupon)
       setTotals({
         subtotal: result.subtotal,
@@ -73,7 +107,7 @@ export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: bool
     setError(null)
     const code = codeToApply || couponCode
     try {
-      const inputItems = items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity }))
+      const inputItems = items.map(i => ({ productId: i.productId || i.id, variantId: i.variantId, quantity: i.quantity }))
       const result = await calculateOrderTotal(inputItems, shippingMethod, code)
       if (result.couponApplied) {
         setAppliedCoupon({ code: code, discount: result.discount, isFreeGift: result.isFreeGift })
@@ -97,7 +131,7 @@ export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: bool
   const handlePlaceOrder = async () => {
     setLoading(true)
     setError(null)
-    const inputItems = items.map(i => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity }))
+    const inputItems = items.map(i => ({ productId: i.productId || i.id, variantId: i.variantId, quantity: i.quantity }))
 
     try {
       if (paymentMethod === 'cod') {
@@ -296,32 +330,115 @@ export function CheckoutClient({ codEnabled, razorpayKeyId }: { codEnabled: bool
                 Shipping Address
               </h2>
               {step === 1 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input type="text" placeholder="First Name" value={address.firstName} onChange={e => setAddress({...address, firstName: e.target.value})} className={inputClasses} />
-                  <input type="text" placeholder="Last Name" value={address.lastName} onChange={e => setAddress({...address, lastName: e.target.value})} className={inputClasses} />
+                <div>
+                  {savedAddresses.length > 0 ? (
+                    <>
+                    <div className="mb-8">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Select a saved address</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {savedAddresses.map((sa: any) => {
+                          const isSelected = address.street === sa.address_line1 && address.city === sa.city;
+                          return (
+                            <div 
+                              key={sa.id} 
+                              onClick={() => setAddress({
+                                firstName: sa.full_name?.split(' ')[0] || '',
+                                lastName: sa.full_name?.split(' ').slice(1).join(' ') || '',
+                                email: userEmail || '',
+                                phone: sa.phone || '',
+                                street: sa.address_line1 || '',
+                                city: sa.city || '',
+                                state: sa.state || '',
+                                zip: sa.postal_code || '',
+                                country: sa.country || 'US'
+                              })}
+                              className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 ${isSelected ? 'border-[#1C1C1C] bg-gray-50 ring-1 ring-[#1C1C1C]' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <p className="font-bold text-xs text-gray-900 uppercase tracking-widest">{sa.full_name}</p>
+                                {sa.is_default && <span className="text-[8px] bg-black text-white px-2 py-1 rounded-sm uppercase tracking-widest">Default</span>}
+                              </div>
+                              <p className="text-[10px] text-gray-500 mt-1 font-medium">{sa.address_line1}</p>
+                              <p className="text-[10px] text-gray-500 font-medium">{sa.city}, {sa.state} {sa.postal_code}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      </div>
+                      
+                      {/* Add New Address Toggle */}
+                      {!showNewAddressForm && (
+                        <div className="mt-6 flex items-center justify-center">
+                          <button 
+                            type="button"
+                            onClick={() => setShowNewAddressForm(true)}
+                            className="text-xs font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#1C1C1C] transition-colors border-b-2 border-transparent hover:border-[#1C1C1C]"
+                          >
+                            + Add New Address
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="mb-8 p-6 bg-gray-50 border border-gray-200 rounded-2xl text-center">
+                      <p className="text-xs font-medium text-gray-500 mb-4">You don't have any saved addresses yet.</p>
+                      {!showNewAddressForm && (
+                        <button 
+                          type="button"
+                          onClick={() => setShowNewAddressForm(true)}
+                          className="bg-[#1C1C1C] text-white px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors shadow-sm"
+                        >
+                          Add New Address
+                        </button>
+                      )}
+                    </div>
+                  )}
                   
-                  <div className="sm:col-span-2">
-                    <input type="email" placeholder="Email Address" value={address.email} onChange={e => setAddress({...address, email: e.target.value})} className={`${inputClasses} ${address.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email) ? 'border-red-500 focus:border-red-500' : ''}`} />
-                    {address.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email) && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-widest">Valid email required</p>}
-                  </div>
+                  {/* New Address Form */}
+                  {showNewAddressForm && (
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 mt-2">
+                      <h3 className="text-[10px] font-bold text-gray-900 uppercase tracking-widest mb-4">Add a new address</h3>
+                      <form action={async (formData) => {
+                        setIsSavingAddress(true)
+                        formData.append('full_name', `${newAddress.firstName} ${newAddress.lastName}`)
+                        formData.append('address_line1', newAddress.street)
+                        formData.append('postal_code', newAddress.zip)
+                        formData.append('country', 'US')
+                        const res = await saveAddress(formData)
+                        if (res.success) {
+                          setShowNewAddressForm(false)
+                          setNewAddress({ firstName: '', lastName: '', phone: '', street: '', city: '', state: '', zip: '' })
+                          // Assuming the parent page will refresh the savedAddresses array via revalidatePath
+                        } else {
+                          setError(res.error || 'Failed to save address')
+                        }
+                        setIsSavingAddress(false)
+                      }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input required type="text" name="firstName" placeholder="First Name" value={newAddress.firstName} onChange={e => setNewAddress({...newAddress, firstName: e.target.value})} className={inputClasses} />
+                        <input required type="text" name="lastName" placeholder="Last Name" value={newAddress.lastName} onChange={e => setNewAddress({...newAddress, lastName: e.target.value})} className={inputClasses} />
+                        <input required type="tel" name="phone" placeholder="10-digit Phone Number" maxLength={10} value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value.replace(/\D/g, '')})} className={`${inputClasses} sm:col-span-2`} />
+                        <input required type="text" name="street" placeholder="Street Address" value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
+                        <input required type="text" name="city" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className={inputClasses} />
+                        <input required type="text" name="state" placeholder="State/Province" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses} />
+                        <input required type="text" name="zip" placeholder="Zip / Postal Code" value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
+                        
+                        <div className="sm:col-span-2 flex gap-4 mt-2">
+                          <button type="button" onClick={() => setShowNewAddressForm(false)} className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-gray-900 transition-colors">Cancel</button>
+                          <button type="submit" disabled={isSavingAddress} className="flex-1 rounded-full bg-[#1C1C1C] text-white py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors disabled:opacity-50">
+                            {isSavingAddress ? 'Saving...' : 'Save Address'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
                   
-                  <input type="text" placeholder="Street Address" value={address.street} onChange={e => setAddress({...address, street: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
-                  <input type="text" placeholder="City" value={address.city} onChange={e => setAddress({...address, city: e.target.value})} className={inputClasses} />
-                  <input type="text" placeholder="State/Province" value={address.state} onChange={e => setAddress({...address, state: e.target.value})} className={inputClasses} />
-                  <input type="text" placeholder="Zip / Postal Code" value={address.zip} onChange={e => setAddress({...address, zip: e.target.value})} className={inputClasses} />
-                  
-                  <div>
-                    <input type="tel" placeholder="10-digit Phone Number" maxLength={10} value={address.phone} onChange={e => setAddress({...address, phone: e.target.value.replace(/\D/g, '')})} className={`${inputClasses} ${address.phone && address.phone.length !== 10 ? 'border-red-500 focus:border-red-500' : ''}`} />
-                    {address.phone && address.phone.length !== 10 && <p className="text-[10px] text-red-500 font-bold mt-2 ml-4 uppercase tracking-widest">Must be 10 digits</p>}
-                  </div>
-                  
-                  <div className="sm:col-span-2 mt-4">
+                  <div className="mt-8">
                     <button 
                       onClick={() => setStep(2)}
-                      disabled={!address.firstName || !address.lastName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email) || !address.street || !address.city || !address.state || !address.zip || address.phone.length !== 10}
+                      disabled={!address.street || !address.city || showNewAddressForm}
                       className="w-full rounded-full bg-[#1C1C1C] text-white py-4 md:py-5 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-400 shadow-md"
                     >
-                      Continue to Delivery
+                      {(!address.street || !address.city) ? 'Select an address to continue' : 'Continue to Delivery'}
                     </button>
                   </div>
                 </div>

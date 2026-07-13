@@ -22,6 +22,7 @@ const productSchema = z.object({
   sale_price: z.any(),
   stock: z.any(),
   featured: z.boolean().optional(),
+  is_enquiry_only: z.boolean().optional(),
   status: z.enum(['ACTIVE', 'DRAFT', 'ARCHIVED', 'OUT_OF_STOCK']).optional(),
   fabric: z.string().optional(),
   material: z.string().optional(),
@@ -38,10 +39,11 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>
 
-export function ProductForm({ product, categories }: { product?: any, categories: any[] }) {
+export function ProductForm({ product, categories, mode }: { product?: any, categories: any[], mode?: 'regular' | 'enquiry' | null }) {
   const [error, setError] = useState<string | null>(null)
   const [selectedImages, setSelectedImages] = useState<{file: File, preview: string}[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
+  const isEnquiryMode = mode === 'enquiry' || (product && product.is_enquiry_only)
   
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -55,6 +57,7 @@ export function ProductForm({ product, categories }: { product?: any, categories
       sale_price: product.sale_price || null,
       stock: product.stock || 0,
       featured: product.featured || false,
+      is_enquiry_only: isEnquiryMode,
       status: product.status || 'DRAFT',
       fabric: product.fabric || '',
       material: product.material || '',
@@ -68,7 +71,7 @@ export function ProductForm({ product, categories }: { product?: any, categories
       keywords: product.keywords || '',
       canonical_url: product.canonical_url || ''
     } : {
-      name: '', slug: '', category_id: '', short_description: '', description: '', price: 0, sale_price: null, stock: 0, featured: false, status: 'DRAFT'
+      name: '', slug: '', category_id: '', short_description: '', description: '', price: 0, sale_price: null, stock: 0, featured: false, is_enquiry_only: isEnquiryMode, status: 'DRAFT'
     }
   })
 
@@ -145,6 +148,22 @@ export function ProductForm({ product, categories }: { product?: any, categories
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-12">
       {error && <div className="bg-red-50 text-red-600 p-4 border border-red-100 rounded-[2rem] text-[10px] font-bold tracking-widest uppercase">{error}</div>}
       
+      {/* Product Type Configuration (Hidden in create mode since it's already selected) */}
+      {!mode && (
+        <Card className={`${cardClass} border-[#D4AF37]/30 shadow-[#D4AF37]/5`}>
+          <CardContent className="p-8 md:p-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-gray-900 mb-1">Enquiry Mode</h3>
+              <p className="text-xs text-gray-500">Instead of 'Add to Cart', customers will see an 'Enquire Now' button that redirects to an enquiry form.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="is_enquiry_only" className="text-xs font-bold uppercase tracking-widest cursor-pointer">Enable</Label>
+              <input type="checkbox" id="is_enquiry_only" {...form.register('is_enquiry_only')} className="h-6 w-6 rounded border-gray-300 text-[#D4AF37] focus:ring-[#D4AF37] cursor-pointer" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* General Information */}
       <Card className={cardClass}>
         <CardContent className="p-8 md:p-10">
@@ -240,19 +259,23 @@ export function ProductForm({ product, categories }: { product?: any, categories
           <h3 className={headerClass}>Pricing & Inventory</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <Label htmlFor="price" className={labelClass}>Regular Price (₹)</Label>
+              <Label htmlFor="price" className={labelClass}>{isEnquiryMode ? "Starting Price (₹)" : "Regular Price (₹)"}</Label>
               <Input id="price" type="number" step="0.01" {...form.register('price')} className={inputClass} placeholder="0.00" />
             </div>
 
-            <div>
-              <Label htmlFor="sale_price" className={labelClass}>Sale Price (₹)</Label>
-              <Input id="sale_price" type="number" step="0.01" {...form.register('sale_price')} className={inputClass} placeholder="0.00 (Optional)" />
-            </div>
+            {!isEnquiryMode && (
+              <>
+                <div>
+                  <Label htmlFor="sale_price" className={labelClass}>Sale Price (₹)</Label>
+                  <Input id="sale_price" type="number" step="0.01" {...form.register('sale_price')} className={inputClass} placeholder="0.00 (Optional)" />
+                </div>
 
-            <div>
-              <Label htmlFor="stock" className={labelClass}>Available Stock</Label>
-              <Input id="stock" type="number" {...form.register('stock')} className={inputClass} placeholder="0" />
-            </div>
+                <div>
+                  <Label htmlFor="stock" className={labelClass}>Available Stock</Label>
+                  <Input id="stock" type="number" {...form.register('stock')} className={inputClass} placeholder="0" />
+                </div>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

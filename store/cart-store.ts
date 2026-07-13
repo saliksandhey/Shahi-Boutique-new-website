@@ -41,20 +41,23 @@ export const useCartStore = create<CartState>()(
       
       addItem: async (newItem) => {
         const { items } = get()
+        const productId = newItem.productId || newItem.id
+        const newItemFixed = { ...newItem, productId }
+        
         // Find existing item matching both productId and variantId
         const existingItem = items.find(
-          (item) => item.productId === newItem.productId && item.variantId === newItem.variantId
+          (item) => (item.productId || item.id) === productId && item.variantId === newItem.variantId
         )
 
         let updatedItems
         if (existingItem) {
           updatedItems = items.map((item) =>
-            item.productId === newItem.productId && item.variantId === newItem.variantId
+            (item.productId || item.id) === productId && item.variantId === newItem.variantId
               ? { ...item, quantity: item.quantity + newItem.quantity }
               : item
           )
         } else {
-          updatedItems = [...items, newItem]
+          updatedItems = [...items, newItemFixed]
         }
 
         set({ items: updatedItems })
@@ -63,20 +66,12 @@ export const useCartStore = create<CartState>()(
         const supabase = createClient()
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
-          // Since onConflict with NULLs in Postgres can be tricky, we'll try to find if the row exists first
-          const query = supabase
+          const { data: existingDb } = await supabase
             .from('cart_items')
             .select('id, quantity')
             .eq('user_id', session.user.id)
-            .eq('product_id', newItem.productId)
-            
-          if (newItem.variantId) {
-            query.eq('variant_id', newItem.variantId)
-          } else {
-            query.is('variant_id', null)
-          }
-
-          const { data: existingDb } = await query.maybeSingle()
+            .eq('product_id', productId)
+            .maybeSingle()
 
           if (existingDb) {
             await supabase.from('cart_items').update({
@@ -85,8 +80,7 @@ export const useCartStore = create<CartState>()(
           } else {
             await supabase.from('cart_items').insert({
               user_id: session.user.id,
-              product_id: newItem.productId,
-              variant_id: newItem.variantId || null,
+              product_id: productId,
               quantity: newItem.quantity,
             })
           }
@@ -104,12 +98,7 @@ export const useCartStore = create<CartState>()(
           const supabase = createClient()
           const { data: { session } } = await supabase.auth.getSession()
           if (session) {
-            const query = supabase.from('cart_items').delete().eq('user_id', session.user.id).eq('product_id', itemToRemove.productId)
-            if (itemToRemove.variantId) {
-              query.eq('variant_id', itemToRemove.variantId)
-            } else {
-              query.is('variant_id', null)
-            }
+            const query = supabase.from('cart_items').delete().eq('user_id', session.user.id).eq('product_id', itemToRemove.productId || itemToRemove.id)
             await query
           }
         }
@@ -126,12 +115,7 @@ export const useCartStore = create<CartState>()(
           const supabase = createClient()
           const { data: { session } } = await supabase.auth.getSession()
           if (session) {
-            const query = supabase.from('cart_items').update({ quantity }).eq('user_id', session.user.id).eq('product_id', itemToUpdate.productId)
-            if (itemToUpdate.variantId) {
-              query.eq('variant_id', itemToUpdate.variantId)
-            } else {
-              query.is('variant_id', null)
-            }
+            const query = supabase.from('cart_items').update({ quantity }).eq('user_id', session.user.id).eq('product_id', itemToUpdate.productId || itemToUpdate.id)
             await query
           }
         }
@@ -171,7 +155,7 @@ export const useCartStore = create<CartState>()(
 
         const { data: dbItems, error } = await supabase
           .from('cart_items')
-          .select('*, products(*, product_images(url, is_primary)), product_variants(*)')
+          .select('*, products(*, product_images(url, is_primary))')
           .eq('user_id', session.user.id)
 
         if (error || !dbItems) {
@@ -183,12 +167,12 @@ export const useCartStore = create<CartState>()(
         
         // Push local items to DB if they don't exist in DB
         for (const localItem of localItems) {
-          const existsInDb = dbItems.find(dbI => dbI.product_id === localItem.productId && dbI.variant_id === (localItem.variantId || null))
+          const actualProductId = localItem.productId || localItem.id
+          const existsInDb = dbItems.find(dbI => dbI.product_id === actualProductId)
           if (!existsInDb) {
             await supabase.from('cart_items').insert({
               user_id: session.user.id,
-              product_id: localItem.productId,
-              variant_id: localItem.variantId || null,
+              product_id: actualProductId,
               quantity: localItem.quantity,
             })
           }
@@ -197,24 +181,20 @@ export const useCartStore = create<CartState>()(
         // Refetch after merge
         const { data: finalDbItems } = await supabase
           .from('cart_items')
-          .select('*, products(*, product_images(url, is_primary)), product_variants(*)')
+          .select('*, products(*, product_images(url, is_primary))')
           .eq('user_id', session.user.id)
 
         if (finalDbItems) {
           const mergedItems: CartItem[] = finalDbItems.map((dbItem: any) => {
             const product = dbItem.products
-            const variant = dbItem.product_variants
             const image = product.product_images?.find((img: any) => img.is_primary)?.url || product.product_images?.[0]?.url || '/placeholder.png'
 
             return {
-              id: variant ? `${product.id}-${variant.id}` : product.id,
+              id: product.id,
               productId: product.id,
-              variantId: variant?.id || null,
               name: product.name,
-              color: variant?.color || null,
-              size: variant?.size || null,
-              price: variant?.price_override || product.price,
-              salePrice: product.sale_price, // Wait, variant.sale_price_override? In DB it's not present or null, let's just stick to product.sale_price unless variant has override
+              price: product.price,
+              salePrice: product.sale_price,
               image: image,
               quantity: dbItem.quantity
             }

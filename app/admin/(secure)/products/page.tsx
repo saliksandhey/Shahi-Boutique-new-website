@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,26 +25,26 @@ export default async function AdminProductsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-5xl font-heading font-black tracking-widest text-gray-900 uppercase">Products</h1>
-          <p className="mt-1 md:mt-2 text-xs md:text-sm text-gray-500 font-bold uppercase tracking-widest">Manage your store's inventory.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#09090B]">Products</h1>
+          <p className="mt-1 text-sm text-gray-500 font-medium">Manage your store's inventory.</p>
         </div>
-        <Button asChild className="rounded-full bg-[#1C1C1C] text-white px-8 py-6 text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] shadow-xl transition-all duration-300">
+        <Button asChild className="rounded-lg bg-[#09090B] text-white px-6 py-2 text-sm font-semibold hover:bg-[#09090B]/80 shadow-sm transition-colors">
           <Link href="/admin/products/new">
             <Plus className="mr-2 h-4 w-4" /> Add Product
           </Link>
         </Button>
       </div>
 
-      <div className="rounded-[2rem] border border-gray-100 bg-white shadow-sm overflow-hidden hidden md:block">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden hidden md:block">
         <Table>
           <TableHeader className="bg-gray-50">
-            <TableRow className="border-gray-100 hover:bg-transparent">
-              <TableHead className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Name</TableHead>
-              <TableHead className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Category</TableHead>
-              <TableHead className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Price</TableHead>
-              <TableHead className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Stock</TableHead>
-              <TableHead className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Status</TableHead>
-              <TableHead className="text-right text-gray-400 font-black uppercase tracking-widest text-[10px]">Actions</TableHead>
+            <TableRow className="border-gray-200 hover:bg-transparent">
+              <TableHead className="text-gray-500 font-semibold text-xs">Name</TableHead>
+              <TableHead className="text-gray-500 font-semibold text-xs">Category</TableHead>
+              <TableHead className="text-gray-500 font-semibold text-xs">Price</TableHead>
+              <TableHead className="text-gray-500 font-semibold text-xs">Stock</TableHead>
+              <TableHead className="text-gray-500 font-semibold text-xs">Status</TableHead>
+              <TableHead className="text-right text-gray-500 font-semibold text-xs">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -52,11 +53,13 @@ export default async function AdminProductsPage() {
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-4">
                     {product.product_images?.length > 0 ? (
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200 shadow-sm">
-                        <img 
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-200 shadow-sm relative">
+                        <Image 
                           src={product.product_images.sort((a: any, b: any) => (a.position || 0) - (b.position || 0))[0]?.url} 
                           alt={product.name} 
-                          className="w-full h-full object-cover" 
+                          fill
+                          sizes="48px"
+                          className="object-cover" 
                         />
                       </div>
                     ) : (
@@ -66,15 +69,18 @@ export default async function AdminProductsPage() {
                     )}
                     <div className="flex flex-col gap-1">
                       <span className="text-sm font-bold text-gray-900">{product.name}</span>
-                      {product.featured && <Badge variant="outline" className="text-[9px] w-fit bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 uppercase tracking-widest font-black shadow-sm">Featured</Badge>}
+                      <div className="flex gap-2">
+                        {product.featured && <Badge variant="outline" className="text-[9px] w-fit bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 uppercase tracking-widest font-black shadow-sm">Featured</Badge>}
+                        {product.is_enquiry_only && <Badge variant="outline" className="text-[9px] w-fit bg-[#1C1C1C] text-white border-transparent uppercase tracking-widest font-black shadow-sm">Enquiry Only</Badge>}
+                      </div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-gray-500 font-medium text-xs uppercase tracking-wider">{(product.categories as any)?.name || '-'}</TableCell>
-                <TableCell className="font-black text-gray-900">₹{product.price}</TableCell>
+                <TableCell className="text-gray-600 font-medium text-sm">{(product.categories as any)?.name || '-'}</TableCell>
+                <TableCell className="font-semibold text-[#09090B]">₹{product.price}</TableCell>
                 <TableCell className="font-medium text-gray-900">{product.stock}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={`text-[9px] uppercase font-bold tracking-wider ${product.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                  <Badge variant="outline" className={`text-xs font-medium px-2 py-0.5 ${product.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                     {product.status}
                   </Badge>
                 </TableCell>
@@ -111,23 +117,29 @@ export default async function AdminProductsPage() {
       {/* Mobile Card View */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {products?.map((product) => (
-          <div key={product.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 relative">
+          <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 relative">
             <div className="flex items-start gap-4">
                {/* Image */}
-               <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-gray-200 shadow-sm">
+               <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-gray-200 shadow-sm relative">
                  {product.product_images?.length > 0 ? (
-                   <img src={product.product_images.sort((a: any, b: any) => (a.position || 0) - (b.position || 0))[0]?.url} alt={product.name} className="w-full h-full object-cover" />
+                   <Image 
+                     src={product.product_images.sort((a: any, b: any) => (a.position || 0) - (b.position || 0))[0]?.url} 
+                     alt={product.name} 
+                     fill
+                     sizes="64px"
+                     className="object-cover" 
+                   />
                  ) : (
                    <div className="w-full h-full bg-gray-50 flex items-center justify-center"><span className="text-[9px] text-gray-400 font-bold uppercase">No Img</span></div>
                  )}
                </div>
                {/* Details */}
                <div className="flex-1 min-w-0 pr-8">
-                 <h3 className="font-bold text-gray-900 text-sm leading-tight">{product.name}</h3>
-                 <div className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">{(product.categories as any)?.name || 'Uncategorized'}</div>
+                 <h3 className="font-semibold text-[#09090B] text-sm leading-tight">{product.name}</h3>
+                 <div className="text-xs text-gray-500 mt-1 font-medium">{(product.categories as any)?.name || 'Uncategorized'}</div>
                  <div className="flex items-center gap-2 mt-2">
-                   <span className="font-black text-gray-900">₹{product.price}</span>
-                   <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">• Stock: {product.stock}</span>
+                   <span className="font-semibold text-[#09090B]">₹{product.price}</span>
+                   <span className="text-xs text-gray-500 font-medium">• Stock: {product.stock}</span>
                  </div>
                </div>
             </div>
@@ -142,12 +154,13 @@ export default async function AdminProductsPage() {
             </div>
 
             {/* Bottom Status Row */}
-            <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-50">
+            <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`text-[9px] uppercase font-bold tracking-wider ${product.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                <Badge variant="outline" className={`text-xs font-medium px-2 py-0.5 ${product.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
                   {product.status}
                 </Badge>
-                {product.featured && <Badge variant="outline" className="text-[9px] bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 uppercase tracking-widest font-black shadow-sm">Featured</Badge>}
+                {product.featured && <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30 shadow-sm">Featured</Badge>}
+                {product.is_enquiry_only && <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 bg-[#09090B] text-white border-transparent shadow-sm">Enquiry Only</Badge>}
               </div>
               <form action={async () => {
                 'use server'

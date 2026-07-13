@@ -1,7 +1,6 @@
 import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Package, Heart, Clock } from 'lucide-react'
+import { Package, Heart, Clock, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AccountDashboard() {
@@ -34,83 +33,80 @@ export default async function AccountDashboard() {
     .limit(3)
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          Welcome back, {customerProfile?.name || user.email}!
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your orders and account settings from your personal dashboard.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{ordersCount || 0}</div>
-          </CardContent>
-        </Card>
+    <div className="space-y-12">
+      
+      {/* Stat Blocks */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="bg-[#F8F9FA] border border-gray-100 rounded-2xl p-6 lg:p-8 flex flex-col justify-between hover:border-[#111111] transition-colors duration-500">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Total Orders</h3>
+            <Package className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
+          </div>
+          <div className="text-4xl md:text-5xl font-sans font-black tracking-tighter text-[#111111]">{ordersCount || 0}</div>
+        </div>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wishlist Items</CardTitle>
-            <Heart className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{wishlistCount || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="bg-[#F8F9FA] border border-gray-100 rounded-2xl p-6 lg:p-8 flex flex-col justify-between hover:border-[#111111] transition-colors duration-500">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Wishlist Items</h3>
+            <Heart className="h-5 w-5 text-gray-400" strokeWidth={1.5} />
+          </div>
+          <div className="text-4xl md:text-5xl font-sans font-black tracking-tighter text-[#111111]">{wishlistCount || 0}</div>
+        </div>
       </div>
 
-      <div className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
-          <Link href="/account/orders" className="text-sm font-medium text-black hover:underline">
-            View all
+      {/* Recent Orders Section */}
+      <div>
+        <div className="flex items-end justify-between border-b border-gray-200 pb-4 mb-6">
+          <h2 className="text-lg font-black uppercase tracking-widest text-gray-900">Recent Orders</h2>
+          <Link href="/account/orders" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-[#111111] transition-colors flex items-center group">
+            View all <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
         
-        <div className="mt-4">
+        <div>
           {recentOrders && recentOrders.length > 0 ? (
-            <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
-              <ul role="list" className="divide-y divide-gray-200">
-                {recentOrders.map((order) => (
-                  <li key={order.id} className="p-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <p className="text-sm font-medium text-gray-900">Order #{order.order_number}</p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm font-medium text-gray-900">₹{order.total_amount}</div>
-                        <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-                          {order.order_status}
-                        </span>
-                        <Link href={`/account/orders/${order.id}`} className="text-sm font-medium text-black hover:underline">
-                          Details
-                        </Link>
-                      </div>
+            <div className="space-y-4">
+              {recentOrders.map((order) => (
+                <div key={order.id} className="group border border-gray-100 hover:border-[#111111] rounded-2xl p-6 transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
+                        {new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                      <p className="text-sm font-black tracking-wide text-gray-900">Order #{order.order_number}</p>
                     </div>
-                  </li>
-                ))}
-              </ul>
+
+                    <div className="flex flex-col sm:items-end">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Total</span>
+                      <div className="text-sm font-black text-[#111111]">₹{order.total_amount}</div>
+                    </div>
+
+                    <div className="flex flex-col sm:items-end">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Status</span>
+                      <span className="inline-flex items-center rounded-full bg-[#111111] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-white">
+                        {order.order_status}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-gray-100">
+                      <Link href={`/account/orders/${order.id}`} className="inline-flex items-center justify-center rounded-full border-2 border-[#111111] px-6 py-2 text-[10px] font-bold uppercase tracking-widest text-[#111111] hover:bg-[#111111] hover:text-white transition-colors w-full sm:w-auto">
+                        Details
+                      </Link>
+                    </div>
+
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="rounded-md border border-gray-200 bg-white p-8 text-center">
-              <Clock className="mx-auto h-8 w-8 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No orders</h3>
-              <p className="mt-1 text-sm text-gray-500">You haven't placed any orders yet.</p>
-              <div className="mt-6">
-                <Link href="/" className="inline-flex items-center rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">
-                  Start shopping
-                </Link>
-              </div>
+            <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-12 text-center">
+              <Clock className="mx-auto h-8 w-8 text-gray-300 mb-4" strokeWidth={1.5} />
+              <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 mb-2">No orders yet</h3>
+              <p className="text-xs text-gray-500 font-medium mb-6">When you place orders, they will appear here.</p>
+              <Link href="/shop" className="inline-flex items-center rounded-full bg-[#111111] px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 transition-colors">
+                Start shopping
+              </Link>
             </div>
           )}
         </div>

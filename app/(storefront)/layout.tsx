@@ -2,6 +2,8 @@ import { StorefrontWrapper } from "@/components/storefront/StorefrontWrapper";
 import { createPublicClient } from "@/lib/supabase/server";
 import { getActiveAnnouncements } from "@/lib/actions/announcements";
 import { AnnouncementManager } from "@/components/storefront/AnnouncementManager";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
+import { PageTransition } from "@/components/providers/PageTransition";
 
 export default async function StorefrontLayout({
   children,
@@ -18,9 +20,13 @@ export default async function StorefrontLayout({
   return (
     <>
       <AnnouncementManager announcements={announcements || []} />
-      <StorefrontWrapper categories={categories || []}>
-        {children}
-      </StorefrontWrapper>
+      <SmoothScrollProvider>
+        <StorefrontWrapper categories={categories || []}>
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </StorefrontWrapper>
+      </SmoothScrollProvider>
     </>
   );
 }

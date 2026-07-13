@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateStoreSettings, updateEmail, updatePassword } from '@/lib/actions/settings'
+import { updateStoreSettings, updateEmail, updatePassword, uploadHeroBanner } from '@/lib/actions/settings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +12,13 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
 
   const [securityLoading, setSecurityLoading] = useState(false)
   const [securityMessage, setSecurityMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const [bannerLoading, setBannerLoading] = useState(false)
+  const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const [marqueeContent, setMarqueeContent] = useState(initialSettings?.marquee_content || '✦ Shop the Exclusive Bridal Collection ✦ Free Worldwide Shipping ✦')
+  const [marqueeSpeed, setMarqueeSpeed] = useState(initialSettings?.marquee_speed || '25')
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
 
   const handleStoreSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,11 +31,15 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
     const razorpayKeyId = formData.get('razorpay_key_id') as string
     const razorpayKeySecret = formData.get('razorpay_key_secret') as string
     const codEnabled = formData.get('cod_enabled') as string
+    const newMarqueeContent = formData.get('marquee_content') as string
+    const newMarqueeSpeed = formData.get('marquee_speed') as string
 
     if (
       razorpayKeyId === (initialSettings?.razorpay_key_id || '') &&
       razorpayKeySecret === (initialSettings?.razorpay_key_secret || '') &&
-      codEnabled === (initialSettings?.cod_enabled || 'false')
+      codEnabled === (initialSettings?.cod_enabled || 'false') &&
+      newMarqueeContent === (initialSettings?.marquee_content || '') &&
+      newMarqueeSpeed === (initialSettings?.marquee_speed || '')
     ) {
       setStoreMessage({ type: 'success', text: 'No changes to save.' })
       setStoreLoading(false)
@@ -81,10 +92,91 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
     setSecurityLoading(false)
   }
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setBannerLoading(true)
+    setBannerMessage(null)
+
+    const formData = new FormData()
+    formData.append('hero_banner', file)
+    formData.append('type', type)
+
+    const result = await uploadHeroBanner(formData)
+    if (result.success) {
+      setBannerMessage({ type: 'success', text: `${type === 'desktop' ? 'Desktop' : 'Mobile'} hero banner uploaded successfully!` })
+    } else {
+      setBannerMessage({ type: 'error', text: result.error || 'Failed to upload banner.' })
+    }
+    setBannerLoading(false)
+    e.target.value = '' // Reset input
+  }
+
   return (
     <div className="space-y-12">
+      {/* Storefront Assets Form */}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Storefront Assets</h3>
+          <p className="text-xs font-medium text-gray-500 mb-4">Manage images and assets displayed on your public storefront.</p>
+          
+          <div className="grid gap-4 max-w-xl">
+            <div className="grid gap-2">
+              <Label htmlFor="hero_banner" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Desktop Hero Banner (2.75:1 Ratio)</Label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                {initialSettings?.hero_banner_image && (
+                  <div className="mb-4 w-full h-32 relative rounded-lg overflow-hidden border border-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={initialSettings.hero_banner_image} alt="Current Hero Banner" className="object-cover w-full h-full" />
+                  </div>
+                )}
+                <Input 
+                  id="hero_banner" 
+                  name="hero_banner" 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleBannerUpload(e, 'desktop')}
+                  disabled={bannerLoading}
+                  className="max-w-[250px]"
+                />
+                <p className="text-[10px] text-gray-400 mt-2">Upload a high-resolution landscape image. Image quality will be preserved.</p>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="hero_banner_mobile" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Mobile Hero Banner (3:2 Ratio)</Label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                {initialSettings?.hero_banner_mobile_image && (
+                  <div className="mb-4 w-40 h-40 relative rounded-lg overflow-hidden border border-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={initialSettings.hero_banner_mobile_image} alt="Current Mobile Hero Banner" className="object-cover w-full h-full" />
+                  </div>
+                )}
+                <Input 
+                  id="hero_banner_mobile" 
+                  name="hero_banner_mobile" 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleBannerUpload(e, 'mobile')}
+                  disabled={bannerLoading}
+                  className="max-w-[250px]"
+                />
+                <p className="text-[10px] text-gray-400 mt-2">Upload an image specifically optimized for mobile devices.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {bannerMessage && (
+          <div className={`p-4 rounded-xl text-xs font-bold uppercase tracking-widest ${bannerMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+            {bannerMessage.text}
+          </div>
+        )}
+      </div>
+
       {/* Store Settings Form */}
-      <form onSubmit={handleStoreSubmit} className="space-y-6">
+      <form onSubmit={handleStoreSubmit} className="space-y-6 pt-8 border-t-2 border-gray-50">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Razorpay Configuration</h3>
@@ -112,6 +204,84 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
                   placeholder="Enter secret key"
                   className="rounded-xl border-gray-200"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-100">
+            <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Announcement Marquee</h3>
+            <p className="text-xs font-medium text-gray-500 mb-4">Manage the scrolling text banner below the hero section.</p>
+            
+            <div className="grid gap-6">
+              <div className="grid gap-4 max-w-xl">
+                <div className="grid gap-2">
+                  <Label htmlFor="marquee_content" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Marquee Content</Label>
+                  <Input 
+                    id="marquee_content" 
+                    name="marquee_content" 
+                    value={marqueeContent}
+                    onChange={(e) => setMarqueeContent(e.target.value)}
+                    placeholder="✦ Your text here ✦"
+                    className="rounded-xl border-gray-200"
+                  />
+                  <p className="text-[10px] text-gray-400">Use special characters like ✦ to separate points.</p>
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="marquee_speed" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Scrolling Speed</Label>
+                  <select
+                    id="marquee_speed"
+                    name="marquee_speed"
+                    value={marqueeSpeed}
+                    onChange={(e) => setMarqueeSpeed(e.target.value)}
+                    className="flex h-10 w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7A00] focus:ring-offset-2"
+                  >
+                    <option value="40">Slow</option>
+                    <option value="25">Normal</option>
+                    <option value="15">Fast</option>
+                    <option value="10">Very Fast</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Live Preview Container */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 mt-2">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-600">Live Preview</span>
+                  <div className="flex bg-gray-100 p-1 rounded-lg">
+                    <button 
+                      type="button" 
+                      onClick={() => setPreviewMode('desktop')}
+                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${previewMode === 'desktop' ? 'bg-white shadow-sm text-[#1C1C1C]' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      Desktop
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setPreviewMode('mobile')}
+                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${previewMode === 'mobile' ? 'bg-white shadow-sm text-[#1C1C1C]' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                      Mobile
+                    </button>
+                  </div>
+                </div>
+                <div className={`mx-auto bg-white transition-all duration-300 ${previewMode === 'desktop' ? 'w-full' : 'w-[375px] border-x border-gray-200'}`}>
+                  {/* The Marquee Preview */}
+                  <div className="relative w-full bg-[#5E1218] border-y border-[#4A0D11] overflow-hidden py-3">
+                    <div 
+                      className="flex whitespace-nowrap"
+                      style={{ animation: `marquee ${marqueeSpeed}s linear infinite` }}
+                    >
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className="flex items-center mx-6">
+                          <span className="text-white text-sm font-medium tracking-wider">
+                            {marqueeContent}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

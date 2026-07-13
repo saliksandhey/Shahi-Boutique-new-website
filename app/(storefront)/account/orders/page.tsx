@@ -2,8 +2,6 @@ import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Package } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
 
 export default async function OrdersPage() {
   const user = await requireAuth()
@@ -17,55 +15,51 @@ export default async function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Orders</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Check the status of recent orders, manage returns, and discover similar products.
-        </p>
+      <div className="border-b border-gray-200 pb-4 mb-6">
+        <h2 className="text-lg font-black uppercase tracking-widest text-gray-900">All Orders</h2>
       </div>
 
       <div className="space-y-4">
         {orders && orders.length > 0 ? (
           orders.map((order) => (
-            <div key={order.id} className="rounded-lg border border-gray-200 bg-white">
-              <div className="flex flex-wrap items-center justify-between border-b border-gray-200 p-4 sm:p-6 bg-gray-50/50">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 w-full sm:w-auto">
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Order Number</dt>
-                    <dd className="mt-1 text-sm font-semibold text-gray-900">#{order.order_number}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Date placed</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Total amount</dt>
-                    <dd className="mt-1 text-sm font-medium text-gray-900">₹{order.total_amount}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Status</dt>
-                    <dd className="mt-1">
-                      <Badge variant="outline" className="uppercase text-xs">{order.order_status}</Badge>
-                    </dd>
-                  </div>
+            <div key={order.id} className="group border border-gray-100 hover:border-[#111111] rounded-2xl p-6 transition-all duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
+                    {new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </span>
+                  <p className="text-sm font-black tracking-wide text-gray-900">Order #{order.order_number}</p>
                 </div>
-                <div className="mt-4 w-full sm:mt-0 sm:w-auto flex justify-end">
-                  <Link href={`/account/orders/${order.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                    View Order
+
+                <div className="flex flex-col sm:items-end">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Total</span>
+                  <div className="text-sm font-black text-[#111111]">₹{order.total_amount}</div>
+                </div>
+
+                <div className="flex flex-col sm:items-end">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Status</span>
+                  <span className="inline-flex items-center rounded-full bg-[#111111] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-white">
+                    {order.order_status}
+                  </span>
+                </div>
+
+                <div className="mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-gray-100">
+                  <Link href={`/account/orders/${order.id}`} className="inline-flex items-center justify-center rounded-full border-2 border-[#111111] px-6 py-2 text-[10px] font-bold uppercase tracking-widest text-[#111111] hover:bg-[#111111] hover:text-white transition-colors w-full sm:w-auto">
+                    View Details
                   </Link>
                 </div>
+
               </div>
             </div>
           ))
         ) : (
-          <div className="rounded-md border border-gray-200 bg-white p-8 text-center">
-            <Package className="mx-auto h-8 w-8 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders</h3>
-            <p className="mt-1 text-sm text-gray-500">You haven't placed any orders yet.</p>
+          <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-12 text-center">
+            <Package className="mx-auto h-8 w-8 text-gray-300 mb-4" strokeWidth={1.5} />
+            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 mb-2">No orders</h3>
+            <p className="text-xs text-gray-500 font-medium mb-6">You haven't placed any orders yet.</p>
             <div className="mt-6">
-              <Link href="/" className="inline-flex items-center rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">
+              <Link href="/shop" className="inline-flex items-center rounded-full bg-[#111111] px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-gray-800 transition-colors">
                 Start shopping
               </Link>
             </div>

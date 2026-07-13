@@ -1,5 +1,7 @@
-import { CheckoutClient } from '@/components/storefront/CheckoutClient'
+import { CheckoutClient } from '@/components/storefront/CheckoutClient'
 import { getStoreSettings } from '@/lib/actions/settings'
+import { requireAuth } from '@/lib/auth'
+import { createAdminClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -8,12 +10,23 @@ export const metadata: Metadata = {
 }
 
 export default async function CheckoutPage() {
+  const user = await requireAuth('/checkout')
   const settings = await getStoreSettings()
   
   // Fetch checkout notice
   const { getActiveAnnouncements } = await import('@/lib/actions/announcements')
   const announcements = await getActiveAnnouncements()
   const checkoutNotice = announcements.find((a: any) => a.display_type === 'CHECKOUT_NOTICE')
+
+  const supabase = createAdminClient()
+  
+  // Fetch Saved Addresses
+  const { data: savedAddresses } = await supabase
+    .from('addresses')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: false })
   
   return (
     <div className="bg-white min-h-screen pb-16 md:pb-32">
@@ -43,6 +56,8 @@ export default async function CheckoutPage() {
         <CheckoutClient 
           codEnabled={settings.cod_enabled === 'true'} 
           razorpayKeyId={settings.razorpay_key_id || ''} 
+          savedAddresses={savedAddresses || []}
+          userEmail={user.email}
         />
       </div>
     </div>

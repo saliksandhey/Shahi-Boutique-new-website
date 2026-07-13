@@ -4,6 +4,7 @@ import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { AddToCart } from '@/components/storefront/AddToCart'
 import { ProductGrid } from '@/components/storefront/ProductGrid'
 import { ReviewCarousel } from '@/components/storefront/ReviewCarousel'
+import { PotliShowcase } from '@/components/storefront/PotliShowcase'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -101,7 +102,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </h1>
             
             <div className="flex items-center gap-4 mb-8">
-              {product.sale_price ? (
+              {product.is_enquiry_only ? (
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Starting from</span>
+                  <p className="text-3xl font-black text-gray-900">₹{product.price.toFixed(2)}</p>
+                </div>
+              ) : product.sale_price ? (
                 <>
                   <p className="text-3xl font-black text-[#FF7A00]">₹{product.sale_price.toFixed(2)}</p>
                   <p className="text-xl font-bold text-gray-400 line-through decoration-2">₹{product.price.toFixed(2)}</p>
@@ -180,6 +186,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </h2>
             </div>
             <ReviewCarousel reviews={reviews} />
+          </div>
+        )}
+
+        {/* Potli Showcase for Potli category products */}
+        {product.categories?.slug === 'potli' && (
+          <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-gray-100">
+            <PotliShowcase hideHeader={true} />
           </div>
         )}
 

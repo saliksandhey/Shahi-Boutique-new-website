@@ -14,9 +14,12 @@ import {
   Star, 
   Settings,
   ArrowLeft,
-  Megaphone
+  Megaphone,
+  MessageSquare,
+  PenTool
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Calendar } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -26,6 +29,9 @@ const navigation = [
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
+  { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+  { name: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
+  { name: 'Feed', href: '/admin/blogs', icon: PenTool },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
@@ -34,17 +40,17 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-100 bg-white px-6 pb-4">
-        <div className="flex h-20 shrink-0 items-center border-b border-gray-100 mb-2">
-          <Link href="/admin" className="text-2xl font-heading font-black uppercase tracking-widest text-gray-900 hover:text-[#FF7A00] transition-colors">
-            SHAHI ADMIN
+    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
+      <div className="flex grow flex-col overflow-y-auto border-r border-gray-200 bg-white px-4 pb-4">
+        <div className="flex h-16 shrink-0 items-center mb-4 px-2">
+          <Link href="/admin" className="text-xl font-heading font-black tracking-widest text-[#09090B] hover:opacity-70 transition-opacity">
+            SHAHI
           </Link>
         </div>
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
             <li>
-              <ul role="list" className="-mx-2 space-y-1">
+              <ul role="list" className="space-y-1">
                 {navigation.map((item) => {
                   const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                   return (
@@ -53,15 +59,15 @@ export function Sidebar() {
                         href={item.href}
                         className={cn(
                           isActive
-                            ? 'bg-[#1C1C1C] text-white shadow-md'
-                            : 'text-gray-500 hover:text-[#FF7A00] hover:bg-[#FF7A00]/10',
-                          'group flex gap-x-4 rounded-full p-3.5 text-xs leading-6 font-black uppercase tracking-widest transition-all duration-300'
+                            ? 'bg-gray-100 text-[#09090B] font-semibold'
+                            : 'text-gray-500 hover:text-[#09090B] hover:bg-gray-50 font-medium',
+                          'group flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm transition-colors'
                         )}
                       >
                         <item.icon
                           className={cn(
-                            isActive ? 'text-[#FF7A00]' : 'text-gray-400 group-hover:text-[#FF7A00]',
-                            'h-5 w-5 shrink-0 transition-colors duration-300'
+                            isActive ? 'text-[#09090B]' : 'text-gray-400 group-hover:text-[#09090B]',
+                            'h-4 w-4 shrink-0 transition-colors'
                           )}
                           aria-hidden="true"
                         />
@@ -75,13 +81,13 @@ export function Sidebar() {
           </ul>
         </nav>
         
-        <div className="mt-auto pb-4 space-y-3 pt-4 border-t border-gray-100">
+        <div className="mt-auto pb-2 space-y-1 pt-4 border-t border-gray-100">
           <Link
             href="/"
-            className="group flex items-center gap-x-3 rounded-full p-3 text-xs uppercase tracking-widest leading-6 font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300"
+            className="group flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:text-[#09090B] hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft
-              className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-gray-900 transition-colors"
+              className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-[#09090B] transition-colors"
               aria-hidden="true"
             />
             Back to Store
@@ -89,7 +95,7 @@ export function Sidebar() {
           <form action={adminLogout}>
             <button
               type="submit"
-              className="w-full group flex items-center gap-x-3 rounded-full p-3 text-xs uppercase tracking-widest leading-6 font-bold text-red-500 hover:text-white hover:bg-red-500 transition-all duration-300 shadow-sm"
+              className="w-full group flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
             >
               Sign Out
             </button>
