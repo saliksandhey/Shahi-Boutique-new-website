@@ -5,7 +5,7 @@ import {
   Shirt, Palette, Wand2, Brush, Crosshair, Stars, Flower2, Droplets
 } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 
 const services = [
   { title: "Bridal Suit Stitching", icon: Sparkles, desc: "Exquisite craftsmanship for your big day.", colSpan: "lg:col-span-2", bg: "bg-[#FDF4EB]" },
@@ -20,7 +20,7 @@ const services = [
 ]
 
 export function ServicesGrid() {
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -28,7 +28,7 @@ export function ServicesGrid() {
     }
   }
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   }
