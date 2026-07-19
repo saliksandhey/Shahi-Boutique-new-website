@@ -26,8 +26,8 @@ const greatVibes = Great_Vibes({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Boutique",
-    default: "Boutique - Premium Fashion & Accessories",
+    template: "%s | Shahi Boutique",
+    default: "Shahi Boutique - Premium Fashion & Accessories",
   },
   description: "Shop the latest premium fashion collections.",
 };

@@ -7,7 +7,7 @@ import { HomeFeedSection } from '@/components/storefront/HomeFeedSection'
 import { WhyChooseUs } from '@/components/storefront/WhyChooseUs'
 import { WorldwideDelivery } from '@/components/storefront/WorldwideDelivery'
 import { CustomerReviews } from '@/components/storefront/CustomerReviews'
-import { Newsletter } from '@/components/storefront/Newsletter'
+import { AppointmentBanner } from '@/components/storefront/AppointmentBanner'
 
 export const revalidate = 60
 
@@ -18,6 +18,14 @@ export default async function HomePage() {
   const heroBannerMobileUrl = settings?.hero_banner_mobile_image
   const marqueeContent = settings?.marquee_content
   const marqueeSpeed = settings?.marquee_speed
+  
+  let heroSlides = []
+  try {
+    heroSlides = JSON.parse(settings?.hero_slider_slides || '[]')
+  } catch (e) {
+    heroSlides = []
+  }
+  const heroInterval = parseInt(settings?.hero_slider_interval || '5', 10)
 
   // Fetch All Active Products for New Arrivals
   const { data: recentProducts } = await supabase.from('products')
@@ -43,6 +51,8 @@ export default async function HomePage() {
         heroBannerMobileUrl={heroBannerMobileUrl} 
         marqueeContent={marqueeContent}
         marqueeSpeed={marqueeSpeed}
+        slides={heroSlides}
+        intervalSecs={heroInterval}
       />
 
       {/* Services Section */}
@@ -63,8 +73,8 @@ export default async function HomePage() {
       {/* Section 7: Customer Reviews */}
       <CustomerReviews />
 
-      {/* Section 8: Newsletter */}
-      <Newsletter />
+      {/* Section 8: Appointment Banner (Replaced Newsletter) */}
+      <AppointmentBanner />
       
       {/* Section 10: Footer is in layout.tsx */}
     </div>

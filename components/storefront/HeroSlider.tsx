@@ -1,60 +1,162 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
 
-export function HeroSlider({ banners }: { banners: any[] }) {
-  const [current, setCurrent] = useState(0)
+export type Slide = {
+  id: string;
+  desktopUrl: string;
+  mobileUrl: string;
+  link: string;
+}
+
+interface HeroSliderProps {
+  slides: Slide[];
+  intervalSecs: number;
+}
+
+const swipeConfidenceThreshold = 10000
+const swipePower = (offset: number, velocity: number) => {
+  return Math.abs(offset) * velocity
+}
+
+export function HeroSlider({ slides, intervalSecs }: HeroSliderProps) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+
+  const nextSlide = useCallback(() => {
+    setDirection(1)
+    setCurrentIndex((prevIndex) => (prevIndex === slides.length - 1 ? 0 : prevIndex + 1))
+  }, [slides.length])
+
+  const prevSlide = useCallback(() => {
+    setDirection(-1)
+    setCurrentIndex((prevIndex) => (prevIndex === 0 ? slides.length - 1 : prevIndex - 1))
+  }, [slides.length])
 
   useEffect(() => {
-    if (!banners?.length) return
-    const timer = setInterval(() => {
-      setCurrent(prev => (prev + 1) % banners.length)
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [banners])
+    if (slides.length <= 1 || isHovered) return
 
-  if (!banners?.length) return null
+    const intervalId = setInterval(nextSlide, intervalSecs * 1000)
+    return () => clearInterval(intervalId)
+  }, [slides.length, intervalSecs, isHovered, nextSlide])
+
+  if (!slides || slides.length === 0) {
+    return null // Return null or a fallback banner if no slides exist
+  }
+
+  const slideVariants = {
+    initial: (dir: number) => ({
+      x: dir > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+    animate: {
+      x: 0,
+      opacity: 1,
+      transition: { duration: 0.6, ease: [0.33, 1, 0.68, 1] }
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? '-100%' : '100%',
+      opacity: 0,
+      transition: { duration: 0.6, ease: [0.33, 1, 0.68, 1] }
+    }),
+  }
 
   return (
-    <div className="relative w-full h-[70vh] md:h-[85vh] overflow-hidden bg-stone-900 group">
-      {banners.map((banner, index) => (
-        <div
-          key={banner.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${index === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-        >
-          <Image 
-            src={banner.image} 
-            alt={banner.title || 'Banner'} 
-            fill 
-            priority={index === 0}
-            className="object-cover opacity-70" 
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            {banner.subtitle && <span className="text-white text-sm md:text-base font-medium tracking-[0.2em] uppercase mb-4 block animate-fade-in-up">{banner.subtitle}</span>}
-            {banner.title && <h1 className="text-white font-serif text-4xl md:text-6xl lg:text-7xl mb-8 animate-fade-in-up delay-100 max-w-4xl">{banner.title}</h1>}
-            {banner.button_text && banner.button_link && (
-              <Link href={banner.button_link} className="bg-white text-black px-8 py-3 text-sm font-medium uppercase tracking-widest hover:bg-stone-200 transition-colors animate-fade-in-up delay-200">
-                {banner.button_text}
+    <div 
+      className="relative w-full overflow-hidden bg-[#F8F9FA]"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative w-full aspect-[3/2] md:aspect-[2.75/1]">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={slideVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x)
+
+              if (swipe < -swipeConfidenceThreshold) {
+                nextSlide()
+              } else if (swipe > swipeConfidenceThreshold) {
+                prevSlide()
+              }
+            }}
+            className="absolute inset-0 w-full h-full touch-pan-y"
+          >
+            {slides[currentIndex].link ? (
+              <Link href={slides[currentIndex].link} className="block w-full h-full relative cursor-pointer">
+                <picture className="w-full h-full block">
+                  {/* Mobile Image */}
+                  <source media="(max-width: 768px)" srcSet={slides[currentIndex].mobileUrl || slides[currentIndex].desktopUrl} />
+                  {/* Desktop Image */}
+                  <img 
+                    src={slides[currentIndex].desktopUrl || slides[currentIndex].mobileUrl} 
+                    alt={`Slide ${currentIndex + 1}`} 
+                    className="w-full h-full object-cover object-center pointer-events-none"
+                  />
+                </picture>
               </Link>
+            ) : (
+              <div className="w-full h-full relative">
+                <picture className="w-full h-full block">
+                  <source media="(max-width: 768px)" srcSet={slides[currentIndex].mobileUrl || slides[currentIndex].desktopUrl} />
+                  <img 
+                    src={slides[currentIndex].desktopUrl || slides[currentIndex].mobileUrl} 
+                    alt={`Slide ${currentIndex + 1}`} 
+                    className="w-full h-full object-cover object-center pointer-events-none"
+                  />
+                </picture>
+              </div>
             )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation Arrows (Desktop Only) */}
+        {slides.length > 1 && (
+          <>
+            <button 
+              onClick={prevSlide}
+              className={`hidden md:block absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/70 text-black p-2 sm:p-3 rounded-full backdrop-blur-sm transition-all duration-300 z-10 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+            
+            <button 
+              onClick={nextSlide}
+              className={`hidden md:block absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/70 text-black p-2 sm:p-3 rounded-full backdrop-blur-sm transition-all duration-300 z-10 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+              aria-label="Next slide"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          </>
+        )}
+
+        {/* Slide Indicators */}
+        {slides.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 z-10">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`transition-all duration-300 rounded-full h-1.5 sm:h-2 ${currentIndex === index ? 'w-6 sm:w-8 bg-white' : 'w-1.5 sm:w-2 bg-white/50 hover:bg-white/80'}`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
-        </div>
-      ))}
-      
-      {banners.length > 1 && (
-        <>
-          <button onClick={() => setCurrent(prev => (prev - 1 + banners.length) % banners.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 text-white/50 hover:text-white transition-colors opacity-0 group-hover:opacity-100 hidden md:block">
-            <ChevronLeft className="w-8 h-8" />
-          </button>
-          <button onClick={() => setCurrent(prev => (prev + 1) % banners.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 text-white/50 hover:text-white transition-colors opacity-0 group-hover:opacity-100 hidden md:block">
-            <ChevronRight className="w-8 h-8" />
-          </button>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }

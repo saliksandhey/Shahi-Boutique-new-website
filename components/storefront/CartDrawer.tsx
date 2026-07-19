@@ -7,13 +7,90 @@ import { useCartStore } from '@/store/cart-store'
 import { X, Trash2, ShoppingBag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { getUpsellProducts } from '@/lib/actions/products'
+import { Clock } from 'lucide-react'
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal } = useCartStore()
+  const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
   const router = useRouter()
   const [showLoginSheet, setShowLoginSheet] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [upsellItems, setUpsellItems] = useState<any[]>([])
+  const [countdown, setCountdown] = useState<string>('')
+  const [upsellPhase, setUpsellPhase] = useState<'flash' | 'last-chance' | 'expired'>('flash')
+
+  // Fetch real products for upsell
+  useEffect(() => {
+    if (isOpen && upsellItems.length === 0) {
+      getUpsellProducts().then(data => {
+        if (data && data.length > 0) {
+          // Filter out items already in cart
+          const cartProductIds = items.map(item => item.productId)
+          const availableUpsells = data.filter((p: any) => !cartProductIds.includes(p.id))
+          
+          // Select top 2
+          const selected = availableUpsells.slice(0, 2).map((p: any) => {
+            const primaryImage = p.product_images?.find((img: any) => img.is_primary)?.url || p.product_images?.[0]?.url || ''
+            const salePrice = p.sale_price ? Number(p.sale_price) : 0
+            const regularPrice = p.price ? Number(p.price) : 0
+            const basePrice = salePrice > 0 ? salePrice : regularPrice
+            return {
+              id: p.id,
+              productId: p.id,
+              name: p.name,
+              price: basePrice,
+              salePrice: basePrice * 0.9, // 10% off the offer price
+              image: primaryImage,
+              quantity: 1,
+              color: p.fabric || 'Special',
+            }
+          })
+          setUpsellItems(selected)
+        }
+      }).catch(() => {})
+    }
+  }, [isOpen, items])
+
+  // Countdown timer logic
+  useEffect(() => {
+    let startTime = localStorage.getItem('upsell_start_time')
+    if (!startTime) {
+      startTime = Date.now().toString()
+      localStorage.setItem('upsell_start_time', startTime)
+    }
+
+    const updateTimer = () => {
+      const now = Date.now()
+      const elapsed = now - parseInt(startTime!)
+      const phase1Duration = 10 * 60 * 1000 // 10 mins
+      const phase2Duration = 1 * 60 * 1000 // 1 min
+
+      if (elapsed < phase1Duration) {
+        // Flash Phase
+        const diff = phase1Duration - elapsed
+        const m = Math.floor(diff / 60000)
+        const s = Math.floor((diff % 60000) / 1000)
+        setCountdown(`${m}:${s.toString().padStart(2, '0')}`)
+        setUpsellPhase('flash')
+      } else if (elapsed < phase1Duration + phase2Duration) {
+        // Last Chance Phase
+        const diff = (phase1Duration + phase2Duration) - elapsed
+        const m = Math.floor(diff / 60000)
+        const s = Math.floor((diff % 60000) / 1000)
+        setCountdown(`${m}:${s.toString().padStart(2, '0')}`)
+        setUpsellPhase('last-chance')
+      } else {
+        // Expired Phase
+        setCountdown('0:00')
+        setUpsellPhase('expired')
+      }
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Prevent background scrolling when cart is open
   useEffect(() => {
@@ -91,6 +168,8 @@ export function CartDrawer() {
     }
   }
 
+  const displayUpsells = upsellItems.filter(ui => !items.some(ci => ci.productId === ui.productId))
+
   if (!isOpen) return null
 
   return (
@@ -102,10 +181,13 @@ export function CartDrawer() {
       />
       
       {/* Drawer */}
-      <div className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div 
+        data-lenis-prevent
+        className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
+      >
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-6 border-b border-gray-100 shrink-0">
           <h2 className="text-2xl font-black font-sans tracking-tighter uppercase text-gray-900">Your Cart</h2>
           <button 
             onClick={closeCart}
@@ -115,8 +197,8 @@ export function CartDrawer() {
           </button>
         </div>
 
-        {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Cart Body - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-6" data-lenis-prevent>
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
               <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center">
@@ -135,6 +217,7 @@ export function CartDrawer() {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Actual Cart Items */}
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative w-24 h-32 bg-gray-50 rounded-2xl overflow-hidden shrink-0">
@@ -187,22 +270,79 @@ export function CartDrawer() {
                   </div>
                 </div>
               ))}
+
+              {/* End of Cart Items */}
+
+              {/* Upsell Cards in Scrollable Area */}
+              {displayUpsells.length > 0 && (
+                <div className="mt-8 border-t border-gray-100 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className={`text-xs font-black uppercase tracking-widest ${upsellPhase === 'expired' ? 'text-gray-400' : 'text-gray-900'}`}>
+                      {upsellPhase === 'flash' ? 'Flash Offer: 10% OFF' : upsellPhase === 'last-chance' ? 'Last Chance: 10% OFF' : 'Offer Expired'}
+                    </h3>
+                    <div className={`flex items-center gap-1.5 text-white px-2 py-1 rounded text-[10px] font-bold ${
+                      upsellPhase === 'flash' ? 'bg-[#FF7A00]' : upsellPhase === 'last-chance' ? 'bg-red-600 animate-pulse' : 'bg-gray-400'
+                    }`}>
+                      <Clock className="w-3 h-3" />
+                      <span>{countdown}</span>
+                    </div>
+                  </div>
+                  
+                  <div className={`grid grid-cols-2 gap-3 transition-all duration-700 ${upsellPhase === 'expired' ? 'opacity-50 grayscale' : ''}`}>
+                    {displayUpsells.map((upsell) => (
+                      <div key={upsell.id} className={`border rounded-xl relative overflow-hidden bg-white transition-colors ${
+                        upsellPhase === 'expired' ? 'border-gray-100 pointer-events-none' : 'border-gray-200 group hover:border-[#FF7A00]'
+                      }`}>
+                        <div className="flex flex-col p-2 h-full">
+                          <div className="relative w-full aspect-[4/5] bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100 mb-2">
+                            <Image src={upsell.image} alt={upsell.name} fill className="object-cover object-center" sizes="(max-width: 768px) 50vw, 33vw" />
+                          </div>
+                          <div className="flex flex-col flex-1 justify-between">
+                            <h4 className="font-bold text-gray-900 text-[11px] leading-tight line-clamp-2 min-h-[30px]">{upsell.name}</h4>
+                            <div className="flex flex-col gap-2 mt-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none flex items-center ${
+                                  upsellPhase === 'expired' ? 'bg-gray-400' : upsellPhase === 'last-chance' ? 'bg-red-600' : 'bg-[#FF7A00]'
+                                }`}>
+                                  ₹{upsell.salePrice.toFixed(0)}
+                                </span>
+                                <span className="text-[9px] text-gray-400 line-through font-medium">
+                                  ₹{upsell.price.toFixed(0)}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => addItem(upsell)}
+                                disabled={upsellPhase === 'expired'}
+                                className={`w-full text-[10px] font-bold uppercase tracking-widest text-white py-1.5 px-2 rounded-full transition-colors ${
+                                  upsellPhase === 'expired' ? 'bg-gray-300' : 'bg-[#111111] hover:bg-[#FF7A00]'
+                                }`}
+                              >
+                                {upsellPhase === 'expired' ? 'Expired' : 'Add'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t border-gray-100 p-6 bg-white space-y-6">
+          <div className="border-t border-gray-100 p-4 bg-white space-y-3 shrink-0">
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold uppercase tracking-widest text-xs">Subtotal</span>
-              <span className="font-black text-2xl">₹{getSubtotal().toFixed(2)}</span>
+              <span className="font-black text-xl">₹{getSubtotal().toFixed(2)}</span>
             </div>
-            <p className="text-xs text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
+            <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 
               onClick={handleCheckoutClick}
               disabled={isCheckingAuth}
-              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-14 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-lg disabled:opacity-50"
+              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-12 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-md disabled:opacity-50 mt-1"
             >
               {isCheckingAuth ? 'Processing...' : 'Proceed to Checkout'}
             </button>

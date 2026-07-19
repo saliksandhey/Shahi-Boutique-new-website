@@ -61,7 +61,7 @@ export function ServicesHero() {
             <motion.div variants={itemVariants} className="mt-10 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="/contact"
+                  href="/book-appointment"
                   className="group relative flex items-center justify-center rounded-full bg-[#111111] px-8 py-4 text-base font-bold uppercase tracking-widest text-white overflow-hidden transition-all hover:scale-105 shadow-xl"
                 >
                   <span className="relative z-10 flex items-center">

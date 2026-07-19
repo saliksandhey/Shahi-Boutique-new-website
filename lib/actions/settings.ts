@@ -30,13 +30,17 @@ export async function updateStoreSettings(formData: FormData) {
   const codEnabled = formData.get('cod_enabled') as string
   const marqueeContent = formData.get('marquee_content') as string
   const marqueeSpeed = formData.get('marquee_speed') as string
+  const heroSliderInterval = formData.get('hero_slider_interval') as string
+  const heroSliderSlides = formData.get('hero_slider_slides') as string
   
   const updates = [
     { key: 'razorpay_key_id', value: razorpayKeyId },
     { key: 'razorpay_key_secret', value: razorpayKeySecret },
     { key: 'cod_enabled', value: codEnabled },
     { key: 'marquee_content', value: marqueeContent },
-    { key: 'marquee_speed', value: marqueeSpeed }
+    { key: 'marquee_speed', value: marqueeSpeed },
+    { key: 'hero_slider_interval', value: heroSliderInterval },
+    { key: 'hero_slider_slides', value: heroSliderSlides }
   ]
   
   for (const item of updates) {
@@ -55,6 +59,38 @@ export async function updateStoreSettings(formData: FormData) {
   }
   
   revalidatePath('/admin/settings')
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
+export async function updateBannerSettings(formData: FormData) {
+  const supabase = await createAdminClient()
+  
+  const heroSliderInterval = formData.get('hero_slider_interval') as string
+  const heroSliderSlides = formData.get('hero_slider_slides') as string
+  
+  const updates = [
+    { key: 'hero_slider_interval', value: heroSliderInterval },
+    { key: 'hero_slider_slides', value: heroSliderSlides }
+  ]
+  
+  for (const item of updates) {
+    if (item.value !== null && item.value !== undefined) {
+      const { error } = await supabase
+        .from('store_settings')
+        .upsert(
+          { key: item.key, value: item.value },
+          { onConflict: 'key' }
+        )
+        
+      if (error) {
+        return { success: false, error: `Failed to update ${item.key}: ${error.message}` }
+      }
+    }
+  }
+  
+  revalidatePath('/admin/banners')
+  revalidatePath('/', 'layout')
   return { success: true }
 }
 
@@ -106,6 +142,38 @@ export async function uploadHeroBanner(formData: FormData) {
 
   revalidatePath('/')
   revalidatePath('/admin/settings')
+  return { success: true, url: publicUrlData.publicUrl }
+}
+
+export async function uploadImage(formData: FormData) {
+  const supabase = await createAdminClient()
+  const file = formData.get('image') as File
+  
+  if (!file || file.size === 0) {
+    return { error: 'No file provided' }
+  }
+
+  const fileExt = file.name.includes('.') ? file.name.split('.').pop() : 'jpg'
+  const filePath = `uploads/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  const { error: uploadError } = await supabase.storage
+    .from('product-images')
+    .upload(filePath, buffer, {
+      contentType: file.type || 'image/jpeg',
+      upsert: true
+    })
+
+  if (uploadError) {
+    return { error: uploadError.message }
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(filePath)
+
   return { success: true, url: publicUrlData.publicUrl }
 }
 

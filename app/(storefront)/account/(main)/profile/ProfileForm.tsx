@@ -50,39 +50,39 @@ export function ProfileForm({ initialName, initialPhone, email }: { initialName:
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Personal Information</CardTitle>
+    <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
+      <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-6">
+        <CardTitle className="text-xl tracking-tighter">Personal Information</CardTitle>
         <CardDescription>Update your personal details.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
-            <Input id="full_name" {...form.register('full_name')} />
+      <CardContent className="pt-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="full_name" className="text-xs font-bold uppercase tracking-widest text-gray-500">Full Name</Label>
+            <Input id="full_name" {...form.register('full_name')} className="h-12 rounded-xl bg-gray-50/50 border-gray-200" />
             {form.formState.errors.full_name && (
               <p className="text-sm text-red-500">{form.formState.errors.full_name.message}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} disabled />
-            <p className="text-xs text-gray-500">Your email cannot be changed here.</p>
+          <div className="space-y-3">
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500">Email</Label>
+            <Input id="email" type="email" value={email} disabled className="h-12 rounded-xl bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed" />
+            <p className="text-xs text-gray-400 font-medium">Your email cannot be changed here.</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input id="phone" {...form.register('phone')} />
+          <div className="space-y-3">
+            <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</Label>
+            <Input id="phone" {...form.register('phone')} className="h-12 rounded-xl bg-gray-50/50 border-gray-200" />
             {form.formState.errors.phone && (
               <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
             )}
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          {success && <p className="text-sm text-green-600">{success}</p>}
+          {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
+          {success && <p className="text-sm text-green-600 font-medium">{success}</p>}
 
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} className="w-full h-14 rounded-full font-bold uppercase tracking-widest text-xs mt-4">
             {saving ? 'Saving...' : 'Save changes'}
           </Button>
         </form>

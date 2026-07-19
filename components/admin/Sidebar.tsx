@@ -33,6 +33,7 @@ const navigation = [
   { name: 'Enquiries', href: '/admin/enquiries', icon: MessageSquare },
   { name: 'Feed', href: '/admin/blogs', icon: PenTool },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+  { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 

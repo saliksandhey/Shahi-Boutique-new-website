@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Search, Heart, MessageCircle, Share2, Play, LayoutGrid, Image as ImageIcon, Film } from 'lucide-react'
-import { QuickViewModal } from './QuickViewModal'
 import { FeedVideo } from '@/components/storefront/FeedVideo'
 
 const categories = [
@@ -22,7 +21,7 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeMediaType, setActiveMediaType] = useState('All') // All, Images, Videos
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPost, setSelectedPost] = useState<any>(null)
+  const [shuffledBlogs, setShuffledBlogs] = useState<any[]>([])
 
   const isVideoPost = (blog: any) => {
     const cover = blog.cover_image || ''
@@ -30,9 +29,23 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
     return cover.match(/\.(mp4|webm|mov)$/i) || text.includes('youtube.com') || text.includes('vimeo.com')
   }
 
+  // Shuffle when 'All' is selected or initialBlogs loads
+  useEffect(() => {
+    if (activeMediaType === 'All') {
+      const newArr = [...initialBlogs]
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+      }
+      setShuffledBlogs(newArr)
+    }
+  }, [activeMediaType, initialBlogs])
+
   // Filter Blogs
   const filteredBlogs = useMemo(() => {
-    return initialBlogs.filter(blog => {
+    const baseList = activeMediaType === 'All' && shuffledBlogs.length > 0 ? shuffledBlogs : initialBlogs
+
+    return baseList.filter((blog: any) => {
       // 1. Search filter
       const searchString = `${blog.title} ${blog.summary} ${blog.tags?.join(' ')}`.toLowerCase()
       const matchesSearch = searchQuery === '' || searchString.includes(searchQuery.toLowerCase())
@@ -47,7 +60,7 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
 
       return matchesSearch && matchesCategory && matchesMedia
     })
-  }, [initialBlogs, activeCategory, searchQuery, activeMediaType])
+  }, [initialBlogs, shuffledBlogs, activeCategory, searchQuery, activeMediaType])
 
   return (
     <div className="w-full">
@@ -128,7 +141,7 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
       <div className="mx-auto max-w-[1400px] px-0 sm:px-6 lg:px-8">
         {/* 4. MASONRY FEED */}
         {filteredBlogs.length > 0 ? (
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 sm:space-y-6">
+          <div className="columns-2 lg:columns-3 xl:columns-4 gap-3 sm:gap-6 space-y-3 sm:space-y-6">
             <AnimatePresence mode="popLayout">
               {filteredBlogs.map((blog, idx) => {
                 const hasVideo = isVideoPost(blog)
@@ -143,8 +156,8 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
                     transition={{ duration: 0.5, delay: (idx % 10) * 0.05 }}
                     className="break-inside-avoid border-b sm:border-none border-gray-100 pb-6 sm:pb-0 mb-6 sm:mb-0"
                   >
-                    <div 
-                      onClick={() => setSelectedPost(blog)}
+                    <Link 
+                      href={`/feed/${blog.slug}`}
                       className="group block bg-white md:bg-transparent sm:rounded-3xl md:rounded-none overflow-hidden shadow-none sm:shadow-sm md:shadow-none hover:shadow-2xl md:hover:shadow-none transition-all duration-500 sm:border border-gray-100 md:border-none cursor-pointer"
                     >
                       
@@ -177,55 +190,15 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
                             {blog.category}
                           </span>
                         </div>
-                      </div>
-                      
-                      {/* Content Details (Hidden on Desktop) */}
-                      <div className="p-5 md:hidden">
-                        {/* Title (Used as main post heading, though Instagram doesn't have it, we keep it for SEO context) */}
-                        <h3 className="font-heading font-black text-gray-900 text-lg uppercase tracking-widest mb-2 leading-tight">
-                          {blog.title}
-                        </h3>
 
-                        {/* Caption (Summary) */}
-                        <p className="text-sm text-gray-600 font-medium leading-relaxed line-clamp-3 mb-4">
-                          {blog.summary}
-                        </p>
-                        
-                        {/* Hashtags */}
-                        {blog.tags && blog.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-5">
-                            {blog.tags.map((tag: string, i: number) => (
-                              <span key={i} className="text-[#FF7A00] text-xs font-bold hover:underline">
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Feed Actions / Meta */}
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                          <div className="flex items-center gap-4">
-                            <button className="text-gray-400 hover:text-red-500 transition-colors">
-                              <Heart className="w-5 h-5" />
-                            </button>
-                            <button className="text-gray-400 hover:text-blue-500 transition-colors">
-                              <MessageCircle className="w-5 h-5" />
-                            </button>
-                            <button className="text-gray-400 hover:text-green-500 transition-colors">
-                              <Share2 className="w-5 h-5" />
-                            </button>
-                          </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                            {new Date(blog.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {/* Hover Overlay for clicking */}
+                        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                          <span className="px-4 py-2 bg-white/90 backdrop-blur-md text-gray-900 text-xs font-black uppercase tracking-widest rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                            Quick View
                           </span>
                         </div>
-                        
-                        {/* View Details Hover Overlay (Optional but nice) */}
-                        <div className="mt-4 w-full py-3 bg-gray-50 text-center rounded-xl text-xs font-black uppercase tracking-widest text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          Quick View
-                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </motion.div>
                 )
               })}
@@ -247,9 +220,6 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
           </motion.div>
         )}
       </div>
-
-      {/* 5. QUICK VIEW MODAL */}
-      <QuickViewModal post={selectedPost} onClose={() => setSelectedPost(null)} />
     </div>
   )
 }

@@ -4,49 +4,67 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
+import { HeroSlider, Slide } from './HeroSlider'
+
 export function HeroLuxury({ 
   heroBannerUrl, 
   heroBannerMobileUrl,
   marqueeContent,
-  marqueeSpeed
+  marqueeSpeed,
+  slides,
+  intervalSecs
 }: { 
   heroBannerUrl?: string, 
   heroBannerMobileUrl?: string,
   marqueeContent?: string,
-  marqueeSpeed?: string
+  marqueeSpeed?: string,
+  slides?: Slide[],
+  intervalSecs?: number
 }) {
   const currentDesktopBanner = heroBannerUrl || '/Hero_sec.jpeg'
   const currentMobileBanner = heroBannerMobileUrl || currentDesktopBanner
   
   const displayMarquee = marqueeContent || '✦ Shop the Exclusive Bridal Collection ✦ Free Worldwide Shipping ✦'
   const displaySpeed = marqueeSpeed || '25'
+  
+  // If we have slides from settings, use the slider.
+  // Otherwise fallback to the static images (with the exact aspect ratios).
+  const hasSlides = slides && slides.length > 0;
 
   return (
     <>
-      {/* Desktop Banner (2.75:1 Aspect Ratio) */}
-      <div className="relative w-full mt-[72px] md:mt-[88px] bg-[#F8F9FA] overflow-hidden aspect-[2.75/1] hidden md:block">
-        <Image 
-          src={currentDesktopBanner} 
-          alt="Shahi Boutique Desktop" 
-          fill
-          priority
-          unoptimized={!!heroBannerUrl}
-          sizes="100vw"
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <div className="w-full bg-[#F8F9FA]">
+        {hasSlides ? (
+          <HeroSlider slides={slides} intervalSecs={intervalSecs || 5} />
+        ) : (
+          <>
+            {/* Desktop Banner (2.75:1 Aspect Ratio) */}
+            <div className="relative w-full overflow-hidden aspect-[2.75/1] hidden md:block">
+              <Image 
+                src={currentDesktopBanner} 
+                alt="Shahi Boutique Desktop" 
+                fill
+                priority
+                unoptimized={!!heroBannerUrl}
+                sizes="100vw"
+                className="w-full h-full object-cover"
+              />
+            </div>
 
-      {/* Mobile Banner (3:2 Aspect Ratio) */}
-      <div className="relative w-full mt-[72px] bg-[#F8F9FA] overflow-hidden aspect-[3/2] block md:hidden">
-        <Image 
-          src={currentMobileBanner} 
-          alt="Shahi Boutique Mobile" 
-          fill
-          priority
-          unoptimized={!!heroBannerMobileUrl || !!heroBannerUrl}
-          sizes="100vw"
-          className="w-full h-full object-cover"
-        />
+            {/* Mobile Banner (3:2 Aspect Ratio) */}
+            <div className="relative w-full overflow-hidden aspect-[3/2] block md:hidden">
+              <Image 
+                src={currentMobileBanner} 
+                alt="Shahi Boutique Mobile" 
+                fill
+                priority
+                unoptimized={!!heroBannerMobileUrl || !!heroBannerUrl}
+                sizes="100vw"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Announcement Marquee */}

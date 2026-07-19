@@ -169,10 +169,10 @@ export function ServicesEditorial() {
                   {/* Call to Action */}
                   <div className="mt-12 md:mt-16 w-full sm:w-auto">
                     <Link 
-                      href="/contact" 
+                      href="/book-appointment" 
                       className="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[#111111] px-8 py-4 text-sm font-bold uppercase tracking-widest text-white hover:bg-[#FF7A00] transition-colors duration-300"
                     >
-                      Book Consultation
+                      Book Appointment
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Link>
                   </div>

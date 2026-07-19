@@ -1,10 +1,11 @@
 import { Metadata } from 'next'
-import { getBlogBySlug } from '@/lib/actions/blog'
+import { getBlogBySlug, getPublicBlogs } from '@/lib/actions/blog'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Heart, MessageCircle, Share2, ArrowLeft, MoreHorizontal, Bookmark } from 'lucide-react'
+import { Heart, MessageCircle, Share2, ArrowLeft, MoreHorizontal, Bookmark, Play } from 'lucide-react'
 import Link from 'next/link'
+import { PostInteractions } from './PostInteractions'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -42,15 +43,18 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
     notFound()
   }
 
+  const { data: allBlogs } = await getPublicBlogs(undefined, 5)
+  const relatedBlogs = (allBlogs || []).filter(b => b.id !== blog.id).slice(0, 4)
+
   const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://shahiboutique.com/feed/${blog.slug}`
 
   // Check if content has video links to simulate a video player at top
   const isVideoPost = blog.content?.includes('youtube.com') || blog.content?.includes('vimeo.com') || blog.content?.includes('.mp4')
 
   return (
-    <main className="bg-[#F8F9FA] min-h-screen pt-24 pb-20">
+    <div className="bg-white sm:bg-[#F8F9FA] w-full pb-20">
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-4 sm:mb-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <Link href="/feed" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#FF7A00] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
         </Link>
@@ -80,45 +84,24 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         </div>
 
         {/* MEDIA SECTION */}
-        <div className="relative w-full bg-black/5 flex items-center justify-center overflow-hidden">
+        <div className="relative w-full bg-gray-100 flex items-center justify-center overflow-hidden">
           {blog.cover_image?.match(/\.(mp4|webm|mov)$/i) ? (
             <video 
               src={blog.cover_image}
-              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-contain"
+              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-cover"
               autoPlay loop playsInline controls
             />
           ) : (
             <img 
               src={blog.cover_image || '/placeholder-image.jpg'} 
               alt={blog.title}
-              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-contain"
+              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-cover"
             />
           )}
         </div>
 
         {/* INTERACTION BAR */}
-        <div className="p-6 sm:px-8 border-b border-gray-50">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-5">
-              <button className="text-gray-900 hover:text-red-500 transition-transform hover:scale-110">
-                <Heart className="w-7 h-7" />
-              </button>
-              <button className="text-gray-900 hover:text-blue-500 transition-transform hover:scale-110">
-                <MessageCircle className="w-7 h-7" />
-              </button>
-              <button className="text-gray-900 hover:text-green-500 transition-transform hover:scale-110">
-                <Share2 className="w-7 h-7" />
-              </button>
-            </div>
-            <button className="text-gray-900 hover:text-[#FF7A00] transition-transform hover:scale-110">
-              <Bookmark className="w-7 h-7" />
-            </button>
-          </div>
-          
-          <div className="text-sm font-bold text-gray-900 mb-1">
-            Liked by thousands of fashion lovers
-          </div>
-        </div>
+        <PostInteractions title={blog.title} url={shareUrl} />
 
         {/* CAPTION & HASHTAGS */}
         <div className="p-6 sm:p-8">
@@ -171,6 +154,69 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         </div>
 
       </article>
-    </main>
+
+      {/* Related Posts */}
+      {relatedBlogs.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-heading font-black tracking-widest text-gray-900 uppercase">
+              More From Shahi
+            </h2>
+            <div className="w-12 h-1 bg-[#FF7A00] mx-auto mt-4 rounded-full" />
+          </div>
+
+          <div className="columns-2 lg:columns-4 gap-3 sm:gap-6 space-y-3 sm:space-y-6">
+            {relatedBlogs.map((b) => {
+              const hasVid = b.cover_image?.match(/\.(mp4|webm|mov)$/i)
+              return (
+                <div key={b.id} className="break-inside-avoid border-b sm:border-none border-gray-100 pb-4 sm:pb-0 mb-4 sm:mb-0">
+                  <Link 
+                    href={`/feed/${b.slug}`}
+                    className="group block bg-white md:bg-transparent sm:rounded-3xl md:rounded-none overflow-hidden shadow-none sm:shadow-sm md:shadow-none hover:shadow-xl md:hover:shadow-none transition-all duration-500 sm:border border-gray-100 md:border-none cursor-pointer"
+                  >
+                    <div className="relative overflow-hidden bg-gray-100">
+                      {hasVid ? (
+                        <video 
+                          src={b.cover_image}
+                          className="w-full h-auto min-h-[200px] object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out pointer-events-none"
+                          muted playsInline
+                        />
+                      ) : (
+                        <img 
+                          src={b.cover_image || '/placeholder-image.jpg'} 
+                          alt={b.title}
+                          className="w-full h-auto min-h-[200px] object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/5 md:bg-transparent group-hover:bg-transparent transition-colors duration-500" />
+                      
+                      {hasVid && (
+                        <div className="absolute top-4 right-4 w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                          <Play className="w-4 h-4 ml-0.5" />
+                        </div>
+                      )}
+
+                      <div className="absolute top-4 left-4 md:hidden">
+                        <span className="px-3 py-1.5 bg-white/90 backdrop-blur-md text-gray-900 text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                          {b.category}
+                        </span>
+                      </div>
+
+                      <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <span className="px-4 py-2 bg-white/90 backdrop-blur-md text-gray-900 text-xs font-black uppercase tracking-widest rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                          Quick View
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+    </div>
   )
 }

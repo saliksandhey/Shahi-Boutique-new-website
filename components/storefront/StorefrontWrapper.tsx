@@ -22,7 +22,7 @@ export function StorefrontWrapper({ children, categories }: { children: React.Re
       <Navbar categories={categories} />
       <CartDrawer />
       <SearchDrawer />
-      <main className={`flex-1 ${!isHomepage ? 'pt-[112px]' : ''}`}>
+      <main className="flex-1">
         {children}
       </main>
       <Footer categories={categories} />

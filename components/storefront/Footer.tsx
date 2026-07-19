@@ -61,7 +61,7 @@ export function Footer({ categories }: { categories: any[] }) {
                 <li><Link href="/shop?collection=new" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">New Arrivals</Link></li>
                 <li><Link href="/about" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Our Story</Link></li>
                 <li><Link href="/contact" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Contact Us</Link></li>
-                <li><Link href="/track-order" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Track Order</Link></li>
+
               </ul>
             </div>
 

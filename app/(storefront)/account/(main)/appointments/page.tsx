@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Calendar } from 'lucide-react'
 
 export const metadata = {
-  title: 'My Enquiries | SHAHI',
+  title: 'My Appointments | SHAHI',
   description: 'Track your product enquiries.',
 }
 
@@ -33,7 +33,7 @@ export default async function EnquiriesPage() {
       <div className="flex items-center gap-3">
         <MessageSquare className="w-5 h-5 text-gray-400" />
         <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest text-gray-900">
-          My Enquiries
+          My Appointments
         </h2>
       </div>
 

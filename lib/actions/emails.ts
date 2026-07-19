@@ -28,7 +28,7 @@ export async function sendOrderConfirmationEmail(
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const websiteTrackingUrl = `${siteUrl}/track-order?order_number=${orderNumber}&email=${encodeURIComponent(customerEmail)}`
+    const websiteTrackingUrl = `${siteUrl}/account/orders`
 
     const emailHtml = await render(
       OrderEmail({
@@ -72,7 +72,7 @@ export async function sendOrderStatusEmail(
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const websiteTrackingUrl = `${siteUrl}/track-order?order_number=${orderNumber}&email=${encodeURIComponent(customerEmail)}`
+    const websiteTrackingUrl = `${siteUrl}/account/orders`
 
     const emailHtml = await render(
       OrderEmail({

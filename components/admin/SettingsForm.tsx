@@ -115,69 +115,10 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
 
   return (
     <div className="space-y-12">
-      {/* Storefront Assets Form */}
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Storefront Assets</h3>
-          <p className="text-xs font-medium text-gray-500 mb-4">Manage images and assets displayed on your public storefront.</p>
-          
-          <div className="grid gap-4 max-w-xl">
-            <div className="grid gap-2">
-              <Label htmlFor="hero_banner" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Desktop Hero Banner (2.75:1 Ratio)</Label>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
-                {initialSettings?.hero_banner_image && (
-                  <div className="mb-4 w-full h-32 relative rounded-lg overflow-hidden border border-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={initialSettings.hero_banner_image} alt="Current Hero Banner" className="object-cover w-full h-full" />
-                  </div>
-                )}
-                <Input 
-                  id="hero_banner" 
-                  name="hero_banner" 
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleBannerUpload(e, 'desktop')}
-                  disabled={bannerLoading}
-                  className="max-w-[250px]"
-                />
-                <p className="text-[10px] text-gray-400 mt-2">Upload a high-resolution landscape image. Image quality will be preserved.</p>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="hero_banner_mobile" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Mobile Hero Banner (3:2 Ratio)</Label>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center">
-                {initialSettings?.hero_banner_mobile_image && (
-                  <div className="mb-4 w-40 h-40 relative rounded-lg overflow-hidden border border-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={initialSettings.hero_banner_mobile_image} alt="Current Mobile Hero Banner" className="object-cover w-full h-full" />
-                  </div>
-                )}
-                <Input 
-                  id="hero_banner_mobile" 
-                  name="hero_banner_mobile" 
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleBannerUpload(e, 'mobile')}
-                  disabled={bannerLoading}
-                  className="max-w-[250px]"
-                />
-                <p className="text-[10px] text-gray-400 mt-2">Upload an image specifically optimized for mobile devices.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {bannerMessage && (
-          <div className={`p-4 rounded-xl text-xs font-bold uppercase tracking-widest ${bannerMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-            {bannerMessage.text}
-          </div>
-        )}
-      </div>
-
       {/* Store Settings Form */}
-      <form onSubmit={handleStoreSubmit} className="space-y-6 pt-8 border-t-2 border-gray-50">
-        <div className="space-y-4">
+      <form onSubmit={handleStoreSubmit} className="space-y-12">
+
+        <div className="space-y-4 pt-8 border-t-2 border-gray-50">
           <div>
             <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Razorpay Configuration</h3>
             <p className="text-xs font-medium text-gray-500 mb-4">You can find these in your Razorpay Dashboard under Settings &gt; API Keys.</p>

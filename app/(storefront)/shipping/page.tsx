@@ -104,7 +104,7 @@ export default function ShippingPage() {
                 When your order has shipped, you will receive an email notification from us which will include a tracking number you can use to check its status. Please allow 48 hours for the tracking information to become available. 
               </p>
               <p className="mt-4">
-                You can also use our <a href="/track-order" className="text-[#FF7A00] hover:text-[#1C1C1C] font-bold underline transition-colors">Track Order</a> page to view live updates on your delivery at any time.
+                You can also visit the <a href="/account/orders" className="text-[#FF7A00] hover:text-[#1C1C1C] font-bold underline transition-colors">Orders</a> section in your account to view live updates on your delivery at any time.
               </p>
               <p className="mt-4">
                 If you haven’t received your order within the timeframe indicated on your shipping confirmation email, please contact us at <a href="mailto:contact.shahiboutique@gmail.com" className="font-bold text-gray-900 hover:text-[#FF7A00] transition-colors">contact.shahiboutique@gmail.com</a> with your name and order number, and we will look into it for you.

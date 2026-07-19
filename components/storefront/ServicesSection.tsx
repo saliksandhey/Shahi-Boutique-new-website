@@ -56,8 +56,8 @@ export function ServicesSection() {
   // Desktop hover state
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(0)
   
-  // Mobile accordion state (default open first one)
-  const [mobileExpandedIndex, setMobileExpandedIndex] = useState<number | null>(0)
+  // Mobile accordion state (all closed by default)
+  const [mobileExpandedIndex, setMobileExpandedIndex] = useState<number | null>(null)
 
   return (
     <section className="py-16 md:py-32 bg-white relative overflow-hidden">
@@ -111,11 +111,13 @@ export function ServicesSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
 
                 {/* Content Container */}
-                <div className="absolute inset-0 p-8 flex flex-col justify-between z-10">
+                <div className="absolute inset-0 p-4 xl:p-8 flex flex-col justify-between z-10">
                   
                   {/* Top: Icon */}
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isHovered ? 'bg-white/20 backdrop-blur-md' : 'bg-transparent'} transition-all duration-500`}>
-                    <Icon className={`w-6 h-6 ${service.textColor}`} />
+                  <div className={`flex w-full ${isHovered ? 'justify-start' : 'justify-center'} transition-all duration-500`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isHovered ? 'bg-white/20 backdrop-blur-md' : 'bg-transparent'} transition-all duration-500`}>
+                      <Icon className={`w-6 h-6 ${service.textColor}`} />
+                    </div>
                   </div>
 
                   {/* Bottom: Text & Details */}
@@ -129,9 +131,12 @@ export function ServicesSection() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap -rotate-90 origin-bottom-left"
+                          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
                         >
-                          <span className={`text-2xl font-black uppercase tracking-widest ${service.textColor} opacity-50`}>
+                          <span 
+                            className={`text-2xl xl:text-3xl font-black uppercase tracking-widest ${service.textColor} opacity-60`}
+                            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                          >
                             {service.shortTitle}
                           </span>
                         </motion.div>
@@ -194,21 +199,21 @@ export function ServicesSection() {
                 {/* Accordion Header (Always visible, click to expand) */}
                 <button 
                   onClick={() => setMobileExpandedIndex(isExpanded ? null : index)}
-                  className="w-full flex items-center justify-between p-6 sm:p-8 text-left focus:outline-none relative z-10"
+                  className="w-full flex items-center justify-between p-5 sm:p-6 md:p-8 text-left focus:outline-none relative z-10 gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 bg-white/10 backdrop-blur-md">
-                      <Icon className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-3 md:gap-4 flex-1">
+                    <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors duration-300 bg-white/10 backdrop-blur-md">
+                      <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
-                    <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-white">
+                    <h3 className="text-[1.1rem] leading-[1.1] sm:text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">
                       {service.title}
                     </h3>
                   </div>
                   
                   {/* Plus/Minus Icon */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${isExpanded ? 'border-transparent rotate-45' : 'border-white/30 rotate-0'}`}>
-                    <span className="block w-3 h-[2px] absolute bg-white"></span>
-                    <span className="block h-3 w-[2px] absolute bg-white"></span>
+                  <div className={`shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${isExpanded ? 'border-transparent rotate-45' : 'border-white/30 rotate-0'}`}>
+                    <span className="block w-2.5 h-[2px] absolute bg-white"></span>
+                    <span className="block h-2.5 w-[2px] absolute bg-white"></span>
                   </div>
                 </button>
 

@@ -14,9 +14,9 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Profile</h1>
-        <p className="mt-1 text-sm text-gray-500">
+      <div className="flex flex-col mb-8">
+        <h2 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-[#111111] mb-2">Profile Details</h2>
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
           Manage your personal information.
         </p>
       </div>

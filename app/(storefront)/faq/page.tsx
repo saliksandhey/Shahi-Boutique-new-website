@@ -22,7 +22,7 @@ const faqs = [
   },
   {
     question: "How can I track my order?",
-    answer: "Once your order has shipped, you will receive a shipping confirmation email with a tracking link. You can also use the 'Track Order' link in our navigation menu at any time to see live updates."
+    answer: "Once your order has shipped, you will receive a shipping confirmation email with a tracking link. You can also view live updates in your account's 'Orders' section."
   },
   {
     question: "Are your products truly handmade?",

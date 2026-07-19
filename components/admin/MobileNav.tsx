@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tags, Ticket, Star, Megaphone, Settings, Calendar, MessageSquare, PenTool } from 'lucide-react'
+import { Tags, Ticket, Star, Megaphone, Settings, Calendar, MessageSquare, PenTool, Image as ImageIcon } from 'lucide-react'
 
 const mainTabs = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -33,6 +33,7 @@ const moreTabs = [
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Reviews', href: '/admin/reviews', icon: Star },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+  { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
