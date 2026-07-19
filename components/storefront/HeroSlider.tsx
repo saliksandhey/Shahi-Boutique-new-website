@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, Variants } from 'framer-motion'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -48,7 +48,7 @@ export function HeroSlider({ slides, intervalSecs }: HeroSliderProps) {
     return null // Return null or a fallback banner if no slides exist
   }
 
-  const slideVariants = {
+  const slideVariants: Variants = {
     initial: (dir: number) => ({
       x: dir > 0 ? '100%' : '-100%',
       opacity: 0,
