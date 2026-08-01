@@ -55,6 +55,37 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
     <div className="bg-white sm:bg-[#F8F9FA] w-full pb-20">
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Article JSON-LD Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `${process.env.NEXT_PUBLIC_SITE_URL}/feed/${blog.slug}`
+              },
+              "headline": blog.seo_title || blog.title,
+              "image": blog.cover_image ? [blog.cover_image] : [],
+              "datePublished": new Date(blog.published_at).toISOString(),
+              "dateModified": new Date(blog.updated_at || blog.published_at).toISOString(),
+              "author": {
+                "@type": "Person",
+                "name": blog.author || "Shahi Boutique"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Shahi Boutique",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`
+                }
+              },
+              "description": blog.seo_description || blog.summary
+            })
+          }}
+        />
         <Link href="/feed" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#FF7A00] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
         </Link>
@@ -84,18 +115,18 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         </div>
 
         {/* MEDIA SECTION */}
-        <div className="relative w-full bg-gray-100 flex items-center justify-center overflow-hidden">
+        <div className="relative w-full bg-[#111111] flex items-center justify-center">
           {blog.cover_image?.match(/\.(mp4|webm|mov)$/i) ? (
             <video 
               src={blog.cover_image}
-              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-cover"
+              className="w-full h-auto max-h-[85vh] object-contain"
               autoPlay loop playsInline controls
             />
           ) : (
             <img 
               src={blog.cover_image || '/placeholder-image.jpg'} 
               alt={blog.title}
-              className="w-full h-auto max-h-[70vh] md:max-h-[80vh] object-cover"
+              className="w-full h-auto max-h-[85vh] object-contain"
             />
           )}
         </div>

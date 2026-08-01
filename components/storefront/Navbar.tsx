@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Search, ShoppingBag, Menu, X, ChevronRight, ChevronDown, User, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -151,19 +152,21 @@ export function Navbar({ categories }: { categories: any[] }) {
 
         {/* CENTER: Logo */}
         <div className="flex flex-shrink-0 justify-center">
-          <Link href="/" className="group relative flex flex-col items-center justify-center">
-            <span className={cn(
-              "font-heading font-black tracking-[0.25em] uppercase text-[#111111] transition-all duration-700 group-hover:scale-105 leading-none",
-              isScrolled ? "text-xl md:text-2xl" : "text-3xl md:text-4xl"
+          <Link href="/" className="group relative flex items-center justify-center">
+            <div className={cn(
+              "relative transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] group-hover:scale-105",
+              isScrolled ? "w-[130px] md:w-[150px] h-[35px] md:h-[45px]" : "w-[160px] md:w-[200px] h-[45px] md:h-[55px]"
             )}>
-              SHAHI
-            </span>
-            <span className={cn(
-              "absolute -bottom-3 font-sans uppercase tracking-[0.3em] text-[#111111]/70 transition-all duration-700",
-              isScrolled ? "text-[8px] md:text-[9px]" : "text-[10px] md:text-[11px]"
-            )}>
-              Boutique
-            </span>
+              <Image 
+                src="/logo.png" 
+                alt="SHAHI BOUTIQUE" 
+                fill 
+                className="object-contain object-center"
+                quality={100}
+                unoptimized
+                priority
+              />
+            </div>
           </Link>
         </div>
 
@@ -233,13 +236,17 @@ export function Navbar({ categories }: { categories: any[] }) {
                 </button>
               )}
               
-              <div className="flex-1 flex flex-col items-center justify-center w-full">
-                <span className="font-heading text-2xl tracking-[0.25em] font-black text-[#111111] uppercase leading-none">
-                  SHAHI
-                </span>
-                <span className="font-sans text-[9px] tracking-[0.3em] uppercase text-[#111111]/70 mt-1">
-                  Boutique
-                </span>
+              <div className="flex-1 flex justify-center items-center w-full h-full py-4 relative">
+                <div className="relative w-[140px] h-full max-h-[40px]">
+                  <Image 
+                    src="/logo.png" 
+                    alt="SHAHI BOUTIQUE" 
+                    fill 
+                    className="object-contain object-center"
+                    quality={100}
+                    unoptimized
+                  />
+                </div>
               </div>
             </div>
 

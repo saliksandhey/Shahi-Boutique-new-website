@@ -9,12 +9,13 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setStatus('submitting')
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     
     const result = await submitContactForm(formData)
     if (result.success) {
       setStatus('success')
-      e.currentTarget.reset()
+      form.reset()
     } else {
       setStatus('error')
     }

@@ -85,64 +85,8 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
   }
 }
 
-// 2. Create Razorpay Order
-export async function createRazorpayOrderAction(items: CartInputItem[], shippingMethod: string, couponCode?: string) {
-  try {
-    const totals = await calculateOrderTotal(items, shippingMethod, couponCode)
-    const { razorpay, keyId } = await getRazorpayInstance()
-
-    const options = {
-      amount: Math.round(totals.total * 100), // convert to cents/paise
-      currency: "INR", // Updated to INR
-      receipt: `rcpt_${Date.now()}`
-    }
-
-    const order = await razorpay.orders.create(options)
-    
-    return {
-      success: true,
-      orderId: order.id,
-      amount: options.amount,
-      currency: options.currency,
-      keyId,
-      totals
-    }
-  } catch (error: any) {
-    console.error("Razorpay Error:", error)
-    const errorMsg = error.error?.description || error.message || JSON.stringify(error) || "Unknown Razorpay Error"
-    return { success: false, error: errorMsg }
-  }
-}
-
-// 3. Verify & Finalize Order (Razorpay)
-export async function verifyAndCreateOrder(
-  razorpayPaymentId: string,
-  razorpayOrderId: string,
-  razorpaySignature: string,
-  address: any,
-  items: CartInputItem[],
-  shippingMethod: string,
-  couponCode?: string
-) {
-  try {
-    const { keySecret } = await getRazorpayInstance()
-    
-    // Verify signature
-    const text = razorpayOrderId + "|" + razorpayPaymentId
-    const expectedSignature = crypto.createHmac("sha256", keySecret).update(text).digest("hex")
-
-    if (expectedSignature !== razorpaySignature) {
-      throw new Error("Invalid payment signature")
-    }
-
-    return await createFinalOrder(items, address, shippingMethod, 'PAID', 'RAZORPAY', razorpayOrderId, razorpayPaymentId, couponCode)
-  } catch (error: any) {
-    return { success: false, error: error.message }
-  }
-}
-
-// 4. Create COD Order
-export async function createCODOrderAction(
+// 2. Create Concierge Order
+export async function createConciergeOrderAction(
   address: any,
   items: CartInputItem[],
   shippingMethod: string,
@@ -150,20 +94,6 @@ export async function createCODOrderAction(
 ) {
   try {
     return await createFinalOrder(items, address, shippingMethod, 'PENDING', 'COD', null, null, couponCode)
-  } catch (error: any) {
-    return { success: false, error: error.message }
-  }
-}
-
-// 5. Create Demo Order
-export async function createDemoOrderAction(
-  address: any,
-  items: CartInputItem[],
-  shippingMethod: string,
-  couponCode?: string
-) {
-  try {
-    return await createFinalOrder(items, address, shippingMethod, 'PAID', 'RAZORPAY', 'demo_order_' + Date.now(), 'demo_payment_' + Date.now(), couponCode)
   } catch (error: any) {
     return { success: false, error: error.message }
   }
@@ -231,7 +161,7 @@ async function createFinalOrder(
     city: address.city,
     state: address.state,
     postal_code: address.zip,
-    country: address.country || 'US',
+    country: address.country || 'India',
     is_default: true
   }
 
@@ -251,7 +181,7 @@ async function createFinalOrder(
     city: address.city,
     state: address.state,
     postal_code: address.zip,
-    country: address.country || 'US',
+    country: address.country || 'India',
     total_amount: totals.total,
     subtotal: totals.subtotal,
     shipping_cost: totals.shipping,

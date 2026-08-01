@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 
 export function Footer({ categories }: { categories: any[] }) {
@@ -20,8 +21,15 @@ export function Footer({ categories }: { categories: any[] }) {
           
           {/* Column 1: Brand Story */}
           <div className="lg:pr-8 flex flex-col items-center md:items-start">
-            <Link href="/" className="font-sans text-4xl md:text-4xl font-black tracking-tighter text-gray-900 block mb-4 md:mb-6 uppercase">
-              SHAHI
+            <Link href="/" className="block mb-6 md:mb-8 relative w-[180px] h-[50px]">
+              <Image 
+                src="/logo.png" 
+                alt="SHAHI BOUTIQUE" 
+                fill 
+                className="object-contain object-left md:object-left"
+                quality={100}
+                unoptimized
+              />
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed font-medium mb-6 md:mb-8 px-4 md:px-0">
               A legacy of exquisite craftsmanship and modern edge. We bring you the finest streetwear fashion, meticulously designed for the modern muse.

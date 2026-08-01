@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server'
-import { MessageSquare, Calendar } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -12,21 +12,21 @@ import Link from 'next/link'
 import { EnquiryActions } from '@/components/admin/EnquiryActions'
 import { EnquiryMessageModal } from '@/components/admin/EnquiryMessageModal'
 
-export default async function AdminEnquiriesPage() {
+export default async function AdminProductEnquiriesPage() {
   const supabase = createAdminClient()
   
   const { data: enquiries } = await supabase
     .from('product_enquiries')
     .select('*, products(name, slug)')
-    .is('product_id', null)
+    .not('product_id', 'is', null)
     .order('created_at', { ascending: false })
 
   return (
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#09090B]">Concierge Messages</h1>
-          <p className="mt-1 text-sm text-gray-500 font-medium">Manage general concierge requests and contact messages.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#09090B]">Product Enquiries</h1>
+          <p className="mt-1 text-sm text-gray-500 font-medium">Manage product-specific leads and customer requests.</p>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ export default async function AdminEnquiriesPage() {
                        {enquiry.products.name}
                      </Link>
                   ) : (
-                     <span className="text-gray-400 font-medium text-sm">{enquiry.product_id ? 'Deleted Product' : 'Concierge Service'}</span>
+                     <span className="text-gray-400 font-medium text-sm">Deleted Product</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -87,7 +87,7 @@ export default async function AdminEnquiriesPage() {
             {!enquiries?.length && (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-gray-500 font-medium text-sm">
-                  No enquiries found.
+                  No product enquiries found.
                 </TableCell>
               </TableRow>
             )}
@@ -106,7 +106,7 @@ export default async function AdminEnquiriesPage() {
               <div className="flex-1 min-w-0 pr-2">
                 <h3 className="font-semibold text-[#09090B] text-sm truncate">{enquiry.full_name}</h3>
                 <div className="text-xs text-[#FF7A00] mt-1 font-medium truncate">
-                  {enquiry.products?.name || (enquiry.product_id ? 'Deleted Product' : 'Concierge Service')}
+                  {enquiry.products?.name || 'Deleted Product'}
                 </div>
                 <div className="text-xs text-gray-500 mt-1 font-medium">
                   {enquiry.phone_number} | {enquiry.state}, {enquiry.country}
@@ -114,21 +114,24 @@ export default async function AdminEnquiriesPage() {
               </div>
             </div>
             
-            <div className="flex flex-col gap-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center text-xs font-medium text-gray-500">
-                <Calendar className="w-3 h-3 mr-2" /> {new Date(enquiry.created_at).toLocaleDateString()}
-              </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
               <EnquiryActions 
                 enquiryId={enquiry.id} 
                 currentStatus={enquiry.status} 
                 phone={enquiry.phone_number} 
               />
+              <EnquiryMessageModal 
+                name={enquiry.full_name}
+                phone={enquiry.phone_number}
+                message={enquiry.message}
+                date={new Date(enquiry.created_at).toLocaleDateString()}
+              />
             </div>
           </div>
         ))}
         {!enquiries?.length && (
-          <div className="p-8 text-center text-sm font-medium text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
-            No enquiries found.
+          <div className="text-center p-8 bg-white rounded-xl border border-gray-200">
+            <p className="text-sm text-gray-500 font-medium">No product enquiries found.</p>
           </div>
         )}
       </div>

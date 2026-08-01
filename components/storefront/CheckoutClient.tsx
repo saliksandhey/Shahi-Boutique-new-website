@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cart-store'
 import { useRouter } from 'next/navigation'
-import { calculateOrderTotal, createRazorpayOrderAction, verifyAndCreateOrder, createCODOrderAction, getPublicCoupons } from '@/lib/actions/checkout'
+import { 
+  getPublicCoupons, 
+  calculateOrderTotal, 
+  createConciergeOrderAction,
+  CartInputItem
+} from '@/lib/actions/checkout'
 import { saveAddress } from '@/lib/actions/address'
 import Script from 'next/script'
 import { Ticket, X, Gift, ShoppingCart, ChevronDown } from 'lucide-react'
@@ -39,10 +44,10 @@ export function CheckoutClient({
     city: defaultAddress?.city || '',
     state: defaultAddress?.state || '',
     zip: defaultAddress?.postal_code || '',
-    country: defaultAddress?.country || 'US'
+    country: defaultAddress?.country || 'India'
   })
   const [shippingMethod, setShippingMethod] = useState('standard') // only standard now
-  const [paymentMethod, setPaymentMethod] = useState('razorpay') // razorpay | cod
+  const [paymentMethod, setPaymentMethod] = useState<'concierge'>('concierge')
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number, isFreeGift?: boolean} | null>(null)
 
@@ -129,75 +134,28 @@ export function CheckoutClient({
   }
 
   const handlePlaceOrder = async () => {
-    setLoading(true)
-    setError(null)
-    const inputItems = items.map(i => ({ productId: i.productId || i.id, variantId: i.variantId, quantity: i.quantity }))
-
     try {
-      if (paymentMethod === 'cod') {
-        const res = await createCODOrderAction(address, inputItems, shippingMethod, appliedCoupon?.code)
+      setLoading(true)
+      setError(null)
+
+      if (!address.firstName || !address.lastName || !address.email || !address.phone || !address.street || !address.city || !address.state || !address.zip) {
+        throw new Error('Please fill in all required shipping details')
+      }
+
+      const inputItems: CartInputItem[] = items.map(item => ({
+        productId: item.productId || item.id,
+        variantId: item.variantId || null,
+        quantity: item.quantity
+      }))
+
+      if (paymentMethod === 'concierge') {
+        const res = await createConciergeOrderAction(address, inputItems, shippingMethod, appliedCoupon?.code)
         if (res.success && 'orderId' in res) {
           await clearCart()
           router.push(`/checkout/success?order_id=${res.orderId}`)
         } else {
-          setError('error' in res ? res.error : 'Failed to process COD order')
-          setLoading(false)
+          throw new Error(res.error || 'Failed to create order')
         }
-      } else {
-        // Razorpay Flow
-        if (!razorpayKeyId) {
-          throw new Error('Razorpay is not configured. Please contact support.')
-        }
-
-        const orderRes = await createRazorpayOrderAction(inputItems, shippingMethod, appliedCoupon?.code)
-        if (!orderRes.success) {
-          throw new Error(orderRes.error || 'Failed to initialize payment')
-        }
-
-        const options = {
-          key: razorpayKeyId,
-          amount: orderRes.amount,
-          currency: orderRes.currency,
-          name: "SHAHI Boutique",
-          description: "Order Payment",
-          order_id: orderRes.orderId,
-          handler: async function (response: any) {
-            setLoading(true)
-            const verifyRes = await verifyAndCreateOrder(
-              response.razorpay_payment_id,
-              response.razorpay_order_id,
-              response.razorpay_signature,
-              address,
-              inputItems,
-              shippingMethod,
-              appliedCoupon?.code
-            )
-            
-            if (verifyRes.success && 'orderId' in verifyRes) {
-              await clearCart()
-              router.push(`/checkout/success?order_id=${verifyRes.orderId}`)
-            } else {
-              setError('error' in verifyRes ? verifyRes.error : 'Payment verification failed. Please contact support.')
-              setLoading(false)
-            }
-          },
-          prefill: {
-            name: `${address.firstName} ${address.lastName}`,
-            email: address.email,
-            contact: address.phone
-          },
-          theme: {
-            color: "#FF7A00"
-          }
-        }
-
-        const rzp = new (window as any).Razorpay(options)
-        rzp.on('payment.failed', function (response: any) {
-          setError(response.error.description || 'Payment failed')
-          setLoading(false)
-        })
-        
-        rzp.open()
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during checkout')
@@ -289,7 +247,6 @@ export function CheckoutClient({
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
         
         {/* Mobile Order Summary Toggle */}
@@ -350,7 +307,7 @@ export function CheckoutClient({
                                 city: sa.city || '',
                                 state: sa.state || '',
                                 zip: sa.postal_code || '',
-                                country: sa.country || 'US'
+                                country: sa.country || 'India'
                               })}
                               className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 ${isSelected ? 'border-[#1C1C1C] bg-gray-50 ring-1 ring-[#1C1C1C]' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                             >
@@ -403,7 +360,7 @@ export function CheckoutClient({
                         formData.append('full_name', `${newAddress.firstName} ${newAddress.lastName}`)
                         formData.append('address_line1', newAddress.street)
                         formData.append('postal_code', newAddress.zip)
-                        formData.append('country', 'US')
+                        formData.append('country', 'India')
                         const res = await saveAddress(formData)
                         if (res.success) {
                           setShowNewAddressForm(false)
@@ -536,23 +493,13 @@ export function CheckoutClient({
 
                   {/* Payment Methods */}
                   <div className="space-y-4">
-                    <label className={`flex items-center p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'razorpay' ? 'border-2 border-[#FF7A00] bg-white ring-4 ring-[#FF7A00]/10' : 'border border-gray-200 bg-white hover:border-gray-300'}`}>
-                      <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="h-5 w-5 text-[#FF7A00] focus:ring-[#FF7A00] border-gray-300 bg-transparent shrink-0" />
+                    <label className={`flex items-center p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 border-2 border-[#FF7A00] bg-white ring-4 ring-[#FF7A00]/10`}>
+                      <input type="radio" name="payment" value="concierge" checked={true} readOnly className="h-5 w-5 text-[#FF7A00] focus:ring-[#FF7A00] border-[#FF7A00] bg-[#FF7A00] shrink-0" />
                       <div className="ml-3 md:ml-4">
-                        <span className="block text-xs md:text-sm font-bold text-gray-900 uppercase tracking-widest leading-tight">Pay Online (Razorpay)</span>
-                        <span className="block text-[10px] sm:text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider">Credit Card, UPI, NetBanking</span>
+                        <span className="block text-xs md:text-sm font-bold text-gray-900 uppercase tracking-widest leading-tight">Pay After Placing Order</span>
+                        <span className="block text-[10px] sm:text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider">Our team will contact you via WhatsApp for payment.</span>
                       </div>
                     </label>
-
-                    {codEnabled && (
-                      <label className={`flex items-center p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 ${paymentMethod === 'cod' ? 'border-2 border-[#FF7A00] bg-white ring-4 ring-[#FF7A00]/10' : 'border border-gray-200 bg-white hover:border-gray-300'}`}>
-                        <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="h-5 w-5 text-[#FF7A00] focus:ring-[#FF7A00] border-gray-300 bg-transparent shrink-0" />
-                        <div className="ml-3 md:ml-4">
-                          <span className="block text-xs md:text-sm font-bold text-gray-900 uppercase tracking-widest leading-tight">Cash on Delivery</span>
-                          <span className="block text-[10px] sm:text-xs text-gray-500 font-medium mt-1 uppercase tracking-wider">Pay when you receive the order</span>
-                        </div>
-                      </label>
-                    )}
                   </div>
 
                   <div className="mt-8">

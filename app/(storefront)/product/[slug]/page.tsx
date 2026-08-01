@@ -97,6 +97,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           {/* Product info */}
           <div className="mt-6 md:mt-12 lg:mt-0 px-6 sm:px-8 lg:px-0">
+            {/* Product JSON-LD Schema */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "Product",
+                  "name": product.name,
+                  "image": sortedImages.map((img: any) => img.url),
+                  "description": product.meta_description || product.description?.substring(0, 160) || `Buy ${product.name} at Shahi Boutique`,
+                  "sku": product.sku || product.id,
+                  "offers": {
+                    "@type": "Offer",
+                    "url": `${process.env.NEXT_PUBLIC_SITE_URL}/product/${product.slug}`,
+                    "priceCurrency": "INR",
+                    "price": product.price,
+                    "itemCondition": "https://schema.org/NewCondition",
+                    "availability": product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                  }
+                })
+              }}
+            />
+            
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-3 md:mb-4 leading-none">
               {product.name}
             </h1>

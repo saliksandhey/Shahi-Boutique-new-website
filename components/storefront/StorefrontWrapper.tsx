@@ -6,6 +6,7 @@ import { Footer } from './Footer'
 import { AnnouncementBar } from './AnnouncementBar'
 import { CartDrawer } from './CartDrawer'
 import { SearchDrawer } from './SearchDrawer'
+import { FloatingAppointmentButton } from './FloatingAppointmentButton'
 
 export function StorefrontWrapper({ children, categories }: { children: React.ReactNode, categories: any[] }) {
   const pathname = usePathname()
@@ -22,6 +23,7 @@ export function StorefrontWrapper({ children, categories }: { children: React.Re
       <Navbar categories={categories} />
       <CartDrawer />
       <SearchDrawer />
+      <FloatingAppointmentButton />
       <main className="flex-1">
         {children}
       </main>

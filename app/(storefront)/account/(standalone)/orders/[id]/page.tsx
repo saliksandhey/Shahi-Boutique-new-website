@@ -151,6 +151,16 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                   <dt>Total</dt>
                   <dd>₹{order.total_amount}</dd>
                 </div>
+                <div className="flex justify-between border-t border-gray-200 pt-4">
+                  <dt>Payment Method</dt>
+                  <dd className="text-gray-900 font-medium">{order.payment_method === 'COD' ? 'Concierge WhatsApp' : order.payment_method}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Payment Status</dt>
+                  <dd className={`font-bold ${order.payment_status === 'PAID' ? 'text-green-600' : 'text-[#FF7A00]'}`}>
+                    {order.payment_status || 'PENDING'}
+                  </dd>
+                </div>
               </dl>
             </div>
           </div>

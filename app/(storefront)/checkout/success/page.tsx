@@ -32,16 +32,28 @@ export default async function SuccessPage({ searchParams }: { searchParams: { or
         
         <h1 className="text-3xl sm:text-4xl lg:text-6xl font-sans font-black text-gray-900 mb-4 uppercase tracking-tighter text-center leading-none">Order Confirmed</h1>
         
-        <p className="text-gray-500 font-medium mb-8 sm:mb-10 text-center max-w-md text-sm sm:text-base leading-relaxed">
+        <p className="text-gray-500 font-medium mb-4 sm:mb-6 text-center max-w-md text-sm sm:text-base leading-relaxed">
           Thank you for your purchase. Your order <span className="font-bold text-gray-900">#{order?.order_number || orderId.substring(0, 8)}</span> has been successfully placed.
         </p>
+
+        {order?.payment_method === 'COD' && order?.payment_status === 'PENDING' && (
+          <div className="bg-[#FF7A00]/10 border border-[#FF7A00]/20 rounded-2xl p-4 sm:p-5 mb-8 w-full max-w-md text-center">
+            <p className="text-xs sm:text-sm text-[#FF7A00] font-bold uppercase tracking-wide">
+              Payment Pending
+            </p>
+            <p className="text-[10px] sm:text-xs text-gray-700 mt-2 leading-relaxed">
+              Our concierge team will contact you shortly on WhatsApp or Email with the payment details to finalize your order.
+            </p>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl sm:rounded-[2rem] border border-gray-100 p-5 sm:p-8 w-full mb-8 sm:mb-10 shadow-sm">
           <h2 className="text-[10px] sm:text-xs font-black text-gray-900 uppercase tracking-widest mb-4 sm:mb-6 border-b border-gray-100 pb-3 sm:pb-4">Order Details</h2>
           <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-gray-500 font-medium">
-            <p className="flex justify-between items-center"><span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gray-400 font-bold">Status</span> <span className="font-bold text-[#FF7A00] uppercase tracking-widest text-[10px] sm:text-xs">{order?.status || 'Processing'}</span></p>
-            <p className="flex justify-between items-center"><span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gray-400 font-bold">Payment Method</span> <span className="font-bold text-gray-900 uppercase tracking-widest text-[10px] sm:text-xs">{order?.payment_method || 'Razorpay'}</span></p>
-            <p className="flex justify-between items-center border-t border-gray-100 pt-3 sm:pt-4 mt-2"><span className="uppercase tracking-widest text-[10px] sm:text-xs text-gray-900 font-black">Total Paid</span> <span className="font-black text-lg sm:text-xl text-gray-900">₹{(order?.total_amount || 0).toFixed(2)}</span></p>
+            <p className="flex justify-between items-center"><span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gray-400 font-bold">Order Status</span> <span className="font-bold text-[#FF7A00] uppercase tracking-widest text-[10px] sm:text-xs">{order?.status || 'Processing'}</span></p>
+            <p className="flex justify-between items-center"><span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gray-400 font-bold">Payment Status</span> <span className={`font-bold uppercase tracking-widest text-[10px] sm:text-xs ${order?.payment_status === 'PAID' ? 'text-green-600' : 'text-red-500'}`}>{order?.payment_status || 'PENDING'}</span></p>
+            <p className="flex justify-between items-center"><span className="uppercase tracking-widest text-[9px] sm:text-[10px] text-gray-400 font-bold">Payment Method</span> <span className="font-bold text-gray-900 uppercase tracking-widest text-[10px] sm:text-xs">{order?.payment_method === 'COD' ? 'Concierge WhatsApp' : order?.payment_method}</span></p>
+            <p className="flex justify-between items-center border-t border-gray-100 pt-3 sm:pt-4 mt-2"><span className="uppercase tracking-widest text-[10px] sm:text-xs text-gray-900 font-black">Total Amount</span> <span className="font-black text-lg sm:text-xl text-gray-900">₹{(order?.total_amount || 0).toFixed(2)}</span></p>
           </div>
         </div>
 
