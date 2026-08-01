@@ -154,7 +154,7 @@ export function CheckoutClient({
           await clearCart()
           router.push(`/checkout/success?order_id=${res.orderId}`)
         } else {
-          throw new Error(res.error || 'Failed to create order')
+          throw new Error((res as any).error || 'Failed to create order')
         }
       }
     } catch (err: any) {
