@@ -4,6 +4,7 @@ import { getActiveAnnouncements } from "@/lib/actions/announcements";
 import { AnnouncementManager } from "@/components/storefront/AnnouncementManager";
 import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 import { PageTransition } from "@/components/providers/PageTransition";
+import { ScrollToTop } from "@/components/storefront/ScrollToTop";
 
 export default async function StorefrontLayout({
   children,
@@ -25,6 +26,7 @@ export default async function StorefrontLayout({
           <PageTransition>
             {children}
           </PageTransition>
+          <ScrollToTop />
         </StorefrontWrapper>
       </SmoothScrollProvider>
     </>
