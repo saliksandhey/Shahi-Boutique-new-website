@@ -4,8 +4,10 @@ export type UserProfile = {
   id: string
   email: string
   full_name: string | null
+  phone?: string | null
   avatar: string | null
   role: 'CUSTOMER' | 'ADMIN'
+  created_at?: string
 }
 
 interface UserState {
