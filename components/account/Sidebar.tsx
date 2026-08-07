@@ -19,8 +19,8 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md lg:bg-transparent lg:static pt-2 pb-4 lg:py-0 border-b lg:border-0 border-gray-100 mb-6 lg:mb-0">
-      <nav className="flex lg:flex-col gap-2 overflow-x-auto hide-scrollbar px-4 sm:px-8 lg:px-0">
+    <div className="sticky top-0 z-10 bg-white lg:bg-transparent lg:static pt-2 pb-4 lg:py-0 border-b lg:border-0 border-gray-100 mb-6 lg:mb-0 -mx-4 px-4 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
+      <nav className="flex lg:flex-col gap-3 overflow-x-auto hide-scrollbar pb-2 lg:pb-0">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (

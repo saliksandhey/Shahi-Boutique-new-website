@@ -65,11 +65,13 @@ export function ProfileForm({ initialName, initialPhone, email }: { initialName:
             )}
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500">Email</Label>
-            <Input id="email" type="email" value={email} disabled className="h-12 rounded-xl bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed" />
-            <p className="text-xs text-gray-400 font-medium">Your email cannot be changed here.</p>
-          </div>
+          {!email.endsWith('@shahi.in') && (
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500">Email</Label>
+              <Input id="email" type="email" value={email} disabled className="h-12 rounded-xl bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed" />
+              <p className="text-xs text-gray-400 font-medium">Your email cannot be changed here.</p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</Label>

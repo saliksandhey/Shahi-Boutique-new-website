@@ -1,7 +1,8 @@
 import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import { Package } from 'lucide-react'
+import Link from 'next/link'
+import { MobileBackNav } from '@/components/account/MobileBackNav'
 
 export default async function OrdersPage() {
   const user = await requireAuth()
@@ -15,6 +16,7 @@ export default async function OrdersPage() {
 
   return (
     <div className="space-y-6">
+      <MobileBackNav />
       <div className="border-b border-gray-200 pb-4 mb-6">
         <h2 className="text-lg font-black uppercase tracking-widest text-gray-900">All Orders</h2>
       </div>

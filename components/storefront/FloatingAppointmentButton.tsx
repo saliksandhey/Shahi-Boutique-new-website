@@ -9,9 +9,19 @@ import { cn } from '@/lib/utils'
 
 export function FloatingAppointmentButton() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [hasManuallyClosed, setHasManuallyClosed] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [hasManuallyClosed, setHasManuallyClosed] = useState(true)
   const pathname = usePathname()
+
+  // Run once on mount to check if we should auto-expand
+  useEffect(() => {
+    const hasSeen = sessionStorage.getItem('hasSeenAppointmentMessage')
+    if (!hasSeen) {
+      setIsExpanded(true)
+      setHasManuallyClosed(false)
+      sessionStorage.setItem('hasSeenAppointmentMessage', 'true')
+    }
+  }, [])
 
   // Track scroll position
   useEffect(() => {
@@ -40,10 +50,12 @@ export function FloatingAppointmentButton() {
     }
   }, [isScrolled, isExpanded, hasManuallyClosed])
 
-  // Don't show on admin pages or the book-appointment page itself
   if (pathname === '/book-appointment' || pathname?.startsWith('/admin')) {
     return null
   }
+
+  const isShop = pathname === '/shop'
+  const bottomClass = isShop ? 'bottom-24 lg:bottom-6' : 'bottom-6'
 
   return (
     <AnimatePresence>
@@ -53,7 +65,7 @@ export function FloatingAppointmentButton() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className="fixed bottom-6 left-4 sm:left-6 z-[90] flex items-center"
+          className={`fixed ${bottomClass} left-4 sm:left-6 z-[90] flex items-center`}
           onMouseEnter={() => !hasManuallyClosed && setIsExpanded(true)}
           onMouseLeave={() => !hasManuallyClosed && setIsExpanded(false)}
         >

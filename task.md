@@ -1,0 +1,4 @@
+- `[x]` 1. Create Server Actions for Phone Auth (`lib/actions/auth-phone.ts`)
+- `[x]` 2. Redesign `login/page.tsx` with Phone Auth Form and Split Screen UI
+- `[x]` 3. Implement Forgot Password Modal (WhatsApp flow)
+- `[/]` 4. Verify & Update Walkthrough

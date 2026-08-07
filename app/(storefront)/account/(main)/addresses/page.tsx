@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { AddressManager } from '@/components/account/AddressManager'
+import { MobileBackNav } from '@/components/account/MobileBackNav'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -19,6 +20,9 @@ export default async function AddressesPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <AddressManager initialAddresses={addresses || []} />
+    <div className="space-y-6">
+      <MobileBackNav />
+      <AddressManager initialAddresses={addresses || []} />
+    </div>
   )
 }

@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { getUpsellProducts } from '@/lib/actions/products'
 import { Clock } from 'lucide-react'
+import { loginOrSignupWithPhone } from '@/lib/actions/auth-phone'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
@@ -367,9 +368,89 @@ export function CartDrawer() {
               <p className="text-sm text-gray-500 font-medium mt-2">Sign in to access your saved addresses and faster checkout.</p>
             </div>
             
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setIsCheckingAuth(true)
+                setLoginError(null)
+                const formData = new FormData(e.currentTarget)
+                
+                const phone = formData.get('phone') as string
+                if (!phone.startsWith('+')) {
+                  formData.set('phone', '+91' + phone)
+                }
+
+                try {
+                  const res = await loginOrSignupWithPhone(formData)
+                  if (res.error) {
+                    setLoginError(res.error)
+                  } else {
+                    setShowLoginSheet(false)
+                    closeCart()
+                    router.push('/checkout')
+                    router.refresh()
+                  }
+                } catch(err) {
+                  setLoginError("An unexpected error occurred.")
+                } finally {
+                  setIsCheckingAuth(false)
+                }
+              }}
+              className="space-y-4 mb-6"
+            >
+              <div className="space-y-2">
+                <div className="flex">
+                  <span className="inline-flex items-center px-4 rounded-l-full border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-xs font-bold">
+                    +91
+                  </span>
+                  <input 
+                    name="phone" 
+                    type="tel" 
+                    required 
+                    className="flex h-12 w-full rounded-r-full border border-l-0 border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]"
+                    placeholder="Phone Number" 
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-end">
+                  <Link 
+                    href="/forgot-password" 
+                    onClick={closeCart}
+                    className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors"
+                  >
+                    Forgot?
+                  </Link>
+                </div>
+                <input 
+                  name="password" 
+                  type="password" 
+                  required 
+                  className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" 
+                  placeholder="Password" 
+                />
+              </div>
+              <button 
+                type="submit" 
+                disabled={isCheckingAuth} 
+                className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md"
+              >
+                {isCheckingAuth ? 'Continuing...' : 'Continue'}
+              </button>
+            </form>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest">
+                <span className="bg-white px-4 text-gray-400">Or</span>
+              </div>
+            </div>
+
             <button 
               onClick={handleGoogleLogin}
-              className="w-full bg-white text-gray-900 border border-gray-300 rounded-full h-14 flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm"
+              className="w-full bg-white text-gray-900 border border-gray-300 rounded-full h-12 flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                 <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
@@ -377,7 +458,7 @@ export function CartDrawer() {
                 <path d="M5.26498 14.2949C5.02498 13.5699 4.87998 12.7999 4.87998 12.0049C4.87998 11.2099 5.01998 10.4399 5.26498 9.71497L1.275 6.61997C0.465 8.22997 0 10.0599 0 12.0049C0 13.9499 0.465 15.7799 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"/>
                 <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.87037 19.245 6.21537 17.135 5.26537 14.29L1.27539 17.385C3.25539 21.31 7.31037 24.0001 12.0004 24.0001Z" fill="#34A853"/>
               </svg>
-              <span className="font-bold tracking-widest text-xs uppercase">Continue with Google</span>
+              <span className="font-bold tracking-widest text-xs uppercase">Google</span>
             </button>
             
             {loginError && <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200 mt-4 text-center">{loginError}</p>}

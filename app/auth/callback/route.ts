@@ -10,9 +10,13 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
+    if (!error && session?.user?.email) {
+      // Create fallback session just in case
+      const { createSession } = await import('@/lib/auth')
+      await createSession(session.user.email)
+
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
       

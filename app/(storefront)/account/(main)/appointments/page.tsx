@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Calendar } from 'lucide-react'
+import { MobileBackNav } from '@/components/account/MobileBackNav'
 
 export const metadata = {
   title: 'My Appointments | SHAHI',
@@ -29,7 +30,8 @@ export default async function EnquiriesPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6">
+      <MobileBackNav />
       <div className="flex items-center gap-3">
         <MessageSquare className="w-5 h-5 text-gray-400" />
         <h2 className="text-xl md:text-2xl font-black uppercase tracking-widest text-gray-900">

@@ -75,10 +75,14 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     .single()
 
   // Auto-insert if signing up via OAuth or for the first time and record is missing
-  if (!profile) {
+  if (!profile && user.id) {
     const { data: newProfile, error } = await supabase
       .from('customer_profiles')
-      .insert({ email: user.email })
+      .insert({ 
+        id: user.id, 
+        email: user.email,
+        full_name: user.email.split('@')[0] // Provide a default name from email
+      })
       .select()
       .single()
     
@@ -91,7 +95,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     return {
       id: profile.id,
       email: profile.email,
-      full_name: profile.name,
+      full_name: profile.full_name, // Fixed mapping
       phone: profile.phone,
       avatar: null,
       role: 'CUSTOMER',

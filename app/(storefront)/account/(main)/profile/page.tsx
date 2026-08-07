@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { ProfileForm } from './ProfileForm'
+import { MobileBackNav } from '@/components/account/MobileBackNav'
 
 export default async function ProfilePage() {
   const user = await requireAuth()
@@ -14,6 +15,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6">
+      <MobileBackNav />
       <div className="flex flex-col mb-8">
         <h2 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-[#111111] mb-2">Profile Details</h2>
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400">

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Heart, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toggleWishlist } from '@/lib/actions/wishlist'
+import { MobileBackNav } from '@/components/account/MobileBackNav'
 import { revalidatePath } from 'next/cache'
 
 export default async function WishlistPage() {
@@ -24,7 +25,8 @@ export default async function WishlistPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <MobileBackNav />
+      <div className="border-b border-gray-200 pb-4 mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Wishlist</h1>
         <p className="mt-1 text-sm text-gray-500">
           Save items you love and buy them later.
