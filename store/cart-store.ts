@@ -190,7 +190,7 @@ export const useCartStore = create<CartState>()(
             const image = product.product_images?.find((img: any) => img.is_primary)?.url || product.product_images?.[0]?.url || '/placeholder.png'
 
             return {
-              id: product.id,
+              id: dbItem.id, // Use unique DB row ID instead of product ID to prevent React duplicate key warnings
               productId: product.id,
               name: product.name,
               price: product.price,

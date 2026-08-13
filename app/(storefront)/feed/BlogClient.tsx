@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Search, Heart, MessageCircle, Share2, Play, LayoutGrid, Image as ImageIcon, Film } from 'lucide-react'
+import { Search, Heart, MessageCircle, Share2, Play, LayoutGrid, Image as ImageIcon, Film, ExternalLink } from 'lucide-react'
 import { FeedVideo } from '@/components/storefront/FeedVideo'
 
 const categories = [
@@ -193,8 +193,15 @@ export function BlogClient({ initialBlogs }: { initialBlogs: any[] }) {
 
                         {/* Hover Overlay for clicking */}
                         <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                          <span className="px-4 py-2 bg-white/90 backdrop-blur-md text-gray-900 text-xs font-black uppercase tracking-widest rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                            Quick View
+                          <span className="px-4 py-2 bg-white/90 backdrop-blur-md text-gray-900 text-xs font-black uppercase tracking-widest rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300 flex items-center gap-2">
+                            {blog.instagram_url ? (
+                              <>
+                                <ExternalLink className="w-4 h-4" />
+                                Open Instagram
+                              </>
+                            ) : (
+                              'Quick View'
+                            )}
                           </span>
                         </div>
                       </div>

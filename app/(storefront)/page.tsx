@@ -8,6 +8,7 @@ import { WhyChooseUs } from '@/components/storefront/WhyChooseUs'
 import { WorldwideDelivery } from '@/components/storefront/WorldwideDelivery'
 import { CustomerReviews } from '@/components/storefront/CustomerReviews'
 import { AppointmentBanner } from '@/components/storefront/AppointmentBanner'
+import { StoreLocationSection } from '@/components/storefront/StoreLocationSection'
 
 export const revalidate = 60
 
@@ -75,6 +76,9 @@ export default async function HomePage() {
 
       {/* Section 8: Appointment Banner (Replaced Newsletter) */}
       <AppointmentBanner />
+
+      {/* Section 9: Store Location (Visit Us) */}
+      <StoreLocationSection />
       
       {/* Section 10: Footer is in layout.tsx */}
     </div>

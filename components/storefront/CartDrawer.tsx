@@ -30,8 +30,14 @@ export function CartDrawer() {
           const cartProductIds = items.map(item => item.productId)
           const availableUpsells = data.filter((p: any) => !cartProductIds.includes(p.id))
           
-          // Select top 2
-          const selected = availableUpsells.slice(0, 2).map((p: any) => {
+          // Use the start time to pseudo-randomly pick products so it changes per session
+          let startTime = localStorage.getItem('upsell_start_time')
+          let seed = startTime ? parseInt(startTime) : Date.now()
+          const maxStart = Math.max(0, availableUpsells.length - 2)
+          const startIndex = seed % (maxStart + 1)
+          
+          // Select 2 products based on the seed
+          const selected = availableUpsells.slice(startIndex, startIndex + 2).map((p: any) => {
             const primaryImage = p.product_images?.find((img: any) => img.is_primary)?.url || p.product_images?.[0]?.url || ''
             const salePrice = p.sale_price ? Number(p.sale_price) : 0
             const regularPrice = p.price ? Number(p.price) : 0
@@ -55,9 +61,19 @@ export function CartDrawer() {
 
   // Countdown timer logic
   useEffect(() => {
+    if (items.length === 0) {
+      localStorage.removeItem('upsell_start_time')
+      setCountdown('10:00')
+      setUpsellPhase('flash')
+      return
+    }
+
     let startTime = localStorage.getItem('upsell_start_time')
-    if (!startTime) {
-      startTime = Date.now().toString()
+    const now = Date.now()
+
+    // Reset if no start time OR if > 24 hours have passed (86400000 ms)
+    if (!startTime || (now - parseInt(startTime) > 86400000)) {
+      startTime = now.toString()
       localStorage.setItem('upsell_start_time', startTime)
     }
 
@@ -91,7 +107,7 @@ export function CartDrawer() {
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [items.length])
 
   // Prevent background scrolling when cart is open
   useEffect(() => {

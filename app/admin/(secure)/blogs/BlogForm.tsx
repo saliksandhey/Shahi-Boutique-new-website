@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBlog, updateBlog, uploadBlogImage } from '@/lib/actions/blog'
+import { createBlog, updateBlog, uploadBlogImage, fetchInstagramData } from '@/lib/actions/blog'
 import { Button } from '@/components/ui/button'
 import { Image as ImageIcon, Loader2, Save, Send } from 'lucide-react'
 
@@ -24,9 +24,32 @@ export function BlogForm({ initialData = null }: { initialData?: any }) {
     seo_title: initialData?.seo_title || '',
     seo_description: initialData?.seo_description || '',
     meta_keywords: initialData?.meta_keywords || '',
+    instagram_url: initialData?.instagram_url || '',
   })
   
   const [isUploading, setIsUploading] = useState(false)
+  const [isFetchingInsta, setIsFetchingInsta] = useState(false)
+
+  const handleFetchInstagram = async () => {
+    if (!formData.instagram_url) {
+      alert('Please enter an Instagram URL first.')
+      return
+    }
+    
+    setIsFetchingInsta(true)
+    const result = await fetchInstagramData(formData.instagram_url)
+    setIsFetchingInsta(false)
+
+    if (result.success && result.imageUrl) {
+      setFormData(prev => ({ 
+        ...prev, 
+        cover_image: result.imageUrl,
+        summary: prev.summary || result.description || '',
+      }))
+    } else {
+      alert(result.error)
+    }
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -187,6 +210,32 @@ export function BlogForm({ initialData = null }: { initialData?: any }) {
         {/* Sidebar Settings */}
         <div className="space-y-8">
           
+          {/* Instagram Link Integration */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+            <h3 className="font-black uppercase tracking-widest text-gray-900 border-b border-gray-100 pb-3">Instagram Integration</h3>
+            <div>
+              <label className={labelBase}>Instagram Post URL</label>
+              <div className="flex gap-2">
+                <input 
+                  type="url" 
+                  value={formData.instagram_url}
+                  onChange={e => setFormData({...formData, instagram_url: e.target.value})}
+                  className={inputBase}
+                  placeholder="https://instagram.com/p/..."
+                />
+                <button 
+                  type="button" 
+                  onClick={handleFetchInstagram}
+                  disabled={isFetchingInsta || !formData.instagram_url}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {isFetchingInsta ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch Photo'}
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-500 mt-2 font-medium">Link will be used to redirect users on the feed page. Fetch photo attempts to automatically pull the post image.</p>
+            </div>
+          </div>
+
           {/* Cover Image */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
             <h3 className="font-black uppercase tracking-widest text-gray-900 border-b border-gray-100 pb-3">Cover Media</h3>

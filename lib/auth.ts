@@ -81,7 +81,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
       .insert({ 
         id: user.id, 
         email: user.email,
-        full_name: user.email.split('@')[0] // Provide a default name from email
+        name: user.email.split('@')[0] // Provide a default name from email
       })
       .select()
       .single()
@@ -95,7 +95,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     return {
       id: profile.id,
       email: profile.email,
-      full_name: profile.full_name, // Fixed mapping
+      full_name: profile.name || profile.full_name, // Map name to full_name
       phone: profile.phone,
       avatar: null,
       role: 'CUSTOMER',

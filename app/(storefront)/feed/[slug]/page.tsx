@@ -3,13 +3,13 @@ import { getBlogBySlug, getPublicBlogs } from '@/lib/actions/blog'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Heart, MessageCircle, Share2, ArrowLeft, MoreHorizontal, Bookmark, Play } from 'lucide-react'
+import { Heart, MessageCircle, Share2, ArrowLeft, MoreHorizontal, Bookmark, Play, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { PostInteractions } from './PostInteractions'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
-  const { data: blog } = await getBlogBySlug(slug)
+  const decodedSlug = decodeURIComponent((await params).slug)
+  const { data: blog } = await getBlogBySlug(decodedSlug)
   
   if (!blog) return { title: 'Not Found' }
 
@@ -36,8 +36,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const { data: blog } = await getBlogBySlug(slug)
+  const decodedSlug = decodeURIComponent((await params).slug)
+  const { data: blog } = await getBlogBySlug(decodedSlug)
 
   if (!blog || blog.status !== 'PUBLISHED') {
     notFound()
@@ -115,21 +115,65 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
         </div>
 
         {/* MEDIA SECTION */}
-        <div className="relative w-full bg-[#111111] flex items-center justify-center">
-          {blog.cover_image?.match(/\.(mp4|webm|mov)$/i) ? (
-            <video 
-              src={blog.cover_image}
-              className="w-full h-auto max-h-[85vh] object-contain"
-              autoPlay loop playsInline controls
-            />
+        <div className="relative w-full bg-[#111111] flex items-center justify-center overflow-hidden">
+          {blog.instagram_url ? (
+            <a href={blog.instagram_url} target="_blank" rel="noopener noreferrer" className="relative block w-full flex items-center justify-center group cursor-pointer">
+              {blog.cover_image?.match(/\.(mp4|webm|mov)$/i) ? (
+                <video 
+                  src={blog.cover_image}
+                  className="w-full h-auto max-h-[85vh] object-contain"
+                  autoPlay loop playsInline
+                  // Removed 'muted' to allow sound, though browser policies might require a user interaction first to hear it.
+                  // We remove 'controls' so that clicking the video clicks the link instead of pausing.
+                />
+              ) : (
+                <img 
+                  src={blog.cover_image || '/placeholder-image.jpg'} 
+                  alt={blog.title}
+                  className="w-full h-auto max-h-[85vh] object-contain"
+                />
+              )}
+              {/* Overlay icon on hover to show it's clickable */}
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                 <div className="bg-white/90 rounded-full px-6 py-3 flex items-center gap-2 shadow-xl transform scale-95 group-hover:scale-100 transition-transform">
+                   <ExternalLink className="w-5 h-5 text-gray-900" />
+                   <span className="text-gray-900 font-black uppercase tracking-widest text-xs">View on Instagram</span>
+                 </div>
+              </div>
+            </a>
           ) : (
-            <img 
-              src={blog.cover_image || '/placeholder-image.jpg'} 
-              alt={blog.title}
-              className="w-full h-auto max-h-[85vh] object-contain"
-            />
+            <>
+              {blog.cover_image?.match(/\.(mp4|webm|mov)$/i) ? (
+                <video 
+                  src={blog.cover_image}
+                  className="w-full h-auto max-h-[85vh] object-contain"
+                  autoPlay loop playsInline controls
+                />
+              ) : (
+                <img 
+                  src={blog.cover_image || '/placeholder-image.jpg'} 
+                  alt={blog.title}
+                  className="w-full h-auto max-h-[85vh] object-contain"
+                />
+              )}
+            </>
           )}
         </div>
+
+        {/* INSTAGRAM BUTTON (If Applicable) */}
+        {blog.instagram_url && (
+          <div className="w-full flex justify-center py-4 bg-gray-50 border-b border-gray-100">
+            <a 
+              href={blog.instagram_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#111111] hover:bg-[#FF7A00] text-white rounded-full text-xs font-black uppercase tracking-widest transition-colors shadow-md"
+            >
+              <ExternalLink className="w-4 h-4" />
+              View Original on Instagram
+            </a>
+          </div>
+        )}
 
         {/* INTERACTION BAR */}
         <PostInteractions title={blog.title} url={shareUrl} />

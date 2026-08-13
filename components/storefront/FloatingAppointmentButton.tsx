@@ -40,12 +40,13 @@ export function FloatingAppointmentButton() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [hasManuallyClosed])
 
-  // Auto-collapse after 5 seconds to save screen space (especially for mobile)
+  // Auto-collapse after 2 seconds to just show the button
   useEffect(() => {
     if (isScrolled && isExpanded && !hasManuallyClosed) {
       const timer = setTimeout(() => {
         setIsExpanded(false)
-      }, 5000)
+        setHasManuallyClosed(true)
+      }, 2000)
       return () => clearTimeout(timer)
     }
   }, [isScrolled, isExpanded, hasManuallyClosed])

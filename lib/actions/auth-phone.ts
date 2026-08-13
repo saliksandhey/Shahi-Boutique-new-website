@@ -146,7 +146,8 @@ export async function loginOrSignupWithPhone(formData: FormData) {
     return { error: 'Phone number and password are required.' }
   }
 
-  const supabase = createAdminClient()
+  const supabaseAdmin = createAdminClient()
+  const ssrSupabase = await createClient()
 
   let cleanPhone = phone.replace(/[^0-9+]/g, '')
   if (!cleanPhone.startsWith('+')) {
@@ -155,63 +156,115 @@ export async function loginOrSignupWithPhone(formData: FormData) {
   
   const dummyEmail = `${cleanPhone.replace('+', '')}@shahi.in`
 
-  // Check if user exists
-  const { data: profile } = await supabase
-    .from('customer_profiles')
-    .select('id')
-    .eq('phone', cleanPhone)
-    .single()
+  // 1. Always try to sign in first
+  const { data: signInData, error: signInError } = await ssrSupabase.auth.signInWithPassword({
+    email: dummyEmail,
+    password,
+  })
 
-  if (profile) {
-    // User exists, try to log in
-    const ssrSupabase = await createClient()
-    const { data, error } = await ssrSupabase.auth.signInWithPassword({
-      email: dummyEmail,
-      password,
-    })
+  if (signInData.user) {
+    // User signed in successfully. Verify their profile exists.
+    const { data: profile } = await supabaseAdmin
+      .from('customer_profiles')
+      .select('id, name')
+      .eq('id', signInData.user.id)
+      .single()
 
-    if (error) {
-      return { error: 'Incorrect password.' }
-    }
-
-    if (data.user) {
-      await createSession(dummyEmail)
-      return { success: true }
-    }
-    return { error: 'Failed to login' }
-  } else {
-    // User does not exist, sign them up
-    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
-      email: dummyEmail,
-      password,
-      email_confirm: true,
-    })
-
-    if (adminError) {
-      return { error: adminError.message }
-    }
-
-    if (adminData.user) {
-      const ssrSupabase = await createClient()
-      const { data: signInData, error: signInError } = await ssrSupabase.auth.signInWithPassword({
+    if (!profile) {
+      // Profile is missing (maybe deleted during dev). Create it now.
+      await supabaseAdmin.from('customer_profiles').upsert({
+        id: signInData.user.id,
         email: dummyEmail,
-        password,
-      })
-
-      if (signInError) {
-        return { error: 'Account created but failed to log in automatically.' }
-      }
-      
-      await supabase.from('customer_profiles').upsert({
-        id: adminData.user.id,
-        email: dummyEmail,
-        full_name: 'Guest User', // Default name, user can change later
+        name: '', 
         phone: cleanPhone,
       })
-
       await createSession(dummyEmail)
-      return { success: true }
+      return { success: true, isNewUser: true }
+    } else {
+      await createSession(dummyEmail)
+      // Check if they never completed onboarding (name is empty)
+      const isNew = !profile.name || profile.name.trim() === ''
+      return { success: true, isNewUser: isNew }
     }
-    return { error: 'Failed to sign up' }
   }
+
+  // 2. If signIn failed, it could be wrong password OR new user. Try to sign up.
+  const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.createUser({
+    email: dummyEmail,
+    password,
+    email_confirm: true,
+  })
+
+  if (adminError) {
+    if (adminError.message.includes('already been registered') || adminError.status === 422) {
+      // User exists in auth.users, so the earlier sign in failed due to WRONG PASSWORD.
+      return { error: 'Incorrect password.' }
+    }
+    return { error: adminError.message }
+  }
+
+  // 3. Signup successful! Sign them in to set browser cookies.
+  if (adminData.user) {
+    const { data: newSignInData, error: newSignInError } = await ssrSupabase.auth.signInWithPassword({
+      email: dummyEmail,
+      password,
+    })
+
+    if (newSignInError) {
+      return { error: 'Account created but failed to log in automatically.' }
+    }
+    
+    await supabaseAdmin.from('customer_profiles').upsert({
+      id: adminData.user.id,
+      email: dummyEmail,
+      name: '', // Empty name indicates they need onboarding
+      phone: cleanPhone,
+    })
+
+    await createSession(dummyEmail)
+    return { success: true, isNewUser: true }
+  }
+
+  return { error: 'Failed to sign up' }
+}
+
+export async function completeUserProfile(formData: FormData) {
+  const name = formData.get('name') as string
+
+  if (!name || name.trim().length === 0) {
+    return { error: 'Please enter your name.' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'Not authenticated.' }
+  }
+
+  const supabaseAdmin = createAdminClient()
+
+  // Update customer_profiles table (uses 'name' column)
+  const { error: customerProfileError } = await supabaseAdmin
+    .from('customer_profiles')
+    .update({ name: name.trim() })
+    .eq('id', user.id)
+    
+  // Also try updating full_name just in case they added it recently or it's in the schema cache
+  if (customerProfileError?.code === 'PGRST204') {
+    await supabaseAdmin.from('customer_profiles').update({ full_name: name.trim() }).eq('id', user.id)
+  }
+
+  // Also update the main 'profiles' table which uses 'full_name'
+  await supabaseAdmin
+    .from('profiles')
+    .update({ full_name: name.trim() })
+    .eq('id', user.id)
+
+  if (customerProfileError && customerProfileError.code !== 'PGRST204') {
+    console.error("Profile update error:", customerProfileError)
+    return { error: 'Failed to update profile.' }
+  }
+
+  return { success: true }
 }

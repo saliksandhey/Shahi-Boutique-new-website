@@ -6,14 +6,11 @@ import { revalidatePath } from 'next/cache'
 export async function createBlog(data: any) {
   const supabase = createAdminClient()
   
-  // Ensure slug is unique by appending random string if needed
-  let finalSlug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
-  
-  // Check if slug exists
-  const { data: existing } = await supabase.from('blogs').select('id').eq('slug', finalSlug).single()
-  if (existing) {
-    finalSlug = `${finalSlug}-${Math.random().toString(36).substring(2, 6)}`
-  }
+  // Ensure slug is unique by always appending a random string
+  const rawSlug = data.slug || data.title
+  const baseSlug = rawSlug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+  const randomSuffix = Math.random().toString(36).substring(2, 6)
+  const finalSlug = `${baseSlug}-${randomSuffix}`
 
   // Handle published_at if status is PUBLISHED
   const payload = { ...data, slug: finalSlug }
@@ -170,4 +167,48 @@ export async function uploadBlogImage(formData: FormData) {
     .getPublicUrl(filePath)
 
   return { success: true, url: publicUrlData.publicUrl }
+}
+
+export async function fetchInstagramData(url: string) {
+  try {
+    // 1. Fetch Microlink data for title, description, and fallback image
+    const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`)
+    const data = await response.json()
+    
+    if (data.status === 'success' && data.data?.image?.url) {
+      let imageUrl = data.data.image.url
+      let videoUrl = data.data.video?.url
+
+      // 2. Try to fetch the uncropped full-resolution media from Instagram's embed endpoint
+      try {
+        const cleanUrl = url.split('?')[0].replace(/\/$/, '')
+        const embedResponse = await fetch(`${cleanUrl}/embed`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        })
+        if (embedResponse.ok) {
+          const embedHtml = await embedResponse.text()
+          const imgMatch = embedHtml.match(/class=\"EmbeddedMediaImage\"[^>]+src=\"([^\"]+)\"/)
+          
+          if (imgMatch && imgMatch[1]) {
+            // Instagram embed image (high quality, uncropped)
+            imageUrl = imgMatch[1].replace(/&amp;/g, '&')
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch from embed endpoint', e)
+      }
+
+      return { 
+        success: true, 
+        imageUrl: videoUrl || imageUrl, // Prefer video if available
+        title: data.data.title, 
+        description: data.data.description 
+      }
+    }
+    return { success: false, error: 'Could not extract image from Instagram link. Please upload manually.' }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 }

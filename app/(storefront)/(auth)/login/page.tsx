@@ -34,6 +34,9 @@ function AuthForm() {
       const res = await loginOrSignupWithPhone(formData)
       if (res.error) {
         setError(res.error)
+      } else if (res.isNewUser) {
+        router.push(`/onboarding?next=${encodeURIComponent(nextParam)}`)
+        router.refresh()
       } else {
         router.push(nextParam)
         router.refresh()
