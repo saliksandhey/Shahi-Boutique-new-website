@@ -5,6 +5,7 @@ import { adminLogout } from '@/lib/actions/admin-auth'
 import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function Header() {
   const pathname = usePathname()
@@ -15,9 +16,16 @@ export function Header() {
       
       {/* Mobile Title */}
       <div className="lg:hidden flex items-center">
-        <span className="text-lg font-heading font-black uppercase tracking-widest text-[#09090B]">
-          SHAHI
-        </span>
+        <Link href="/2010admin" className="relative w-28 h-8 flex items-center justify-center">
+          <Image 
+            src="/logo.png" 
+            alt="SHAHI" 
+            fill 
+            className="object-contain object-left"
+            quality={100}
+            priority
+          />
+        </Link>
       </div>
 
       {/* Desktop Breadcrumbs */}

@@ -3,25 +3,29 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export async function adminLogin(formData: FormData) {
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const pin = formData.get('pin') as string
 
-  const supabase = await createClient()
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error || !data.user) {
-    return { error: 'Invalid email or password.' }
+  if (!pin || pin.length !== 4) {
+    return { error: 'Invalid PIN format.' }
   }
 
-  if (!data.session) {
-    return { error: 'Email not confirmed. Please confirm your email in Supabase or turn off email confirmation.' }
+  const supabase = await createAdminClient()
+  
+  // Get the PIN from settings
+  const { data, error } = await supabase
+    .from('store_settings')
+    .select('value')
+    .eq('key', 'admin_pin')
+    .single()
+
+  // Default PIN is '2010' if none is set in the DB
+  const validPin = data?.value || '2010'
+
+  if (pin !== validPin) {
+    return { error: 'Incorrect PIN.' }
   }
 
   const cookieStore = await cookies()
@@ -32,15 +36,12 @@ export async function adminLogin(formData: FormData) {
     path: '/',
   })
 
-  revalidatePath('/admin', 'layout')
-  redirect('/admin')
+  revalidatePath('/2010admin', 'layout')
+  redirect('/2010admin')
 }
 
 export async function adminLogout() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-
   const cookieStore = await cookies()
   cookieStore.delete('admin_token')
-  redirect('/admin/login')
+  redirect('/2010admin')
 }

@@ -5,6 +5,29 @@ import { SortSelect } from '@/components/storefront/SortSelect'
 import { Pagination } from '@/components/storefront/Pagination'
 import { notFound } from 'next/navigation'
 
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = await params
+  const supabase = createPublicClient()
+  
+  const { data: category } = await supabase.from('categories').select('*').eq('slug', slug).single()
+  
+  if (!category) return {}
+
+  const description = category.description?.substring(0, 160) || `Shop the latest ${category.name} collection at Shahi Boutique.`
+
+  return {
+    title: `${category.name} Collection`,
+    description: description,
+    openGraph: {
+      title: `${category.name} | Shahi Boutique`,
+      description: description,
+      url: `/category/${category.slug}`,
+    }
+  }
+}
+
 export const revalidate = 60
 
 export default async function CategoryPage({

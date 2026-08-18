@@ -32,7 +32,7 @@ export async function createAppointment(data: {
   }
 
   // Optional: revalidate admin page if necessary
-  revalidatePath('/admin/appointments')
+  revalidatePath('/2010admin/appointments')
   
   return { success: true, booking_id }
 }
@@ -66,6 +66,6 @@ export async function updateAppointmentStatus(id: string, status: string) {
     return { success: false, error: 'Failed to update status' }
   }
 
-  revalidatePath('/admin/appointments')
+  revalidatePath('/2010admin/appointments')
   return { success: true }
 }

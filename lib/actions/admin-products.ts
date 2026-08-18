@@ -55,7 +55,7 @@ export async function saveProductDetails(data: ProductPayload) {
       }
       return { error: error.message }
     }
-    revalidatePath('/admin/products')
+    revalidatePath('/2010admin/products')
     revalidatePath(`/product/${data.slug}`)
     revalidatePath('/shop')
     revalidatePath('/')
@@ -80,7 +80,7 @@ export async function saveProductDetails(data: ProductPayload) {
     const { data: newProd, error } = await supabase.from('products').insert([payload]).select('id').single()
     if (error) return { error: error.message }
     
-    revalidatePath('/admin/products')
+    revalidatePath('/2010admin/products')
     revalidatePath(`/product/${uniqueSlug}`)
     revalidatePath('/shop')
     revalidatePath('/')
@@ -92,7 +92,7 @@ export async function deleteProduct(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('products').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/products')
+  revalidatePath('/2010admin/products')
   return { success: true }
 }
 
@@ -125,7 +125,7 @@ export async function saveSizeGuides(productId: string, guides: SizeGuidePayload
   const { error } = await supabase.from('product_size_guides').upsert(toUpsert, { onConflict: 'id' })
   if (error) return { error: error.message }
   
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   return { success: true }
 }
 
@@ -133,7 +133,7 @@ export async function deleteSizeGuide(id: string, productId: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('product_size_guides').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   return { success: true }
 }
 
@@ -154,7 +154,7 @@ export async function saveVariants(productId: string, variants: VariantPayload[]
   const { error } = await supabase.from('product_variants').upsert(toUpsert, { onConflict: 'id' })
   if (error) return { error: error.message }
   
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   revalidatePath('/shop')
   return { success: true }
 }
@@ -163,7 +163,7 @@ export async function deleteVariant(id: string, productId: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('product_variants').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   revalidatePath('/shop')
   return { success: true }
 }
@@ -200,7 +200,7 @@ export async function uploadProductImages(productId: string, formData: FormData)
     if (dbError) return { error: dbError.message }
   }
 
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   return { success: true }
 }
 
@@ -219,7 +219,7 @@ export async function setPrimaryImage(id: string, productId: string) {
   const { error } = await supabase.from('product_images').update({ is_primary: true }).eq('id', id)
   if (error) return { error: error.message }
   
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   return { success: true }
 }
 
@@ -237,6 +237,6 @@ export async function deleteProductImage(id: string, productId: string) {
   const { error } = await supabase.from('product_images').delete().eq('id', id)
   if (error) return { error: error.message }
   
-  revalidatePath(`/admin/products/${productId}/edit`)
+  revalidatePath(`/2010admin/products/${productId}/edit`)
   return { success: true }
 }

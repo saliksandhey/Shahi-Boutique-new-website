@@ -14,8 +14,8 @@ export async function markOrderAsPaid(orderId: string) {
     return { success: false, error: error.message }
   }
   
-  revalidatePath('/admin/payments')
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath('/2010admin/payments')
+  revalidatePath(`/2010admin/orders/${orderId}`)
   
   return { success: true }
 }

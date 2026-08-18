@@ -12,7 +12,7 @@ export function AppointmentPopup() {
 
   useEffect(() => {
     // Don't show on the appointment page itself or admin pages
-    if (pathname === '/book-appointment' || pathname?.startsWith('/admin')) {
+    if (pathname === '/book-appointment' || pathname?.startsWith('/2010admin')) {
       return
     }
 

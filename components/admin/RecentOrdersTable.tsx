@@ -40,7 +40,7 @@ export async function RecentOrdersTable() {
             {orders.map((order) => (
               <TableRow key={order.id} className="border-gray-100 hover:bg-gray-50 transition-colors">
                 <TableCell className="font-medium">
-                  <Link href={`/admin/orders/${order.id}`} className="hover:text-[#FF7A00] text-[#09090B] font-semibold transition-colors">
+                  <Link href={`/2010admin/orders/${order.id}`} className="hover:text-[#FF7A00] text-[#09090B] font-semibold transition-colors">
                     #{order.order_number}
                   </Link>
                 </TableCell>
@@ -60,7 +60,7 @@ export async function RecentOrdersTable() {
       {/* Mobile Cards */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {orders.map((order) => (
-          <Link href={`/admin/orders/${order.id}`} key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3 active:scale-[0.98] transition-transform">
+          <Link href={`/2010admin/orders/${order.id}`} key={order.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-3 active:scale-[0.98] transition-transform">
             <div className="flex justify-between items-start">
               <span className="font-semibold text-[#09090B]">#{order.order_number}</span>
               <span className="text-xs text-gray-500 font-medium">{new Date(order.created_at).toLocaleDateString()}</span>

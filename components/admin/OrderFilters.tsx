@@ -28,7 +28,7 @@ export function OrderFilters() {
     const params = new URLSearchParams()
     if (status !== 'ALL') params.set('status', status)
     if (q) params.set('q', q)
-    router.push(`/admin/orders?${params.toString()}`)
+    router.push(`/2010admin/orders?${params.toString()}`)
   }
 
   return (

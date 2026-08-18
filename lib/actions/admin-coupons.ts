@@ -39,8 +39,8 @@ export async function createCoupon(formData: FormData) {
   const { error } = await supabase.from('coupons').insert([dataToInsert])
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/coupons')
-  redirect('/admin/coupons')
+  revalidatePath('/2010admin/coupons')
+  redirect('/2010admin/coupons')
 }
 
 export async function updateCoupon(id: string, formData: FormData) {
@@ -67,14 +67,14 @@ export async function updateCoupon(id: string, formData: FormData) {
   const { error } = await supabase.from('coupons').update(dataToUpdate).eq('id', id)
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/coupons')
-  redirect('/admin/coupons')
+  revalidatePath('/2010admin/coupons')
+  redirect('/2010admin/coupons')
 }
 
 export async function deleteCoupon(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('coupons').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/coupons')
+  revalidatePath('/2010admin/coupons')
   return { success: true }
 }

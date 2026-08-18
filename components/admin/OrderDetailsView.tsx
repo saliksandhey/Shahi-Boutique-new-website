@@ -50,17 +50,17 @@ export async function OrderDetailsView({ id, onCloseHref }: { id: string, onClos
         
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/admin/orders/${order.id}/invoice`} target="_blank">
+            <Link href={`/2010admin/orders/${order.id}/invoice`} target="_blank">
               <Printer className="h-4 w-4 mr-2" /> Print Invoice
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href={`/admin/orders/${order.id}/packing-slip`} target="_blank">
+            <Link href={`/2010admin/orders/${order.id}/packing-slip`} target="_blank">
               <FileText className="h-4 w-4 mr-2" /> Packing Slip
             </Link>
           </Button>
           <Button className="bg-black hover:bg-gray-800 text-white" asChild>
-            <Link href={`/admin/orders/${order.id}/label`} target="_blank">
+            <Link href={`/2010admin/orders/${order.id}/label`} target="_blank">
               <Printer className="h-4 w-4 mr-2" /> Print Label
             </Link>
           </Button>

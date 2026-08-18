@@ -58,7 +58,7 @@ export async function updateStoreSettings(formData: FormData) {
     }
   }
   
-  revalidatePath('/admin/settings')
+  revalidatePath('/2010admin/settings')
   revalidatePath('/', 'layout')
   return { success: true }
 }
@@ -89,7 +89,7 @@ export async function updateBannerSettings(formData: FormData) {
     }
   }
   
-  revalidatePath('/admin/banners')
+  revalidatePath('/2010admin/banners')
   revalidatePath('/', 'layout')
   return { success: true }
 }
@@ -141,7 +141,7 @@ export async function uploadHeroBanner(formData: FormData) {
   }
 
   revalidatePath('/')
-  revalidatePath('/admin/settings')
+  revalidatePath('/2010admin/settings')
   return { success: true, url: publicUrlData.publicUrl }
 }
 
@@ -194,65 +194,30 @@ export async function updateAppointmentTimeSlots(times: string[]) {
     return { success: false, error: 'Failed to update time slots' }
   }
   
-  revalidatePath('/admin/appointments')
+  revalidatePath('/2010admin/appointments')
   revalidatePath('/book-appointment')
   
   return { success: true }
 }
 
-export async function updatePassword(formData: FormData) {
-  const supabase = await createClient()
-  const newPassword = formData.get('password') as string
+export async function updateAdminPin(formData: FormData) {
+  const supabase = await createAdminClient()
+  const newPin = formData.get('admin_pin') as string
 
-  if (!newPassword || newPassword.length < 6) {
-    return { error: 'Password must be at least 6 characters long.' }
+  if (!newPin || !/^\d{4}$/.test(newPin)) {
+    return { error: 'PIN must be exactly 4 digits.' }
   }
 
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword
-  })
+  const { error } = await supabase
+    .from('store_settings')
+    .upsert(
+      { key: 'admin_pin', value: newPin },
+      { onConflict: 'key' }
+    )
 
   if (error) {
-    return { error: error.message }
-  }
-
-  return { success: true }
-}
-
-export async function deleteAccount() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: 'Not authenticated' }
-  }
-
-  // Use admin client to delete user completely from Auth schema
-  const adminClient = createAdminClient()
-  const { error } = await adminClient.auth.admin.deleteUser(user.id)
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  return { success: true }
-}
-
-
-export async function updateEmail(formData: FormData) {
-  const supabase = await createClient()
-  const newEmail = formData.get('email') as string
-
-  if (!newEmail || !newEmail.includes('@')) {
-    return { error: 'Please provide a valid email address.' }
-  }
-
-  const { error } = await supabase.auth.updateUser({
-    email: newEmail
-  })
-
-  if (error) {
-    return { error: error.message }
+    console.error('Failed to update admin PIN:', error)
+    return { error: 'Failed to update Admin PIN.' }
   }
 
   return { success: true }

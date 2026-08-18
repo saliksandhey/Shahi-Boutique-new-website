@@ -10,7 +10,7 @@ import { FloatingAppointmentButton } from './FloatingAppointmentButton'
 
 export function StorefrontWrapper({ children, categories }: { children: React.ReactNode, categories: any[] }) {
   const pathname = usePathname()
-  const isAdmin = pathname?.startsWith('/admin')
+  const isAdmin = pathname?.startsWith('/2010admin')
   const isHomepage = pathname === '/'
 
   if (isAdmin) {

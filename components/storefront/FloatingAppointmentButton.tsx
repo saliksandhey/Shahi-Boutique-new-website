@@ -51,7 +51,7 @@ export function FloatingAppointmentButton() {
     }
   }, [isScrolled, isExpanded, hasManuallyClosed])
 
-  if (pathname === '/book-appointment' || pathname?.startsWith('/admin')) {
+  if (pathname === '/book-appointment' || pathname?.startsWith('/2010admin')) {
     return null
   }
 

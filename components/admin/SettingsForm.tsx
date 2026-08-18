@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { updateStoreSettings, updateEmail, updatePassword, uploadHeroBanner } from '@/lib/actions/settings'
+import { updateStoreSettings, updateAdminPin, uploadHeroBanner } from '@/lib/actions/settings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-export function SettingsForm({ initialSettings, currentEmail }: { initialSettings: Record<string, string>, currentEmail: string }) {
+export function SettingsForm({ initialSettings }: { initialSettings: Record<string, string> }) {
   const [storeLoading, setStoreLoading] = useState(false)
   const [storeMessage, setStoreMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
@@ -61,34 +61,21 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
     setSecurityMessage(null)
 
     const formData = new FormData(e.currentTarget)
-    let errorMsg = null
-    let changed = false
-
-    const newEmail = formData.get('email') as string
-    if (newEmail && newEmail !== currentEmail) {
-      changed = true
-      const emailRes = await updateEmail(formData)
-      if (emailRes?.error) errorMsg = emailRes.error
-    }
-
-    const newPassword = formData.get('password') as string
-    if (newPassword && newPassword.length > 0) {
-      changed = true
-      const passRes = await updatePassword(formData)
-      if (passRes?.error) errorMsg = passRes.error
-      else {
-        const passInput = document.getElementById('password') as HTMLInputElement
-        if (passInput) passInput.value = ''
+    const newPin = formData.get('admin_pin') as string
+    
+    if (newPin && newPin.length === 4) {
+      const pinRes = await updateAdminPin(formData)
+      if (pinRes?.error) {
+        setSecurityMessage({ type: 'error', text: pinRes.error })
+      } else {
+        setSecurityMessage({ type: 'success', text: 'Admin PIN updated successfully!' })
+        const pinInput = document.getElementById('admin_pin') as HTMLInputElement
+        if (pinInput) pinInput.value = ''
       }
-    }
-
-    if (!changed) {
-      setSecurityMessage({ type: 'success', text: 'No changes to save.' })
-    } else if (!errorMsg) {
-      setSecurityMessage({ type: 'success', text: 'Security settings updated successfully!' })
     } else {
-      setSecurityMessage({ type: 'error', text: errorMsg })
+      setSecurityMessage({ type: 'error', text: 'Please enter a valid 4-digit PIN.' })
     }
+    
     setSecurityLoading(false)
   }
 
@@ -263,30 +250,23 @@ export function SettingsForm({ initialSettings, currentEmail }: { initialSetting
       <form onSubmit={handleSecuritySubmit} className="space-y-6 pt-8 border-t-2 border-gray-50">
         <div>
           <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Security & Login</h3>
-          <p className="text-xs font-medium text-gray-500 mb-4">Update your admin credentials via Supabase Authentication.</p>
+          <p className="text-xs font-medium text-gray-500 mb-4">Update the secure 4-digit PIN used to access the admin gateway.</p>
           
           <div className="grid gap-4 max-w-xl">
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Admin Email Address</Label>
+              <Label htmlFor="admin_pin" className="text-[10px] uppercase font-black tracking-widest text-gray-400">New Admin PIN</Label>
               <Input 
-                id="email" 
-                name="email" 
-                type="email"
-                defaultValue={currentEmail} 
+                id="admin_pin" 
+                name="admin_pin" 
+                type="text"
+                pattern="\d{4}"
+                maxLength={4}
                 required
-                className="rounded-xl border-gray-200"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="password" className="text-[10px] uppercase font-black tracking-widest text-gray-400">New Password (Optional)</Label>
-              <Input 
-                id="password" 
-                name="password" 
-                type="password"
-                placeholder="Leave blank to keep current password"
-                minLength={6}
-                className="rounded-xl border-gray-200"
+                placeholder="Enter 4-digit PIN"
+                className="rounded-xl border-gray-200 tracking-[0.5em] font-black"
+                onChange={(e) => {
+                  e.target.value = e.target.value.replace(/\D/g, '')
+                }}
               />
             </div>
           </div>

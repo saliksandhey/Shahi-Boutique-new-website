@@ -7,7 +7,7 @@ export async function approveReview(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('reviews').update({ approved: true }).eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/reviews')
+  revalidatePath('/2010admin/reviews')
   return { success: true }
 }
 
@@ -15,7 +15,7 @@ export async function rejectReview(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('reviews').update({ approved: false }).eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/reviews')
+  revalidatePath('/2010admin/reviews')
   return { success: true }
 }
 
@@ -23,6 +23,6 @@ export async function deleteReview(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('reviews').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/reviews')
+  revalidatePath('/2010admin/reviews')
   return { success: true }
 }

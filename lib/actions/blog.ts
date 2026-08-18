@@ -29,7 +29,7 @@ export async function createBlog(data: any) {
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/admin/blogs')
+  revalidatePath('/2010admin/blogs')
   revalidatePath('/feed')
   return { success: true, data: blog }
 }
@@ -55,7 +55,7 @@ export async function updateBlog(id: string, data: any) {
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/admin/blogs')
+  revalidatePath('/2010admin/blogs')
   revalidatePath('/feed')
   revalidatePath(`/feed/${blog.slug}`)
   return { success: true, data: blog }
@@ -73,7 +73,7 @@ export async function deleteBlog(id: string) {
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/admin/blogs')
+  revalidatePath('/2010admin/blogs')
   revalidatePath('/feed')
   return { success: true }
 }

@@ -36,7 +36,7 @@ export async function updateEnquiryStatus(id: string, status: string) {
     return { error: error.message }
   }
   
-  revalidatePath('/admin/enquiries')
+  revalidatePath('/2010admin/enquiries')
   return { success: true }
 }
 
@@ -46,6 +46,6 @@ export async function deleteEnquiry(id: string) {
   
   if (error) return { error: error.message }
   
-  revalidatePath('/admin/enquiries')
+  revalidatePath('/2010admin/enquiries')
   return { success: true }
 }

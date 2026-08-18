@@ -130,7 +130,7 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       }
 
       if (!product) {
-        window.location.href = `/admin/products/${res.id}/edit`
+        window.location.href = `/2010admin/products/${res.id}/edit`
       } else {
         setSelectedImages([])
         setUploadingImages(false)

@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
   // Admin routes logic (Decoupled from Supabase, now using explicit admin_token)
   // We no longer redirect here. Instead, app/admin/(secure)/layout.tsx renders
   // the login component directly if the admin_token is missing.
-  if (pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/2010admin')) {
     return supabaseResponse
   }
 

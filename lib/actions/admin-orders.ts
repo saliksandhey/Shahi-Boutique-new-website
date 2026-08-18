@@ -34,8 +34,8 @@ export async function updateOrderStatus(orderId: string, newStatus: string, desc
     console.error("Failed to send status update email", e)
   }
 
-  revalidatePath(`/admin/orders/${orderId}`)
-  revalidatePath('/admin/orders')
+  revalidatePath(`/2010admin/orders/${orderId}`)
+  revalidatePath('/2010admin/orders')
   return { success: true }
 }
 
@@ -77,7 +77,7 @@ export async function updateShippingDetails(orderId: string, formData: FormData)
     console.error("Failed to send tracking update email", e)
   }
 
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/2010admin/orders/${orderId}`)
   return { success: true }
 }
 
@@ -92,7 +92,7 @@ export async function addTimelineEvent(orderId: string, eventType: string, descr
 
   if (error) return { error: error.message }
 
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/2010admin/orders/${orderId}`)
   return { success: true }
 }
 
@@ -108,7 +108,7 @@ export async function saveStaffNotes(orderId: string, staff_notes: string, tags:
 
   await addTimelineEvent(orderId, 'Internal Note Added', 'Staff notes or tags were updated.')
   
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/2010admin/orders/${orderId}`)
   return { success: true }
 }
 
@@ -161,7 +161,7 @@ export async function processRefund(orderId: string, items: {id: string, qty: nu
     console.error("Failed to send refund email", e)
   }
 
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/2010admin/orders/${orderId}`)
   return { success: true }
 }
 
@@ -179,7 +179,7 @@ export async function updateOrderShippingAddress(orderId: string, address: any) 
   if (error) return { error: error.message }
   
   await addTimelineEvent(orderId, 'Address Updated', 'Shipping address was manually updated by staff.')
-  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath(`/2010admin/orders/${orderId}`)
   return { success: true }
 }
 

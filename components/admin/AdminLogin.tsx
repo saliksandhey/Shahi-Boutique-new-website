@@ -7,17 +7,26 @@ import { Lock } from 'lucide-react'
 export function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pin, setPin] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (pin.length !== 4) {
+      setError('PIN must be 4 digits.')
+      return
+    }
+
     setLoading(true)
     setError(null)
     
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData()
+    formData.append('pin', pin)
+
     const result = await adminLogin(formData)
     
     if (result?.error) {
       setError(result.error)
+      setPin('')
       setLoading(false)
     }
   }
@@ -43,7 +52,7 @@ export function AdminLogin() {
           </h2>
           <p className="mt-6 text-gray-400 text-sm font-medium leading-relaxed">
             Welcome to the Shahi Boutique secure admin gateway. 
-            Manage orders, inventory, and customers all in one place.
+            Enter your secure PIN to access the dashboard.
           </p>
         </div>
         
@@ -63,7 +72,7 @@ export function AdminLogin() {
 
           <div className="space-y-3">
             <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome Back</h2>
-            <p className="text-sm font-medium text-gray-500">Please enter your credentials to access the dashboard.</p>
+            <p className="text-sm font-medium text-gray-500">Please enter your 4-digit PIN to access the dashboard.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -75,32 +84,27 @@ export function AdminLogin() {
             )}
 
             <div className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black tracking-widest text-gray-400 ml-1">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 transition-all font-medium"
-                  placeholder="admin@shahiboutique.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black tracking-widest text-gray-400 ml-1">Password</label>
+              <div className="space-y-2 text-center">
                 <input
                   type="password"
-                  name="password"
+                  name="pin"
                   required
-                  className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 transition-all font-medium"
-                  placeholder="••••••••"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '')
+                    setPin(val)
+                  }}
+                  className="w-full max-w-[200px] mx-auto text-center px-5 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] focus:ring-4 focus:ring-[#FF7A00]/10 transition-all text-3xl font-black tracking-[1em]"
+                  placeholder="••••"
+                  autoFocus
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || pin.length !== 4}
               className="w-full py-4 bg-[#1C1C1C] text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-[#FF7A00] hover:shadow-lg hover:shadow-[#FF7A00]/30 transition-all duration-300 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none flex justify-center items-center group mt-8"
             >
               {loading ? (

@@ -4,8 +4,13 @@ import { createPublicClient } from '@/lib/supabase/server'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'Contact Us | SHAHI',
-  description: 'Get in touch with our customer service team.',
+  title: 'Contact Us',
+  description: 'Get in touch with the Shahi Boutique customer service team for inquiries about bespoke bridal wear, custom outfits, and order support.',
+  openGraph: {
+    title: 'Contact Us | Shahi Boutique',
+    description: 'Get in touch with the Shahi Boutique customer service team for inquiries about bespoke bridal wear, custom outfits, and order support.',
+    url: '/contact',
+  }
 }
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {

@@ -31,7 +31,7 @@ export function AnnouncementForm({ initialData }: { initialData?: any }) {
     if (result.error) {
       setError(result.error)
     } else {
-      router.push('/admin/announcements')
+      router.push('/2010admin/announcements')
     }
   }
 
@@ -92,7 +92,7 @@ export function AnnouncementForm({ initialData }: { initialData?: any }) {
       </div>
 
       <div className="flex gap-4 pt-4">
-        <Button type="button" variant="outline" onClick={() => router.push('/admin/announcements')}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => router.push('/2010admin/announcements')}>Cancel</Button>
         <Button type="submit" disabled={loading} className="bg-black hover:bg-gray-800 text-white">
           {loading ? 'Saving...' : 'Save Announcement'}
         </Button>

@@ -62,7 +62,7 @@ export async function createAnnouncement(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  revalidatePath('/admin/announcements')
+  revalidatePath('/2010admin/announcements')
   return { success: true }
 }
 
@@ -92,7 +92,7 @@ export async function updateAnnouncement(id: string, formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  revalidatePath('/admin/announcements')
+  revalidatePath('/2010admin/announcements')
   return { success: true }
 }
 
@@ -109,6 +109,6 @@ export async function deleteAnnouncement(id: string) {
   }
 
   revalidatePath('/', 'layout')
-  revalidatePath('/admin/announcements')
+  revalidatePath('/2010admin/announcements')
   return { success: true }
 }

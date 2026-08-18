@@ -4,6 +4,18 @@ import { FilterSidebar } from '@/components/storefront/FilterSidebar'
 import { SortSelect } from '@/components/storefront/SortSelect'
 import { Pagination } from '@/components/storefront/Pagination'
 
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Shop All Products',
+  description: 'Browse our entire collection of bespoke bridal wear, stunning potli bags, suits, and luxury accessories at Shahi Boutique.',
+  openGraph: {
+    title: 'Shop All Products | Shahi Boutique',
+    description: 'Browse our entire collection of bespoke bridal wear, stunning potli bags, suits, and luxury accessories at Shahi Boutique.',
+    url: '/shop',
+  }
+}
+
 export const revalidate = 60
 
 export default async function ShopPage({

@@ -38,8 +38,8 @@ export async function createCategory(formData: FormData) {
   const { error } = await supabase.from('categories').insert([{ ...validated.data, image: imageUrl }])
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/categories')
-  redirect('/admin/categories')
+  revalidatePath('/2010admin/categories')
+  redirect('/2010admin/categories')
 }
 
 export async function updateCategory(id: string, formData: FormData) {
@@ -71,14 +71,14 @@ export async function updateCategory(id: string, formData: FormData) {
   const { error } = await supabase.from('categories').update(updateData).eq('id', id)
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/categories')
-  redirect('/admin/categories')
+  revalidatePath('/2010admin/categories')
+  redirect('/2010admin/categories')
 }
 
 export async function deleteCategory(id: string) {
   const supabase = createAdminClient()
   const { error } = await supabase.from('categories').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath('/admin/categories')
+  revalidatePath('/2010admin/categories')
   return { success: true }
 }
