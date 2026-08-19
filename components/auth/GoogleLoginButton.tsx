@@ -16,7 +16,10 @@ export function GoogleLoginButton({ nextParam = '/' }: { nextParam?: string }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${nextParam}`
+        redirectTo: `${window.location.origin}/auth/callback?next=${nextParam}`,
+        queryParams: {
+          prompt: 'select_account'
+        }
       }
     })
     

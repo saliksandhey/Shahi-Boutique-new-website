@@ -9,12 +9,14 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { getUpsellProducts } from '@/lib/actions/products'
 import { Clock } from 'lucide-react'
-import { loginOrSignupWithPhone } from '@/lib/actions/auth-phone'
+import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
   const router = useRouter()
   const [showLoginSheet, setShowLoginSheet] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [loginMessage, setLoginMessage] = useState<string|null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [upsellItems, setUpsellItems] = useState<any[]>([])
@@ -141,7 +143,10 @@ export function CartDrawer() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/checkout&mode=popup`,
-        skipBrowserRedirect: true
+        skipBrowserRedirect: true,
+        queryParams: {
+          prompt: 'select_account'
+        }
       }
     })
     
@@ -264,7 +269,7 @@ export function CartDrawer() {
                         </button>
                       </div>
                       <p className="text-sm font-black text-[#FF7A00] mt-1">
-                        ₹{(item.salePrice || item.price).toFixed(2)}
+                        â‚¹{(item.salePrice || item.price).toFixed(2)}
                       </p>
                     </div>
                     
@@ -321,10 +326,10 @@ export function CartDrawer() {
                                 <span className={`text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none flex items-center ${
                                   upsellPhase === 'expired' ? 'bg-gray-400' : upsellPhase === 'last-chance' ? 'bg-red-600' : 'bg-[#FF7A00]'
                                 }`}>
-                                  ₹{upsell.salePrice.toFixed(0)}
+                                  â‚¹{upsell.salePrice.toFixed(0)}
                                 </span>
                                 <span className="text-[9px] text-gray-400 line-through font-medium">
-                                  ₹{upsell.price.toFixed(0)}
+                                  â‚¹{upsell.price.toFixed(0)}
                                 </span>
                               </div>
                               <button
@@ -353,7 +358,7 @@ export function CartDrawer() {
           <div className="border-t border-gray-100 p-4 bg-white space-y-3 shrink-0">
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold uppercase tracking-widest text-xs">Subtotal</span>
-              <span className="font-black text-xl">₹{getSubtotal().toFixed(2)}</span>
+              <span className="font-black text-xl">â‚¹{getSubtotal().toFixed(2)}</span>
             </div>
             <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 
@@ -380,8 +385,8 @@ export function CartDrawer() {
               <X className="w-5 h-5" />
             </button>
             <div className="text-center mt-4 mb-8">
-              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">Sign in to Checkout</h3>
-              <p className="text-sm text-gray-500 font-medium mt-2">Sign in to access your saved addresses and faster checkout.</p>
+              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">{isSignUp ? 'Create Account' : 'Sign in to Checkout'}</h3>
+              <p className="text-sm text-gray-500 font-medium mt-2">{isSignUp ? 'Create an account to track your orders.' : 'Sign in to access your saved addresses and faster checkout.'}</p>
             </div>
             
             <form 
@@ -389,22 +394,32 @@ export function CartDrawer() {
                 e.preventDefault()
                 setIsCheckingAuth(true)
                 setLoginError(null)
+                setLoginMessage(null)
                 const formData = new FormData(e.currentTarget)
                 
-                const phone = formData.get('phone') as string
-                if (!phone.startsWith('+')) {
-                  formData.set('phone', '+91' + phone)
-                }
-
                 try {
-                  const res = await loginOrSignupWithPhone(formData)
-                  if (res.error) {
-                    setLoginError(res.error)
+                  if (isSignUp) {
+                    const res = await signupWithEmail(formData)
+                    if (res.error) {
+                      setLoginError(res.error)
+                    } else if (res.requireVerification) {
+                      setLoginMessage('Account created! Please check your email to verify before continuing.')
+                    } else {
+                      setShowLoginSheet(false)
+                      closeCart()
+                      router.push('/checkout')
+                      router.refresh()
+                    }
                   } else {
-                    setShowLoginSheet(false)
-                    closeCart()
-                    router.push('/checkout')
-                    router.refresh()
+                    const res = await loginWithEmail(formData)
+                    if (res.error) {
+                      setLoginError(res.error)
+                    } else {
+                      setShowLoginSheet(false)
+                      closeCart()
+                      router.push('/checkout')
+                      router.refresh()
+                    }
                   }
                 } catch(err) {
                   setLoginError("An unexpected error occurred.")
@@ -415,45 +430,44 @@ export function CartDrawer() {
               className="space-y-4 mb-6"
             >
               <div className="space-y-2">
-                <div className="flex">
-                  <span className="inline-flex items-center px-4 rounded-l-full border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-xs font-bold">
-                    +91
-                  </span>
-                  <input 
-                    name="phone" 
-                    type="tel" 
-                    required 
-                    className="flex h-12 w-full rounded-r-full border border-l-0 border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]"
-                    placeholder="Phone Number" 
-                  />
-                </div>
+                <input name="email" type="email" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Email Address" />
               </div>
+              
               <div className="space-y-2">
                 <div className="flex justify-end">
-                  <Link 
-                    href="/forgot-password" 
-                    onClick={closeCart}
-                    className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors"
-                  >
-                    Forgot?
-                  </Link>
+                  {!isSignUp && (
+                    <Link href="/forgot-password" onClick={closeCart} className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors">
+                      Forgot?
+                    </Link>
+                  )}
                 </div>
-                <input 
-                  name="password" 
-                  type="password" 
-                  required 
-                  className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" 
-                  placeholder="Password" 
-                />
+                <input name="password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Password" />
               </div>
+              
+              {isSignUp && (
+                <div className="space-y-2">
+                  <input name="confirm_password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Confirm Password" />
+                </div>
+              )}
+              
               <button 
                 type="submit" 
                 disabled={isCheckingAuth} 
                 className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md"
               >
-                {isCheckingAuth ? 'Continuing...' : 'Continue'}
+                {isCheckingAuth ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
               </button>
             </form>
+
+            <div className="text-center mt-2 mb-4">
+              <button 
+                type="button" 
+                onClick={() => { setIsSignUp(!isSignUp); setLoginError(null); setLoginMessage(null); }} 
+                className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : 'New here? Create Account'}
+              </button>
+            </div>
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -485,3 +499,5 @@ export function CartDrawer() {
     </div>
   )
 }
+
+

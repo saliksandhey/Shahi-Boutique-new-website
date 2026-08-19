@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, User, Package, Heart, LogOut, MapPin, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { signout } from '@/lib/actions/auth'
+import { signout } from '@/lib/actions/auth-email'
 
 const navigation = [
   { name: 'Dashboard', href: '/account', icon: Home },
@@ -64,3 +64,4 @@ export function Sidebar() {
     </div>
   )
 }
+

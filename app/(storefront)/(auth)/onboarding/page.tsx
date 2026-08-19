@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { completeUserProfile } from '@/lib/actions/auth-phone'
+import { completeUserProfile } from '@/lib/actions/auth-email'
 import Image from 'next/image'
 
 function OnboardingForm() {
@@ -110,3 +110,4 @@ export default function OnboardingPage() {
     </div>
   )
 }
+
