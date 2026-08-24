@@ -13,12 +13,10 @@ function fixEncoding(filePath) {
   if (!filePath.endsWith('.tsx') && !filePath.endsWith('.ts')) return;
   
   let content = fs.readFileSync(filePath, 'utf8');
-  
-  // Specifically replace ONLY the known corrupted string for Rupee
   let original = content;
-  content = content.replace(/Ã¢â€šÂ¹/g, '₹');
+  
   content = content.replace(/â‚¹/g, '₹');
-  // Removed the dangerous /,1/g replacement
+  content = content.replace(/Ã¢â€šÂ¹/g, '₹');
   
   if (content !== original) {
     console.log(`Fixed currency symbol in: ${filePath}`);

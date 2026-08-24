@@ -272,7 +272,7 @@ export function CartDrawer() {
                         </button>
                       </div>
                       <p className="text-sm font-black text-[#FF7A00] mt-1">
-                        â‚¹{(item.salePrice || item.price).toFixed(2)}
+                        ₹{(item.salePrice || item.price).toFixed(2)}
                       </p>
                     </div>
                     
@@ -329,10 +329,10 @@ export function CartDrawer() {
                                 <span className={`text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none flex items-center ${
                                   upsellPhase === 'expired' ? 'bg-gray-400' : upsellPhase === 'last-chance' ? 'bg-red-600' : 'bg-[#FF7A00]'
                                 }`}>
-                                  â‚¹{upsell.salePrice.toFixed(0)}
+                                  ₹{upsell.salePrice.toFixed(0)}
                                 </span>
                                 <span className="text-[9px] text-gray-400 line-through font-medium">
-                                  â‚¹{upsell.price.toFixed(0)}
+                                  ₹{upsell.price.toFixed(0)}
                                 </span>
                               </div>
                               <button
@@ -361,7 +361,7 @@ export function CartDrawer() {
           <div className="border-t border-gray-100 p-4 bg-white space-y-3 shrink-0">
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold uppercase tracking-widest text-xs">Subtotal</span>
-              <span className="font-black text-xl">â‚¹{getSubtotal().toFixed(2)}</span>
+              <span className="font-black text-xl">₹{getSubtotal().toFixed(2)}</span>
             </div>
             <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 
