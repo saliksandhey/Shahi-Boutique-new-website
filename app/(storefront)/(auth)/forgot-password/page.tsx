@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Eye, EyeOff } from 'lucide-react'
 import { sendPasswordResetOTP, verifyPasswordResetOTP, updatePassword } from '@/lib/actions/auth-email'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -17,6 +18,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   async function handleSendOTP(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -162,12 +165,30 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleUpdatePassword} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-gray-500">New Password</Label>
-              <Input id="password" name="password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+              <div className="relative">
+                <Input id="password" name="password" type={showPassword ? "text" : "password"} required className="rounded-full h-12 px-6 pr-12 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+                >
+                  {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirm_password" className="text-xs font-bold uppercase tracking-widest text-gray-500">Confirm New Password</Label>
-              <Input id="confirm_password" name="confirm_password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+              <div className="relative">
+                <Input id="confirm_password" name="confirm_password" type={showConfirmPassword ? "text" : "password"} required className="rounded-full h-12 px-6 pr-12 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+                >
+                  {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {error && <p className="text-xs font-bold text-red-500 text-center">{error}</p>}
@@ -191,3 +212,5 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
+
+

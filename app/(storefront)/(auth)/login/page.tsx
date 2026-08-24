@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Eye, EyeOff } from 'lucide-react'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
 import Link from 'next/link'
@@ -20,6 +21,8 @@ function AuthForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -109,13 +112,31 @@ function AuthForm() {
               </Link>
             )}
           </div>
-          <Input id="password" name="password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+          <div className="relative">
+            <Input id="password" name="password" type={showPassword ? "text" : "password"} required className="rounded-full h-12 px-6 pr-12 border-gray-200 focus:border-[#111111]" placeholder="        " minLength={6} />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+            >
+              {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {isSignUp && (
           <div className="space-y-2">
             <Label htmlFor="confirm_password" className="text-xs font-bold uppercase tracking-widest text-gray-500">Confirm Password</Label>
-            <Input id="confirm_password" name="confirm_password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+            <div className="relative">
+              <Input id="confirm_password" name="confirm_password" type={showConfirmPassword ? "text" : "password"} required className="rounded-full h-12 px-6 pr-12 border-gray-200 focus:border-[#111111]" placeholder="        " minLength={6} />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+              >
+                {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         )}
 
@@ -180,3 +201,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+

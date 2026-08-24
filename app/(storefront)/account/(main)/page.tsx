@@ -166,7 +166,7 @@ export default async function AccountDashboard() {
                     </div>
                     <div className="sm:text-right flex items-center justify-between sm:block border-t border-gray-100 pt-4 sm:border-0 sm:pt-0 mt-2 sm:mt-0">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 sm:mb-1 block">Total Amount</span>
-                      <div className="text-xl font-black text-[#111111]">â‚¹{order.total_amount}</div>
+                      <div className="text-xl font-black text-[#111111]">₹{order.total_amount}</div>
                     </div>
                   </div>
                 </Link>

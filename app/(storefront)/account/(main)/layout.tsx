@@ -16,7 +16,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
           {profile?.full_name?.split(' ')[0] || 'My Account'}
         </h1>
         <p className="text-xs md:text-sm text-gray-500 font-medium mt-3">
-          {profile?.phone || (user.email.endsWith('@shahi.in') ? '+' + user.email.replace('@shahi.in', '') : user.email)}
+          {user.email}
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
@@ -8,7 +8,7 @@ import { X, Trash2, ShoppingBag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { getUpsellProducts } from '@/lib/actions/products'
-import { Clock } from 'lucide-react'
+import { Clock, Eye, EyeOff } from 'lucide-react'
 import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 
@@ -19,6 +19,8 @@ export function CartDrawer() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loginMessage, setLoginMessage] = useState<string|null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [upsellItems, setUpsellItems] = useState<any[]>([])
   const [countdown, setCountdown] = useState<string>('')
@@ -452,12 +454,30 @@ export function CartDrawer() {
                     </Link>
                   )}
                 </div>
-                <input name="password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Password" />
+                <div className="relative">
+                  <input name="password" type={showPassword ? "text" : "password"} required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 pr-12 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Password" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+                  >
+                    {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
               
               {isSignUp && (
                 <div className="space-y-2">
-                  <input name="confirm_password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Confirm Password" />
+                  <div className="relative">
+                    <input name="confirm_password" type={showConfirmPassword ? "text" : "password"} required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 pr-12 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Confirm Password" />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
+                    >
+                      {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
               )}
               
@@ -510,6 +530,8 @@ export function CartDrawer() {
     </div>
   )
 }
+
+
 
 
 
