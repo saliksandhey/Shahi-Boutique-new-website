@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server'
+﻿import { createAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, Users, Package, ShoppingCart } from 'lucide-react'
 import { RecentOrdersTable } from '@/components/admin/RecentOrdersTable'
@@ -10,6 +10,7 @@ export default async function AdminDashboard() {
   const { count: customersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'CUSTOMER')
   const { count: productsCount } = await supabase.from('products').select('*', { count: 'exact', head: true })
   const { count: ordersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true })
+  const { count: pendingOrdersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('order_status', 'PENDING')
   
   // Calculate total revenue
   const { data: revenueData } = await supabase.from('orders').select('total_amount').in('payment_status', ['paid', 'PAID', 'Paid'])
@@ -39,7 +40,7 @@ export default async function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-5 pt-0">
-            <div className="text-2xl font-bold text-[#09090B]">₹{totalRevenue.toFixed(0)}</div>
+            <div className="text-2xl font-bold text-[#09090B]">â‚¹{totalRevenue.toFixed(0)}</div>
           </CardContent>
         </Card>
         
@@ -119,3 +120,4 @@ export default async function AdminDashboard() {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -31,6 +31,7 @@ const navigation = [
   { name: 'Orders', href: '/2010admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/2010admin/products', icon: Package },
   { name: 'Customers', href: '/2010admin/customers', icon: Users },
+  { name: 'Payments', href: '/2010admin/payments', icon: Ticket },
   { name: 'Categories', href: '/2010admin/categories', icon: Tags },
   { name: 'Coupons', href: '/2010admin/coupons', icon: Ticket },
   { name: 'Reviews', href: '/2010admin/reviews', icon: Star },
@@ -42,7 +43,7 @@ const navigation = [
   { name: 'Banners', href: '/2010admin/banners', icon: ImageIcon },
 ]
 
-export function Sidebar() {
+export function Sidebar({ newOrdersCount = 0 }: { newOrdersCount?: number }) {
   const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -105,6 +106,11 @@ export function Sidebar() {
                       aria-hidden="true"
                     />
                     {item.name}
+                    {item.name === 'Orders' && newOrdersCount > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {newOrdersCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )
@@ -176,3 +182,4 @@ export function Sidebar() {
     </div>
   )
 }
+

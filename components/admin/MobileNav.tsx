@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -43,7 +43,7 @@ const moreTabs = [
   { name: 'Settings', href: '/2010admin/settings', icon: Settings },
 ]
 
-export function MobileNav() {
+export function MobileNav({ newOrdersCount = 0 }: { newOrdersCount?: number }) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -156,3 +156,4 @@ export function MobileNav() {
     </>
   )
 }
+
