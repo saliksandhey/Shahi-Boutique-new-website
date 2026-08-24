@@ -9,14 +9,14 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { getUpsellProducts } from '@/lib/actions/products'
 import { Clock } from 'lucide-react'
-import { sendEmailOTP, verifyEmailOTP } from '@/lib/actions/auth-email'
+import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
   const router = useRouter()
   const [showLoginSheet, setShowLoginSheet] = useState(false)
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [email, setEmail] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
   const [loginMessage, setLoginMessage] = useState<string|null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -270,7 +270,7 @@ export function CartDrawer() {
                         </button>
                       </div>
                       <p className="text-sm font-black text-[#FF7A00] mt-1">
-                        Ã¢â€šÂ¹{(item.salePrice || item.price).toFixed(2)}
+                        â‚¹{(item.salePrice || item.price).toFixed(2)}
                       </p>
                     </div>
                     
@@ -327,10 +327,10 @@ export function CartDrawer() {
                                 <span className={`text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none flex items-center ${
                                   upsellPhase === 'expired' ? 'bg-gray-400' : upsellPhase === 'last-chance' ? 'bg-red-600' : 'bg-[#FF7A00]'
                                 }`}>
-                                  Ã¢â€šÂ¹{upsell.salePrice.toFixed(0)}
+                                  â‚¹{upsell.salePrice.toFixed(0)}
                                 </span>
                                 <span className="text-[9px] text-gray-400 line-through font-medium">
-                                  Ã¢â€šÂ¹{upsell.price.toFixed(0)}
+                                  â‚¹{upsell.price.toFixed(0)}
                                 </span>
                               </div>
                               <button
@@ -359,7 +359,7 @@ export function CartDrawer() {
           <div className="border-t border-gray-100 p-4 bg-white space-y-3 shrink-0">
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold uppercase tracking-widest text-xs">Subtotal</span>
-              <span className="font-black text-xl">Ã¢â€šÂ¹{getSubtotal().toFixed(2)}</span>
+              <span className="font-black text-xl">â‚¹{getSubtotal().toFixed(2)}</span>
             </div>
             <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 
@@ -374,20 +374,24 @@ export function CartDrawer() {
 
       </div>
 
-      {/* Mobile Login Bottom Sheet */}
-      {showLoginSheet && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLoginSheet(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-t-[2rem] p-8 pb-12 animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
-            <button 
-              onClick={() => setShowLoginSheet(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 bg-gray-50 rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* Login Bottom Sheet */}
+      <div 
+        className={`fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-500 ease-in-out transform ${
+          showLoginSheet ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
+        <div className="w-full max-w-md mx-auto p-8 relative">
+          <button 
+            onClick={() => setShowLoginSheet(false)}
+            className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-colors"
+          >
+            <X size={20} />
+          </button>
+          
+          <div className="pt-2">
             <div className="text-center mt-4 mb-8">
-              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">{isOtpSent ? 'Verify Email' : 'Sign in to Checkout'}</h3>
-              <p className="text-sm text-gray-500 font-medium mt-2">{isOtpSent ? `Enter the 6-digit code sent to ${email}` : 'Enter your email to sign in or create an account.'}</p>
+              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">{isSignUp ? 'Create Account' : 'Sign in to Checkout'}</h3>
+              <p className="text-sm text-gray-500 font-medium mt-2">{isSignUp ? 'Create an account to track your orders.' : 'Enter your email and password to continue.'}</p>
             </div>
             
             <form 
@@ -399,28 +403,26 @@ export function CartDrawer() {
                 const formData = new FormData(e.currentTarget)
                 
                 try {
-                  if (!isOtpSent) {
-                    const emailVal = formData.get('email') as string
-                    setEmail(emailVal)
-                    const res = await sendEmailOTP(formData)
+                  if (isSignUp) {
+                    const res = await signupWithEmail(formData)
                     if (res.error) {
                       setLoginError(res.error)
+                    } else if (res.requireVerification) {
+                      setLoginMessage('Account created! Please check your email to verify before continuing.')
                     } else {
-                      setIsOtpSent(true)
+                      setShowLoginSheet(false)
+                      closeCart()
+                      router.push('/checkout')
+                      router.refresh()
                     }
                   } else {
-                    formData.append('email', email)
-                    const res = await verifyEmailOTP(formData)
+                    const res = await loginWithEmail(formData)
                     if (res.error) {
                       setLoginError(res.error)
                     } else {
                       setShowLoginSheet(false)
                       closeCart()
-                      if (res.isNewUser) {
-                        router.push('/onboarding?next=/checkout')
-                      } else {
-                        router.push('/checkout')
-                      }
+                      router.push('/checkout')
                       router.refresh()
                     }
                   }
@@ -432,13 +434,30 @@ export function CartDrawer() {
               }}
               className="space-y-4 mb-6"
             >
-              {!isOtpSent ? (
+              {isSignUp && (
                 <div className="space-y-2">
-                  <input name="email" type="email" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Email Address" />
+                  <input name="name" type="text" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Full Name" />
                 </div>
-              ) : (
+              )}
+              
+              <div className="space-y-2">
+                <input name="email" type="email" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Email Address" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-end">
+                  {!isSignUp && (
+                    <Link href="/forgot-password" onClick={closeCart} className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors">
+                      Forgot?
+                    </Link>
+                  )}
+                </div>
+                <input name="password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Password" />
+              </div>
+              
+              {isSignUp && (
                 <div className="space-y-2">
-                  <input name="otp" type="text" required maxLength={6} className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-center text-lg tracking-[0.5em] font-bold placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="000000" />
+                  <input name="confirm_password" type="password" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Confirm Password" />
                 </div>
               )}
               
@@ -447,23 +466,19 @@ export function CartDrawer() {
                 disabled={isCheckingAuth} 
                 className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md"
               >
-                {isCheckingAuth ? 'Processing...' : (!isOtpSent ? 'Continue with Email' : 'Verify Code')}
+                {isCheckingAuth ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
               </button>
 
-              {isOtpSent && (
-                <div className="text-center mt-4">
-                  <button 
-                    type="button" 
-                    onClick={() => { setIsOtpSent(false); setLoginError(null); setLoginMessage(null); }} 
-                    className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black"
-                  >
-                    Change Email
-                  </button>
-                </div>
-              )}
+              <div className="text-center mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => { setIsSignUp(!isSignUp); setLoginError(null); setLoginMessage(null); }} 
+                  className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black"
+                >
+                  {isSignUp ? 'Already have an account? Sign In' : 'New here? Create Account'}
+                </button>
+              </div>
             </form>
-
-            
 
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -490,11 +505,12 @@ export function CartDrawer() {
             {loginError && <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200 mt-4 text-center">{loginError}</p>}
           </div>
         </div>
-      )}
+      </div>
 
     </div>
   )
 }
+
 
 
 

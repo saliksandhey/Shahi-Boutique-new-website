@@ -3,24 +3,82 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { createSession } from '@/lib/auth'
 
-export async function sendEmailOTP(formData: FormData) {
+export async function loginWithEmail(formData: FormData) {
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+
+  if (!email || !password) return { error: 'Email and password are required.' }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  const adminClient = await createAdminClient()
+  const { data: profile } = await adminClient.from('customer_profiles').select('id, name').eq('id', data.user.id).single()
+  
+  if (!profile) {
+    await adminClient.from('customer_profiles').upsert({ id: data.user.id, email: email, name: '' })
+  }
+
+  await createSession(email)
+  return { success: true }
+}
+
+export async function signupWithEmail(formData: FormData) {
+  const name = formData.get('name') as string
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirm_password') as string
+
+  if (!name || !email || !password) return { error: 'Name, email, and password are required.' }
+  if (password !== confirmPassword) return { error: 'Passwords do not match.' }
+  if (password.length < 6) return { error: 'Password must be at least 6 characters.' }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  if (data.user) {
+    const adminClient = await createAdminClient()
+    
+    // Update profiles tables with name
+    await adminClient.from('customer_profiles').upsert({ id: data.user.id, email: email, name: name.trim(), full_name: name.trim() })
+    await adminClient.from('profiles').upsert({ id: data.user.id, full_name: name.trim() })
+
+    if (data.session) {
+      await createSession(email)
+      return { success: true, requireVerification: false }
+    }
+  }
+
+  return { success: true, requireVerification: true }
+}
+
+export async function sendPasswordResetOTP(formData: FormData) {
   const email = formData.get('email') as string
   if (!email || !email.includes('@')) return { error: 'Invalid email address.' }
 
   const supabase = await createClient()
 
-  // Supabase will automatically send the OTP email using its configured SMTP server.
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-    }
-  })
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
 
   if (error) {
-    // If it fails, they likely haven't set up Custom SMTP in Supabase
     if (error.message.includes('rate limit') || error.message.includes('quota')) {
-       return { error: 'Email limit reached. Please configure Custom SMTP in Supabase.' }
+       return { error: 'Email limit reached. Please try again later.' }
     }
     return { error: error.message }
   }
@@ -28,7 +86,7 @@ export async function sendEmailOTP(formData: FormData) {
   return { success: true }
 }
 
-export async function verifyEmailOTP(formData: FormData) {
+export async function verifyPasswordResetOTP(formData: FormData) {
   const email = formData.get('email') as string
   const otp = formData.get('otp') as string
 
@@ -39,60 +97,32 @@ export async function verifyEmailOTP(formData: FormData) {
   const { data, error } = await supabase.auth.verifyOtp({
     email,
     token: otp,
-    type: 'email'
+    type: 'recovery'
   })
 
   if (error) {
     return { error: 'Invalid or expired code. Please try again.' }
   }
 
-  if (data.user) {
-    const adminClient = await createAdminClient()
-    const { data: profile } = await adminClient.from('customer_profiles').select('id, name').eq('id', data.user.id).single()
-    
-    if (!profile) {
-      await adminClient.from('customer_profiles').insert({ id: data.user.id, email: email, name: '' })
-      await createSession(email)
-      return { success: true, isNewUser: true }
-    } else {
-      await createSession(email)
-      const isNew = !profile.name || profile.name.trim() === ''
-      return { success: true, isNewUser: isNew }
-    }
-  }
-
-  return { error: 'Verification failed.' }
+  return { success: true }
 }
 
-export async function completeUserProfile(formData: FormData) {
-  const name = formData.get('name') as string
+export async function updatePassword(formData: FormData) {
+  const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirm_password') as string
 
-  if (!name || name.trim().length === 0) {
-    return { error: 'Please enter your name.' }
-  }
+  if (!password || password !== confirmPassword) return { error: 'Passwords do not match.' }
+  if (password.length < 6) return { error: 'Password must be at least 6 characters.' }
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: 'Not authenticated.' }
+  const { error } = await supabase.auth.updateUser({
+    password: password
+  })
+
+  if (error) {
+    return { error: error.message }
   }
-
-  const supabaseAdmin = createAdminClient()
-
-  const { error: customerProfileError } = await supabaseAdmin
-    .from('customer_profiles')
-    .update({ name: name.trim() })
-    .eq('id', user.id)
-    
-  if (customerProfileError?.code === 'PGRST204') {
-    await supabaseAdmin.from('customer_profiles').update({ full_name: name.trim() }).eq('id', user.id)
-  }
-
-  await supabaseAdmin
-    .from('profiles')
-    .update({ full_name: name.trim() })
-    .eq('id', user.id)
 
   return { success: true }
 }

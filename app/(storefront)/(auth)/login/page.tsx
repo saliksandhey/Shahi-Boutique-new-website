@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
-import { sendEmailOTP, verifyEmailOTP } from '@/lib/actions/auth-email'
+import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
+import Link from 'next/link'
 import Image from 'next/image'
 
 function AuthForm() {
@@ -17,50 +18,38 @@ function AuthForm() {
   
   const [error, setError] = useState<string | null>(errorParam)
   const [isLoading, setIsLoading] = useState(false)
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [email, setEmail] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
 
-  async function handleSendOTP(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+    setMessage(null)
     setIsLoading(true)
     
     const formData = new FormData(e.currentTarget)
-    const emailVal = formData.get('email') as string
-    setEmail(emailVal)
     
     try {
-      const res = await sendEmailOTP(formData)
-      if (res.error) {
-        setError(res.error)
+      if (isSignUp) {
+        const res = await signupWithEmail(formData)
+        if (res.error) {
+          setError(res.error)
+        } else if (res.requireVerification) {
+          setMessage("Account created successfully! Please check your email to verify your account before logging in.")
+          e.currentTarget.reset()
+          setIsSignUp(false)
+        } else {
+          router.push(nextParam)
+          router.refresh()
+        }
       } else {
-        setIsOtpSent(true)
-      }
-    } catch (err: any) {
-      setError("An unexpected error occurred.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  async function handleVerifyOTP(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
-    
-    const formData = new FormData(e.currentTarget)
-    formData.append('email', email) // append email from state
-    
-    try {
-      const res = await verifyEmailOTP(formData)
-      if (res.error) {
-        setError(res.error)
-      } else if (res.isNewUser) {
-        router.push(`/onboarding?next=${encodeURIComponent(nextParam)}`)
-        router.refresh()
-      } else {
-        router.push(nextParam)
-        router.refresh()
+        const res = await loginWithEmail(formData)
+        if (res.error) {
+          setError(res.error)
+        } else {
+          router.push(nextParam)
+          router.refresh()
+        }
       }
     } catch (err: any) {
       setError("An unexpected error occurred.")
@@ -73,65 +62,80 @@ function AuthForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-serif font-black tracking-widest uppercase text-gray-900 mb-2">
-          {isOtpSent ? 'Verify Email' : 'Welcome to SHAHI'}
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
         </h2>
         <p className="text-sm text-gray-500 font-medium">
-          {isOtpSent ? `Enter the 6-digit code sent to ${email}` : 'Enter your email to sign in or create an account.'}
+          {isSignUp ? 'Enter your details to create an account.' : 'Sign in to access your account.'}
         </p>
       </div>
 
-      {!isOtpSent ? (
-        <form onSubmit={handleSendOTP} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500">Email Address</Label>
-            <Input 
-              id="email" 
-              name="email" 
-              type="email" 
-              required 
-              className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111] w-full" 
-              placeholder="you@example.com" 
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
 
-          {error && <p className="text-xs font-bold text-red-500 text-center">{error}</p>}
-
-          <Button type="submit" disabled={isLoading} className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md">
-            {isLoading ? 'Sending Code...' : 'Continue with Email'}
-          </Button>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyOTP} className="space-y-6">
+        {isSignUp && (
           <div className="space-y-2">
-            <Label htmlFor="otp" className="text-xs font-bold uppercase tracking-widest text-gray-500">6-Digit Code</Label>
+            <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-gray-500">Full Name</Label>
             <Input 
-              id="otp" 
-              name="otp" 
+              id="name" 
+              name="name" 
               type="text" 
               required 
-              maxLength={6}
-              className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111] text-center tracking-[0.5em] text-lg font-bold w-full" 
-              placeholder="000000" 
+              className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111] w-full" 
+              placeholder="e.g. Alisha Khan" 
             />
           </div>
+        )}
 
-          {error && <p className="text-xs font-bold text-red-500 text-center">{error}</p>}
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-gray-500">Email Address</Label>
+          <Input 
+            id="email" 
+            name="email" 
+            type="email" 
+            required 
+            className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111] w-full" 
+            placeholder="you@example.com" 
+          />
+        </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md">
-            {isLoading ? 'Verifying...' : 'Verify Code'}
-          </Button>
-          
-          <div className="text-center mt-4">
-            <button 
-              type="button" 
-              onClick={() => { setIsOtpSent(false); setError(null); }}
-              className="text-[10px] font-bold text-gray-500 hover:text-black uppercase tracking-widest"
-            >
-              Change Email
-            </button>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-gray-500">Password</Label>
+            {!isSignUp && (
+              <Link 
+                href="/forgot-password"
+                className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors"
+              >
+                Forgot?
+              </Link>
+            )}
           </div>
-        </form>
-      )}
+          <Input id="password" name="password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+        </div>
+
+        {isSignUp && (
+          <div className="space-y-2">
+            <Label htmlFor="confirm_password" className="text-xs font-bold uppercase tracking-widest text-gray-500">Confirm Password</Label>
+            <Input id="confirm_password" name="confirm_password" type="password" required className="rounded-full h-12 px-6 border-gray-200 focus:border-[#111111]" placeholder="••••••••" minLength={6} />
+          </div>
+        )}
+
+        {error && <p className="text-xs font-bold text-red-500 text-center">{error}</p>}
+        {message && <p className="text-xs font-bold text-green-600 text-center">{message}</p>}
+
+        <Button type="submit" disabled={isLoading} className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md">
+          {isLoading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
+        </Button>
+
+        <div className="text-center mt-4">
+          <button 
+            type="button" 
+            onClick={() => { setIsSignUp(!isSignUp); setError(null); setMessage(null); }}
+            className="text-xs font-bold text-gray-500 hover:text-black uppercase tracking-widest"
+          >
+            {isSignUp ? 'Already have an account? Sign In' : 'New here? Create Account'}
+          </button>
+        </div>
+      </form>
 
       <div className="mt-8 mb-6 relative">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
