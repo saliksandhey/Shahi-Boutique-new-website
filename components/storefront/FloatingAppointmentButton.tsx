@@ -55,8 +55,8 @@ export function FloatingAppointmentButton() {
     return null
   }
 
-  const isShop = pathname === '/shop'
-  const bottomClass = isShop ? 'bottom-24 lg:bottom-6' : 'bottom-6'
+  const isShop = pathname === '/shop' || pathname?.startsWith('/product')
+  const bottomClass = isShop ? 'bottom-40 lg:bottom-20' : 'bottom-20'
 
   return (
     <AnimatePresence>
@@ -66,14 +66,14 @@ export function FloatingAppointmentButton() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className={`fixed ${bottomClass} left-4 sm:left-6 z-[90] flex items-center`}
+          className={`fixed ${bottomClass} right-4 sm:right-6 z-[90] flex items-center justify-end`}
           onMouseEnter={() => !hasManuallyClosed && setIsExpanded(true)}
           onMouseLeave={() => !hasManuallyClosed && setIsExpanded(false)}
         >
           <motion.div 
             layout
             className={cn(
-              "bg-[#111111]/95 backdrop-blur-xl text-white rounded-full flex items-center shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-white/10 overflow-hidden transition-all duration-300",
+              "bg-[#111111]/95 backdrop-blur-xl text-white rounded-full flex flex-row-reverse items-center shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-white/10 overflow-hidden transition-all duration-300",
               isExpanded ? "p-1.5 sm:p-2" : "p-3 sm:p-4 hover:bg-[#FF7A00]"
             )}
             style={{ borderRadius: 9999 }}
@@ -101,7 +101,7 @@ export function FloatingAppointmentButton() {
                   transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   className="flex items-center overflow-hidden whitespace-nowrap"
                 >
-                  <Link href="/book-appointment" className="flex flex-col pl-3 pr-2 sm:pl-4 sm:pr-4 group">
+                  <Link href="/book-appointment" className="flex flex-col pr-3 pl-2 sm:pr-4 sm:pl-4 group">
                     <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-0.5">
                       Bespoke Luxury
                     </span>

@@ -1,3 +1,4 @@
+﻿import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -58,16 +59,16 @@ export default function ShippingPage() {
                     <tr>
                       <td className="py-4 text-gray-900 font-bold">Standard Delivery</td>
                       <td className="py-4">3 - 5 Business Days</td>
-                      <td className="py-4 text-right font-black tracking-wide">₹10.00</td>
+                      <td className="py-4 text-right font-black tracking-wide"><PriceDisplay amount={10.00} /></td>
                     </tr>
                     <tr>
                       <td className="py-4 text-gray-900 font-bold">Express Delivery</td>
                       <td className="py-4">1 - 2 Business Days</td>
-                      <td className="py-4 text-right font-black tracking-wide">₹25.00</td>
+                      <td className="py-4 text-right font-black tracking-wide"><PriceDisplay amount={25.00} /></td>
                     </tr>
                     <tr>
                       <td className="py-4 text-gray-900 font-bold">Free Shipping</td>
-                      <td className="py-4">Orders over ₹150.00</td>
+                      <td className="py-4">Orders over <PriceDisplay amount={150.00} /></td>
                       <td className="py-4 text-right font-black tracking-wide text-[#FF7A00]">FREE</td>
                     </tr>
                   </tbody>
@@ -107,7 +108,7 @@ export default function ShippingPage() {
                 You can also visit the <a href="/account/orders" className="text-[#FF7A00] hover:text-[#1C1C1C] font-bold underline transition-colors">Orders</a> section in your account to view live updates on your delivery at any time.
               </p>
               <p className="mt-4">
-                If you haven’t received your order within the timeframe indicated on your shipping confirmation email, please contact us at <a href="mailto:contact.shahiboutique@gmail.com" className="font-bold text-gray-900 hover:text-[#FF7A00] transition-colors">contact.shahiboutique@gmail.com</a> with your name and order number, and we will look into it for you.
+                If you havenâ€™t received your order within the timeframe indicated on your shipping confirmation email, please contact us at <a href="mailto:contact.shahiboutique@gmail.com" className="font-bold text-gray-900 hover:text-[#FF7A00] transition-colors">contact.shahiboutique@gmail.com</a> with your name and order number, and we will look into it for you.
               </p>
             </div>
           </div>
@@ -117,3 +118,4 @@ export default function ShippingPage() {
     </div>
   )
 }
+

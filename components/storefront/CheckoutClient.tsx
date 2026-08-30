@@ -12,6 +12,8 @@ import {
 import { saveAddress } from '@/lib/actions/address'
 import Script from 'next/script'
 import { Ticket, X, Gift, ShoppingCart, ChevronDown } from 'lucide-react'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { useCurrency } from '@/lib/contexts/CurrencyContext';
 
 export function CheckoutClient({ 
   codEnabled, 
@@ -19,14 +21,14 @@ export function CheckoutClient({
   savedAddresses = [],
   userEmail
 }: { 
-  codEnabled: boolean, 
-  razorpayKeyId: string,
-  savedAddresses?: any[],
-  userEmail: string
+  codEnabled: boolean
+  razorpayKeyId: string
+  savedAddresses?: any[] 
+  userEmail?: string
 }) {
-  const { items, clearCart } = useCartStore()
-  const router = useRouter()
-  
+  const { currency } = useCurrency();
+  const { items, clearCart } = useCartStore();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -44,7 +46,7 @@ export function CheckoutClient({
     city: defaultAddress?.city || '',
     state: defaultAddress?.state || '',
     zip: defaultAddress?.postal_code || '',
-    country: defaultAddress?.country || 'India'
+    country: defaultAddress?.country || 'IN'
   })
   const [shippingMethod, setShippingMethod] = useState('standard') // only standard now
   const [paymentMethod, setPaymentMethod] = useState<'concierge'>('concierge')
@@ -61,7 +63,8 @@ export function CheckoutClient({
     street: '',
     city: '',
     state: '',
-    zip: ''
+    zip: '',
+    country: 'India'
   })
 
   // Live Totals (fetched from server)
@@ -84,10 +87,20 @@ export function CheckoutClient({
     }
   }, [items])
 
-  const updateTotals = async (currentShipping = shippingMethod, currentCoupon = appliedCoupon?.code) => {
+  const updateTotals = async (currentShipping = shippingMethod, currentCoupon = appliedCoupon?.code, ignoreThisCountry?: string) => {
+    const currencyToCountryMap: any = {
+      'USD': 'US',
+      'GBP': 'GB',
+      'CAD': 'CA',
+      'AED': 'AE',
+      'AUD': 'AU',
+      'INR': 'IN'
+    };
+    const currentCountry = currencyToCountryMap[currency] || 'IN';
+
     try {
       const inputItems = items.map(i => ({ productId: i.productId || i.id, variantId: i.variantId, quantity: i.quantity }))
-      const result = await calculateOrderTotal(inputItems, currentShipping, currentCoupon)
+      const result = await calculateOrderTotal(inputItems, currentShipping, currentCoupon, currentCountry)
       setTotals({
         subtotal: result.subtotal,
         shipping: result.shipping,
@@ -105,6 +118,12 @@ export function CheckoutClient({
       updateTotals(shippingMethod)
     }
   }, [shippingMethod])
+
+  useEffect(() => {
+    if (mounted && items.length > 0) {
+      updateTotals()
+    }
+  }, [currency])
 
   if (!mounted || items.length === 0) return null
 
@@ -190,7 +209,7 @@ export function CheckoutClient({
                     </p>
                   )}
                 </div>
-                <p className="text-xs lg:text-sm font-black text-[#FF7A00] tracking-wide">₹{((item.salePrice || item.price) * item.quantity).toFixed(2)}</p>
+                <p className="text-xs lg:text-sm font-black text-[#FF7A00] tracking-wide"><PriceDisplay amount={((item.salePrice || item.price) * item.quantity)} /></p>
               </div>
             </div>
           </li>
@@ -219,11 +238,11 @@ export function CheckoutClient({
       <dl className="space-y-4 lg:space-y-6 text-xs lg:text-sm border-t border-gray-200 pt-6 lg:pt-8">
         <div className="flex items-center justify-between">
           <dt className="text-gray-500 font-bold tracking-widest uppercase text-[10px] lg:text-xs">Subtotal</dt>
-          <dd className="font-black text-gray-900 tracking-wide">₹{totals.subtotal.toFixed(2)}</dd>
+          <dd className="font-black text-gray-900 tracking-wide"><PriceDisplay amount={totals.subtotal} /></dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-gray-500 font-bold tracking-widest uppercase text-[10px] lg:text-xs">Shipping</dt>
-          <dd className="font-black text-gray-900 tracking-wide">{totals.shipping === 0 ? 'FREE' : `₹${totals.shipping.toFixed(2)}`}</dd>
+          <dd className="font-black text-gray-900 tracking-wide"><PriceDisplay amount={totals.shipping} /></dd>
         </div>
         {appliedCoupon && (
           <div className="flex items-center justify-between text-[#FF7A00]">
@@ -237,7 +256,7 @@ export function CheckoutClient({
         )}
         <div className="flex items-center justify-between border-t border-gray-200 pt-4 lg:pt-6 mt-4 lg:mt-6">
           <dt className="text-lg lg:text-xl font-sans font-black uppercase tracking-tighter text-gray-900">Total</dt>
-          <dd className="text-xl lg:text-2xl font-black text-[#FF7A00] tracking-tight">₹{totals.total.toFixed(2)}</dd>
+          <dd className="text-xl lg:text-2xl font-black text-[#FF7A00] tracking-tight"><PriceDisplay amount={totals.total} /></dd>
         </div>
       </dl>
     </div>
@@ -260,7 +279,7 @@ export function CheckoutClient({
               {isMobileSummaryOpen ? 'Hide' : 'Show'} Summary
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isMobileSummaryOpen ? 'rotate-180' : ''}`} />
             </div>
-            <span className="font-black text-lg text-[#FF7A00]">₹{totals.total.toFixed(2)}</span>
+            <span className="font-black text-lg text-[#FF7A00]"><PriceDisplay amount={totals.total} /></span>
           </button>
           
           <div className={`overflow-hidden transition-all duration-300 ${isMobileSummaryOpen ? 'max-h-[2000px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -307,7 +326,7 @@ export function CheckoutClient({
                                 city: sa.city || '',
                                 state: sa.state || '',
                                 zip: sa.postal_code || '',
-                                country: sa.country || 'India'
+                                country: sa.country || 'IN'
                               })}
                               className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 ${isSelected ? 'border-[#1C1C1C] bg-gray-50 ring-1 ring-[#1C1C1C]' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                             >
@@ -358,13 +377,24 @@ export function CheckoutClient({
                       <form action={async (formData) => {
                         setIsSavingAddress(true)
                         formData.append('full_name', `${newAddress.firstName} ${newAddress.lastName}`)
-                        formData.append('address_line1', newAddress.street)
-                        formData.append('postal_code', newAddress.zip)
-                        formData.append('country', 'India')
+                        formData.set('address_line1', newAddress.street)
+                          formData.set('postal_code', newAddress.zip)
+                          
+                          let finalCountry = newAddress.country || 'IN'
+                          if (finalCountry === 'OTHER') {
+                            finalCountry = (formData.get('custom_country') as string) || 'Other'
+                          }
+                          formData.set('country', finalCountry)
+
+                          let finalState = (formData.get('state') as string) || newAddress.state
+                          if (finalState === 'Other') {
+                            finalState = (formData.get('custom_state') as string) || 'Other'
+                            formData.set('state', finalState)
+                          }
                         const res = await saveAddress(formData)
                         if (res.success) {
                           setShowNewAddressForm(false)
-                          setNewAddress({ firstName: '', lastName: '', phone: '', street: '', city: '', state: '', zip: '' })
+                          setNewAddress({ firstName: '', lastName: '', phone: '', street: '', city: '', state: '', zip: '', country: 'India' })
                           // Assuming the parent page will refresh the savedAddresses array via revalidatePath
                         } else {
                           setError(res.error || 'Failed to save address')
@@ -376,7 +406,43 @@ export function CheckoutClient({
                         <input required type="tel" name="phone" placeholder="10-digit Phone Number" maxLength={10} value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value.replace(/\D/g, '')})} className={`${inputClasses} sm:col-span-2`} />
                         <input required type="text" name="street" placeholder="Street Address" value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
                         <input required type="text" name="city" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className={inputClasses} />
-                        <input required type="text" name="state" placeholder="State/Province" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses} />
+                        
+                          <select required name="country" value={newAddress.country || 'IN'} onChange={e => {
+                            setNewAddress({...newAddress, country: e.target.value, state: '', zip: ''});
+                            updateTotals(shippingMethod, appliedCoupon?.code, e.target.value);
+                          }} className={`${inputClasses} sm:col-span-2 uppercase`}>
+                            <option value="IN">India</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="AE">UAE</option>
+                            <option value="AU">Australia</option>
+                            <option value="OTHER">Other Country</option>
+                          </select>
+                            {newAddress.country === 'OTHER' && (
+                              <input required type="text" name="custom_country" placeholder="Enter Country Name" className={`${inputClasses} sm:col-span-2`} />
+                            )}
+  
+                            { (newAddress.country === 'IN' || !newAddress.country) ? (
+                              <><select required name="state" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses}>
+                              <option value="">Select State</option>
+                              <option value="Andhra Pradesh">Andhra Pradesh</option>
+                              <option value="Delhi">Delhi</option>
+                              <option value="Haryana">Haryana</option>
+                              <option value="Karnataka">Karnataka</option>
+                              <option value="Maharashtra">Maharashtra</option>
+                              <option value="Punjab">Punjab</option>
+                              <option value="Tamil Nadu">Tamil Nadu</option>
+                              <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Other">Other</option>
+                              </select>
+                              {newAddress.state === 'Other' && (
+                                  <input required type="text" name="custom_state" placeholder="Enter State Name" className={`${inputClasses} mt-2`} />
+                                )}
+                              </>) : (
+                            <input required type="text" name="state" placeholder="State/Province" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses} />
+                          )}
+
                         <input required type="text" name="zip" placeholder="Zip / Postal Code" value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
                         
                         <div className="sm:col-span-2 flex gap-4 mt-2">
@@ -425,7 +491,7 @@ export function CheckoutClient({
                         <span className="block text-xs text-gray-500 font-medium mt-1">4-6 business days</span>
                       </div>
                     </div>
-                    <span className="text-sm font-black text-gray-900 tracking-wide">{totals.subtotal > 150 ? 'FREE' : '₹10.00'}</span>
+                    <span className="text-sm font-black text-gray-900 tracking-wide"><PriceDisplay amount={totals.shipping} /></span>
                   </label>
                   
                   <div className="mt-6">
@@ -574,7 +640,7 @@ export function CheckoutClient({
                     
                     {coupon.min_order_amount > 0 && (
                       <span className="text-[10px] text-gray-500 font-medium mt-1">
-                        On orders above ₹{coupon.min_order_amount}
+                        On orders above <PriceDisplay amount={coupon.min_order_amount} />
                       </span>
                     )}
 

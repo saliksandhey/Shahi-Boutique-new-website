@@ -11,6 +11,7 @@ import { getUpsellProducts } from '@/lib/actions/products'
 import { Clock, Eye, EyeOff } from 'lucide-react'
 import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
@@ -329,10 +330,10 @@ export function CartDrawer() {
                                 <span className={`text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none flex items-center ${
                                   upsellPhase === 'expired' ? 'bg-gray-400' : upsellPhase === 'last-chance' ? 'bg-red-600' : 'bg-[#FF7A00]'
                                 }`}>
-                                  ₹{upsell.salePrice.toFixed(0)}
+                                  <PriceDisplay amount={upsell.salePrice} />
                                 </span>
                                 <span className="text-[9px] text-gray-400 line-through font-medium">
-                                  ₹{upsell.price.toFixed(0)}
+                                  <PriceDisplay amount={upsell.price} />
                                 </span>
                               </div>
                               <button
@@ -361,7 +362,7 @@ export function CartDrawer() {
           <div className="border-t border-gray-100 p-4 bg-white space-y-3 shrink-0">
             <div className="flex justify-between items-center text-gray-900">
               <span className="font-bold uppercase tracking-widest text-xs">Subtotal</span>
-              <span className="font-black text-xl">₹{getSubtotal().toFixed(2)}</span>
+              <span className="font-black text-xl"><PriceDisplay amount={getSubtotal()} /></span>
             </div>
             <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 

@@ -1,3 +1,4 @@
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 import type { Metadata } from 'next'
 import { ContactForm } from '@/components/storefront/ContactForm'
 import { createPublicClient } from '@/lib/supabase/server'
@@ -104,11 +105,11 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                     <h3 className="font-bold text-gray-900 text-lg md:text-xl leading-tight mb-3">{product.name}</h3>
                     {product.sale_price ? (
                       <div className="flex items-center justify-center sm:justify-start gap-3">
-                        <span className="text-lg md:text-xl font-black text-gray-900">Rs. {product.sale_price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                        <span className="text-xs md:text-sm text-gray-400 line-through">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        <span className="text-lg md:text-xl font-black text-gray-900"><PriceDisplay amount={product.sale_price} /></span>
+                        <span className="text-xs md:text-sm text-gray-400 line-through"><PriceDisplay amount={product.price} /></span>
                       </div>
                     ) : (
-                      <span className="text-lg md:text-xl font-black text-gray-900">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      <span className="text-lg md:text-xl font-black text-gray-900"><PriceDisplay amount={product.price} /></span>
                     )}
                   </div>
                 </div>

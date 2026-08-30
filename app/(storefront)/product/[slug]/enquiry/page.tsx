@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { slug } = await params
@@ -79,7 +80,7 @@ export default async function EnquiryPage({ params }: { params: Promise<{ slug: 
                 <h2 className="text-sm sm:text-lg font-black uppercase tracking-widest text-gray-900 mb-1 sm:mb-2">{product.name}</h2>
                 <div className="flex lg:flex-col items-center lg:items-start gap-2 lg:gap-1">
                   <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-500">Starting from</p>
-                  <p className="text-lg sm:text-2xl font-black text-[#FF7A00]">₹{product.price.toFixed(2)}</p>
+                  <p className="text-lg sm:text-2xl font-black text-[#FF7A00]"><PriceDisplay amount={product.price} /></p>
                 </div>
               </div>
             </div>

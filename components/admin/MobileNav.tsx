@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -31,6 +31,7 @@ const mainTabs = [
 
 const moreTabs = [
   { name: 'Customers', href: '/2010admin/customers', icon: Users },
+  { name: 'Payments', href: '/2010admin/payments', icon: Ticket },
   { name: 'Categories', href: '/2010admin/categories', icon: Tags },
   { name: 'Appointments', href: '/2010admin/appointments', icon: Calendar },
   { name: 'Enquiries', href: '/2010admin/enquiries', icon: MessageSquare },

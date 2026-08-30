@@ -1,7 +1,10 @@
-import { createPublicClient } from '@/lib/supabase/server'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { CurrencyDropdown } from '@/components/storefront/CurrencyDropdown';
+﻿import { createPublicClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { AddToCart } from '@/components/storefront/AddToCart'
+import { DeliveryChecker } from '@/components/storefront/DeliveryChecker'
 import { ProductGrid } from '@/components/storefront/ProductGrid'
 import { ReviewCarousel } from '@/components/storefront/ReviewCarousel'
 import { PotliShowcase } from '@/components/storefront/PotliShowcase'
@@ -128,19 +131,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {product.is_enquiry_only ? (
                 <div className="flex flex-col">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Starting from</span>
-                  <p className="text-3xl font-black text-gray-900">₹{product.price.toFixed(2)}</p>
+                  <p className="text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
                 </div>
               ) : product.sale_price ? (
                 <>
-                  <p className="text-3xl font-black text-[#FF7A00]">₹{product.sale_price.toFixed(2)}</p>
-                  <p className="text-xl font-bold text-gray-400 line-through decoration-2">₹{product.price.toFixed(2)}</p>
+                  <p className="text-3xl font-black text-[#FF7A00]"><PriceDisplay amount={product.sale_price} /></p>
+                  <p className="text-xl font-bold text-gray-400 line-through decoration-2"><PriceDisplay amount={product.price} /></p>
                 </>
               ) : (
-                <p className="text-3xl font-black text-gray-900">₹{product.price.toFixed(2)}</p>
+                <p className="text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
               )}
             </div>
-
-            <div className="mb-8 md:mb-10">
+              <div className="flex items-center gap-2 mb-6 -mt-2">
+                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Currency:</span>
+                <div className="bg-gray-50 border border-gray-100 rounded-lg px-2 py-0.5">
+                  <CurrencyDropdown alignLeft />
+                </div>
+              </div>
+  
+              <div className="mb-8 md:mb-10">
               <h3 className="sr-only">Description</h3>
               <div className="text-sm md:text-base text-gray-500 leading-relaxed font-medium whitespace-pre-wrap">
                 {product.description}
@@ -149,6 +158,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div className="py-8">
               <AddToCart product={product} variants={variants || []} />
+              <DeliveryChecker />
             </div>
 
             <div className="mt-8 md:mt-12 bg-[#F8F9FA] rounded-[2rem] p-6 md:p-8 border border-gray-100">
@@ -234,3 +244,4 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     </div>
   )
 }
+

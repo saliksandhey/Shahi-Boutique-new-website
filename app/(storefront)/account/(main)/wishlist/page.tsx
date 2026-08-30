@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { toggleWishlist } from '@/lib/actions/wishlist'
 import { MobileBackNav } from '@/components/account/MobileBackNav'
 import { revalidatePath } from 'next/cache'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export default async function WishlistPage() {
   const user = await requireAuth()
@@ -63,7 +64,7 @@ export default async function WishlistPage() {
                   </h3>
                   <p className="text-sm text-gray-500 line-clamp-2">{product?.short_description}</p>
                   <div className="flex flex-1 flex-col justify-end">
-                    <p className="text-base font-medium text-gray-900">₹{product?.price}</p>
+                    <p className="text-base font-medium text-gray-900"><PriceDisplay amount={product?.price} /></p>
                   </div>
                 </div>
                 <div className="absolute top-2 right-2 z-10">

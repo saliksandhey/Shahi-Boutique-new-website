@@ -18,12 +18,28 @@ export type CartInputItem = {
 }
 
 // 1. Calculate Server Totals
-export async function calculateOrderTotal(items: CartInputItem[], shippingMethod: string, couponCode?: string) {
+export async function calculateOrderTotal(items: CartInputItem[], shippingMethod: string, couponCode?: string, country: string = "IN") {
+  if (country === "India") country = "IN";
   const supabase = await createAdminClient()
   
   let subtotal = 0
   let discount = 0
-  let shipping = shippingMethod === 'express' ? 25 : 10 // Mock logic
+  let shipping = 0;
+  
+  try {
+    const { data: zone } = await supabase.from('shipping_zones').select('shipping_fee_inr').eq('country_code', country).single();
+    if (zone) {
+      shipping = zone.shipping_fee_inr;
+    } else {
+      // Fallback if not found or table doesn't exist yet
+      const fallbacks: any = { 'IN': 0, 'US': 3000, 'GB': 2500, 'CA': 3200, 'AE': 1500, 'AU': 3500 };
+      shipping = fallbacks[country] !== undefined ? fallbacks[country] : 4000;
+    }
+  } catch (e) {
+    console.error("SHIPPING FETCH ERROR:", e);
+    const fallbacks: any = { 'IN': 0, 'US': 3000, 'GB': 2500, 'CA': 3200, 'AE': 1500, 'AU': 3500 };
+    shipping = fallbacks[country] !== undefined ? fallbacks[country] : 4000;
+  }
 
   const validatedItems = []
 
@@ -51,7 +67,7 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
   }
 
   // Free shipping over $150
-  if (subtotal > 150 && shippingMethod !== 'express') shipping = 0
+  // Free shipping logic removed
 
   let couponId = null
   let appliedDiscountText = ''
@@ -233,6 +249,7 @@ async function createFinalOrder(
       fullAddress
     )
   } catch (e) {
+    console.error("SHIPPING FETCH ERROR:", e);
     console.error("Failed to trigger order confirmation email", e)
   }
 

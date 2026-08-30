@@ -8,6 +8,7 @@ import { X, Search as SearchIcon, ShoppingBag, MessageCircle } from 'lucide-reac
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/store/cart-store'
 import { useRouter } from 'next/navigation'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export function SearchDrawer() {
   const router = useRouter()
@@ -136,8 +137,8 @@ export function SearchDrawer() {
                       <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 line-clamp-2 group-hover:text-[#FF7A00] transition-colors">{product.name}</h3>
                       {product.sale_price ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-gray-900">₹{product.sale_price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                          <span className="text-xs text-gray-400 line-through">₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          <span className="text-sm font-black text-gray-900"><PriceDisplay amount={product.sale_price} /></span>
+                          <span className="text-xs text-gray-400 line-through"><PriceDisplay amount={product.price} /></span>
                         </div>
                       ) : (
                         <span className="text-sm font-black text-gray-900">

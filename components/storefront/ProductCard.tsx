@@ -1,4 +1,5 @@
 'use client'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -102,15 +103,15 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
           <div className="mb-1">
             {product.is_enquiry_only ? (
               <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">
-                Starting from Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                Starting from <PriceDisplay amount={product.price} />
               </span>
             ) : product.sale_price ? (
               <div className={`flex flex-wrap items-center justify-center gap-x-2 ${variant === 'horizontal' ? 'justify-start' : ''}`}>
-                <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">Rs. {product.sale_price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                <span className="text-[11px] sm:text-[12px] font-medium text-gray-400 line-through">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]"><PriceDisplay amount={product.sale_price} /></span>
+                <span className="text-[11px] sm:text-[12px] font-medium text-gray-400 line-through"><PriceDisplay amount={product.price} /></span>
               </div>
             ) : (
-              <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]">Rs. {product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+              <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]"><PriceDisplay amount={product.price} /></span>
             )}
           </div>
         </div>

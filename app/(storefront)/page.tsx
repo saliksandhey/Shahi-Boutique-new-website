@@ -1,6 +1,7 @@
 import { createPublicClient } from '@/lib/supabase/server'
 import { getStoreSettings } from '@/lib/actions/settings'
 import { HeroLuxury } from '@/components/storefront/HeroLuxury'
+import { CurrencyDropdown } from '@/components/storefront/CurrencyDropdown'
 import { ServicesSection } from '@/components/storefront/ServicesSection'
 import { CollectionSlider } from '@/components/storefront/CollectionSlider'
 import { HomeFeedSection } from '@/components/storefront/HomeFeedSection'
@@ -45,7 +46,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col w-full">
-      
+
       {/* Section 3: Hero Section */}
       <HeroLuxury 
         heroBannerUrl={heroBannerUrl} 

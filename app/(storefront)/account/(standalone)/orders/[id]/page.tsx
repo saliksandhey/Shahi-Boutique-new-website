@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Package, Truck, CheckCircle } from 'lucide-react'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireAuth()
@@ -114,7 +115,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                           <h3 className="line-clamp-2 sm:line-clamp-none pr-4">
                             <Link href={`/product/${product?.slug}`}>{product?.name}</Link>
                           </h3>
-                          <p className="mt-1 sm:mt-0 whitespace-nowrap text-sm sm:text-base">₹{item.price}</p>
+                          <p className="mt-1 sm:mt-0 whitespace-nowrap text-sm sm:text-base"><PriceDisplay amount={item.price} /></p>
                         </div>
                       </div>
                       <div className="flex flex-1 items-end justify-between text-sm">
@@ -137,7 +138,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <dl className="space-y-4 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <dt>Subtotal</dt>
-                  <dd className="text-gray-900">₹{order.subtotal}</dd>
+                  <dd className="text-gray-900"><PriceDisplay amount={order.subtotal} /></dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Discount</dt>
@@ -149,7 +150,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-4 font-semibold text-gray-900 text-base">
                   <dt>Total</dt>
-                  <dd>₹{order.total_amount}</dd>
+                  <dd><PriceDisplay amount={order.total_amount} /></dd>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-4">
                   <dt>Payment Method</dt>

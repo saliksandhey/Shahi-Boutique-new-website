@@ -5,7 +5,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createAdminClient()
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.shahiboutique.com'
   
-  const { data: products } = await supabase.from('products').select('slug, updated_at').eq('status', 'active')
+  const { data: products } = await supabase.from('products').select('slug, updated_at').eq('status', 'ACTIVE')
   const { data: categories } = await supabase.from('categories').select('slug')
   const { data: blogs } = await supabase.from('blogs').select('slug, updated_at').eq('status', 'PUBLISHED')
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export function CartClient() {
   const { items, removeItem, updateQuantity, getSubtotal } = useCartStore()
@@ -126,7 +127,7 @@ export function CartClient() {
         <dl className="mt-6 space-y-6">
           <div className="flex items-center justify-between">
             <dt className="text-sm text-muted-foreground font-light tracking-wide">Subtotal</dt>
-            <dd className="text-sm font-medium text-foreground tracking-wide">₹{subtotal.toFixed(2)}</dd>
+            <dd className="text-sm font-medium text-foreground tracking-wide"><PriceDisplay amount={subtotal} /></dd>
           </div>
           <div className="flex items-center justify-between border-t border-border pt-6">
             <dt className="flex items-center text-sm text-muted-foreground font-light tracking-wide">
@@ -136,7 +137,7 @@ export function CartClient() {
           </div>
           <div className="flex items-center justify-between border-t border-border pt-6">
             <dt className="text-base font-serif tracking-widest uppercase text-foreground">Order Total</dt>
-            <dd className="text-base font-medium text-foreground tracking-wide">₹{subtotal.toFixed(2)}</dd>
+            <dd className="text-base font-medium text-foreground tracking-wide"><PriceDisplay amount={subtotal} /></dd>
           </div>
         </dl>
 

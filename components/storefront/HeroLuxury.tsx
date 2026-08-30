@@ -68,14 +68,14 @@ export function HeroLuxury({
       </div>
 
       {/* Announcement Marquee */}
-      <div className="relative w-full bg-[#5E1218] border-y border-[#4A0D11] overflow-hidden py-3 z-20">
+      <div className="relative w-full bg-[#5E1218] border-y border-[#4A0D11] overflow-hidden py-1.5 z-20">
         <div 
           className="flex whitespace-nowrap"
           style={{ animation: `marquee ${displaySpeed}s linear infinite` }}
         >
           {[...Array(8)].map((_, i) => (
             <div key={i} className="flex items-center mx-6">
-              <span className="text-white text-sm font-medium tracking-wider">
+              <span className="text-white text-xs font-medium tracking-wider">
                 {displayMarquee}
               </span>
             </div>

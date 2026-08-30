@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { Package } from 'lucide-react'
 import Link from 'next/link'
 import { MobileBackNav } from '@/components/account/MobileBackNav'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay';
 
 export default async function OrdersPage() {
   const user = await requireAuth()
@@ -35,7 +36,7 @@ export default async function OrdersPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 block">Total</span>
-                    <div className="text-sm font-black text-[#111111]">₹{order.total_amount}</div>
+                    <div className="text-sm font-black text-[#111111]"><PriceDisplay amount={order.total_amount} /></div>
                   </div>
                 </div>
 
