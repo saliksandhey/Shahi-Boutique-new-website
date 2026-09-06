@@ -75,13 +75,18 @@ export function MobileNav({ newOrdersCount = 0 }: { newOrdersCount?: number }) {
                 className="flex flex-col items-center justify-center w-full space-y-1 relative group"
               >
                 <div className={cn(
-                  "p-2 rounded-full transition-all duration-300",
+                  "p-2 rounded-full transition-all duration-300 relative",
                   isActive ? "bg-white/10" : "hover:bg-white/5"
                 )}>
                   <item.icon className={cn(
                     "w-5 h-5 transition-colors", 
                     isActive ? "text-[#FF7A00]" : "text-gray-400 group-hover:text-white"
                   )} />
+                  {item.name === 'Orders' && newOrdersCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow">
+                      {newOrdersCount}
+                    </span>
+                  )}
                 </div>
               </Link>
             )
