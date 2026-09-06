@@ -1,16 +1,35 @@
-﻿'use client'
+'use client'
 
 import { useCurrency } from '@/lib/contexts/CurrencyContext'
 
-export function PriceDisplay({ amount, className }: { amount: number, className?: string }) {
-  const { formatPrice, currency, rates } = useCurrency()
-  const formatted = formatPrice(amount)
-  
-  // To avoid hydration mismatch (server renders ₹, client renders $), 
-  // we could just render the formatted string, but if hydration complains we might need to suppress it.
-  return (
-    <span className={className} suppressHydrationWarning>
-      {formatted}
-    </span>
-  )
+interface PriceDisplayProps {
+  amount?: number
+  product?: any
+  className?: string
+}
+
+export function PriceDisplay({ amount, product, className }: PriceDisplayProps) {
+  const { formatPrice, getProductPrice } = useCurrency()
+
+  let formatted: string
+  let formattedSale: string | null = null
+
+  if (product) {
+    const result = getProductPrice(product)
+    formatted = result.formatted
+    formattedSale = result.formattedSale
+  } else {
+    formatted = formatPrice(amount ?? 0)
+  }
+
+  if (formattedSale) {
+    return (
+      <span className={className} suppressHydrationWarning>
+        <span className='text-[#FF7A00]'>{formattedSale}</span>{' '}
+        <span className='line-through text-gray-400'>{formatted}</span>
+      </span>
+    )
+  }
+
+  return <span className={className} suppressHydrationWarning>{formatted}</span>
 }

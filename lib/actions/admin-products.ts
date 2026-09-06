@@ -17,6 +17,17 @@ export type ProductPayload = {
   featured: boolean
   status: string
   is_enquiry_only?: boolean
+  // Per-country pricing
+  price_inr?: number | null
+  price_cad?: number | null
+  price_aud?: number | null
+  price_nzd?: number | null
+  price_usd?: number | null
+  sale_price_inr?: number | null
+  sale_price_cad?: number | null
+  sale_price_aud?: number | null
+  sale_price_nzd?: number | null
+  sale_price_usd?: number | null
   // Details
   fabric?: string
   material?: string

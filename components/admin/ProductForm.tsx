@@ -99,6 +99,12 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
 
   const onSubmit = async (data: ProductFormValues) => {
     setError(null)
+
+    // Collect per-country prices from native inputs (not registered with RHF)
+    const form_el = document.querySelector('form') as HTMLFormElement
+    const fd = form_el ? new FormData(form_el) : null
+    const num = (key: string) => { const v = fd?.get(key); return v && v !== '' ? Number(v) : null }
+
     const payload = {
       id: product?.id,
       ...data,
@@ -107,6 +113,17 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       sale_price: data.sale_price === "" || data.sale_price == null ? null : Number(data.sale_price),
       stock: data.stock === "" || data.stock == null ? 0 : Number(data.stock),
       weight: data.weight === "" || data.weight == null ? null : Number(data.weight),
+      // Per-country prices
+      price_inr: data.price === "" || data.price == null ? 0 : Number(data.price),
+      sale_price_inr: data.sale_price === "" || data.sale_price == null ? null : Number(data.sale_price),
+      price_cad: num('price_cad'),
+      sale_price_cad: num('sale_price_cad'),
+      price_aud: num('price_aud'),
+      sale_price_aud: num('sale_price_aud'),
+      price_nzd: num('price_nzd'),
+      sale_price_nzd: num('sale_price_nzd'),
+      price_usd: num('price_usd'),
+      sale_price_usd: num('sale_price_usd'),
     }
 
     const res = await saveProductDetails(payload as any)
@@ -257,25 +274,120 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       <Card className={cardClass}>
         <CardContent className="p-8 md:p-10">
           <h3 className={headerClass}>Pricing & Inventory</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <Label htmlFor="price" className={labelClass}>{isEnquiryMode ? "Starting Price (₹)" : "Regular Price (₹)"}</Label>
-              <Input id="price" type="number" step="0.01" {...form.register('price')} className={inputClass} placeholder="0.00" />
+
+          {/* Stock (always visible) */}
+          {!isEnquiryMode && (
+            <div className="mb-8 max-w-xs">
+              <Label htmlFor="stock" className={labelClass}>Available Stock</Label>
+              <Input id="stock" type="number" {...form.register('stock')} className={inputClass} placeholder="0" />
+            </div>
+          )}
+
+          {/* Per-Country Pricing */}
+          <div className="space-y-6">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              {isEnquiryMode ? 'Starting Prices by Country' : 'Regular & Sale Price by Country'}
+            </p>
+
+            {/* India INR */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🇮🇳</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-700">India — INR (₹)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (₹)' : 'Regular Price (₹)'}</Label>
+                  <Input type="number" step="0.01" {...form.register('price')} className={inputClass} placeholder="0.00" />
+                </div>
+                {!isEnquiryMode && (
+                  <div>
+                    <Label className={labelClass}>Sale Price (₹) — Optional</Label>
+                    <Input type="number" step="0.01" {...form.register('sale_price')} className={inputClass} placeholder="0.00" />
+                  </div>
+                )}
+              </div>
             </div>
 
-            {!isEnquiryMode && (
-              <>
+            {/* Canada CAD */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🇨🇦</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-700">Canada — CAD (CA$)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="sale_price" className={labelClass}>Sale Price (₹)</Label>
-                  <Input id="sale_price" type="number" step="0.01" {...form.register('sale_price')} className={inputClass} placeholder="0.00 (Optional)" />
+                  <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (CA$)' : 'Regular Price (CA$)'}</Label>
+                  <input type="number" step="0.01" name="price_cad" defaultValue={product?.price_cad || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
                 </div>
+                {!isEnquiryMode && (
+                  <div>
+                    <Label className={labelClass}>Sale Price (CA$) — Optional</Label>
+                    <input type="number" step="0.01" name="sale_price_cad" defaultValue={product?.sale_price_cad || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  </div>
+                )}
+              </div>
+            </div>
 
+            {/* Australia AUD */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🇦🇺</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-700">Australia — AUD (A$)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="stock" className={labelClass}>Available Stock</Label>
-                  <Input id="stock" type="number" {...form.register('stock')} className={inputClass} placeholder="0" />
+                  <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (A$)' : 'Regular Price (A$)'}</Label>
+                  <input type="number" step="0.01" name="price_aud" defaultValue={product?.price_aud || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
                 </div>
-              </>
-            )}
+                {!isEnquiryMode && (
+                  <div>
+                    <Label className={labelClass}>Sale Price (A$) — Optional</Label>
+                    <input type="number" step="0.01" name="sale_price_aud" defaultValue={product?.sale_price_aud || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* New Zealand NZD */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🇳🇿</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-700">New Zealand — NZD (NZ$)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (NZ$)' : 'Regular Price (NZ$)'}</Label>
+                  <input type="number" step="0.01" name="price_nzd" defaultValue={product?.price_nzd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                </div>
+                {!isEnquiryMode && (
+                  <div>
+                    <Label className={labelClass}>Sale Price (NZ$) — Optional</Label>
+                    <input type="number" step="0.01" name="sale_price_nzd" defaultValue={product?.sale_price_nzd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* USA USD */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🇺🇸</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-700">United States — USD ($)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className={labelClass}>{isEnquiryMode ? 'Starting Price ($)' : 'Regular Price ($)'}</Label>
+                  <input type="number" step="0.01" name="price_usd" defaultValue={product?.price_usd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                </div>
+                {!isEnquiryMode && (
+                  <div>
+                    <Label className={labelClass}>Sale Price ($) — Optional</Label>
+                    <input type="number" step="0.01" name="sale_price_usd" defaultValue={product?.sale_price_usd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -378,24 +378,20 @@ export function CheckoutClient({
                         setIsSavingAddress(true)
                         formData.append('full_name', `${newAddress.firstName} ${newAddress.lastName}`)
                         formData.set('address_line1', newAddress.street)
-                          formData.set('postal_code', newAddress.zip)
-                          
-                          let finalCountry = newAddress.country || 'IN'
-                          if (finalCountry === 'OTHER') {
-                            finalCountry = (formData.get('custom_country') as string) || 'Other'
-                          }
-                          formData.set('country', finalCountry)
-
-                          let finalState = (formData.get('state') as string) || newAddress.state
-                          if (finalState === 'Other') {
-                            finalState = (formData.get('custom_state') as string) || 'Other'
-                            formData.set('state', finalState)
-                          }
+                        formData.set('postal_code', newAddress.zip)
+                        
+                        let finalCountry = newAddress.country || 'IN'
+                        formData.set('country', finalCountry)
+                        
+                        let finalState = (formData.get('state') as string) || newAddress.state
+                        if (finalState === 'Other') {
+                          finalState = (formData.get('custom_state') as string) || 'Other'
+                          formData.set('state', finalState)
+                        }
                         const res = await saveAddress(formData)
                         if (res.success) {
                           setShowNewAddressForm(false)
-                          setNewAddress({ firstName: '', lastName: '', phone: '', street: '', city: '', state: '', zip: '', country: 'India' })
-                          // Assuming the parent page will refresh the savedAddresses array via revalidatePath
+                          setNewAddress({ firstName: '', lastName: '', phone: '', street: '', city: '', state: '', zip: '', country: 'IN' })
                         } else {
                           setError(res.error || 'Failed to save address')
                         }
@@ -407,41 +403,36 @@ export function CheckoutClient({
                         <input required type="text" name="street" placeholder="Street Address" value={newAddress.street} onChange={e => setNewAddress({...newAddress, street: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
                         <input required type="text" name="city" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className={inputClasses} />
                         
-                          <select required name="country" value={newAddress.country || 'IN'} onChange={e => {
-                            setNewAddress({...newAddress, country: e.target.value, state: '', zip: ''});
-                            updateTotals(shippingMethod, appliedCoupon?.code, e.target.value);
-                          }} className={`${inputClasses} sm:col-span-2 uppercase`}>
-                            <option value="IN">India</option>
-                            <option value="US">United States</option>
-                            <option value="GB">United Kingdom</option>
-                            <option value="CA">Canada</option>
-                            <option value="AE">UAE</option>
-                            <option value="AU">Australia</option>
-                            <option value="OTHER">Other Country</option>
+                        <select required name="country" value={newAddress.country || 'IN'} onChange={e => {
+                          setNewAddress({...newAddress, country: e.target.value, state: '', zip: ''});
+                          updateTotals(shippingMethod, appliedCoupon?.code, e.target.value);
+                        }} className={`${inputClasses} sm:col-span-2`}>
+                          <option value="IN">India</option>
+                          <option value="CA">Canada</option>
+                          <option value="AU">Australia</option>
+                          <option value="NZ">New Zealand</option>
+                          <option value="US">United States</option>
+                        </select>
+
+                        { (newAddress.country === 'IN' || !newAddress.country) ? (
+                          <><select required name="state" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses}>
+                            <option value="">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Other">Other</option>
                           </select>
-                            {newAddress.country === 'OTHER' && (
-                              <input required type="text" name="custom_country" placeholder="Enter Country Name" className={`${inputClasses} sm:col-span-2`} />
-                            )}
-  
-                            { (newAddress.country === 'IN' || !newAddress.country) ? (
-                              <><select required name="state" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses}>
-                              <option value="">Select State</option>
-                              <option value="Andhra Pradesh">Andhra Pradesh</option>
-                              <option value="Delhi">Delhi</option>
-                              <option value="Haryana">Haryana</option>
-                              <option value="Karnataka">Karnataka</option>
-                              <option value="Maharashtra">Maharashtra</option>
-                              <option value="Punjab">Punjab</option>
-                              <option value="Tamil Nadu">Tamil Nadu</option>
-                              <option value="Uttar Pradesh">Uttar Pradesh</option>
-                                <option value="Other">Other</option>
-                              </select>
-                              {newAddress.state === 'Other' && (
-                                  <input required type="text" name="custom_state" placeholder="Enter State Name" className={`${inputClasses} mt-2`} />
-                                )}
-                              </>) : (
-                            <input required type="text" name="state" placeholder="State/Province" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses} />
+                          {newAddress.state === 'Other' && (
+                            <input required type="text" name="custom_state" placeholder="Enter State Name" className={`${inputClasses} mt-2`} />
                           )}
+                          </>) : (
+                          <input required type="text" name="state" placeholder="State/Province" value={newAddress.state} onChange={e => setNewAddress({...newAddress, state: e.target.value})} className={inputClasses} />
+                        )}
 
                         <input required type="text" name="zip" placeholder="Zip / Postal Code" value={newAddress.zip} onChange={e => setNewAddress({...newAddress, zip: e.target.value})} className={`${inputClasses} sm:col-span-2`} />
                         

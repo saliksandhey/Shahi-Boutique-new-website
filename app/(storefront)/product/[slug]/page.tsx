@@ -1,5 +1,4 @@
 import { PriceDisplay } from '@/components/storefront/PriceDisplay';
-import { CurrencyDropdown } from '@/components/storefront/CurrencyDropdown';
 ﻿import { createPublicClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ProductGallery } from '@/components/storefront/ProductGallery'
@@ -142,13 +141,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <p className="text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
               )}
             </div>
-              <div className="flex items-center gap-2 mb-6 -mt-2">
-                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Currency:</span>
-                <div className="bg-gray-50 border border-gray-100 rounded-lg px-2 py-0.5">
-                  <CurrencyDropdown alignLeft />
-                </div>
-              </div>
-  
+              
               <div className="mb-8 md:mb-10">
               <h3 className="sr-only">Description</h3>
               <div className="text-sm md:text-base text-gray-500 leading-relaxed font-medium whitespace-pre-wrap">

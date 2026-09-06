@@ -1,5 +1,4 @@
 'use client'
-import { CurrencyDropdown } from '@/components/storefront/CurrencyDropdown'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -176,7 +175,6 @@ export function Navbar({ categories }: { categories: any[] }) {
         <div className="flex flex-1 items-center justify-end gap-6 xl:gap-8">
           
           <div className="flex items-center gap-5">
-            <div className="hidden md:block mr-2"><CurrencyDropdown /></div>
             <button onClick={openSearch} className="text-[#111111] hover:opacity-60 transition-opacity p-1 outline-none">
               <span className="sr-only">Search</span>
               <Search className="h-5 w-5" strokeWidth={1.25} />

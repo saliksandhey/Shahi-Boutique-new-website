@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { MapPin, Truck, AlertCircle, CheckCircle2 } from 'lucide-react'
@@ -10,7 +10,7 @@ export function DeliveryChecker() {
   const [country, setCountry] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ type: 'success' | 'error', message: string, detail?: string } | null>(null)
-  const { rates, formatPrice } = useCurrency()
+  const { formatPrice } = useCurrency()
 
   const checkPincode = async () => {
     if (!pincode || pincode.length !== 6) {
@@ -44,13 +44,11 @@ export function DeliveryChecker() {
       setResult({ type: 'error', message: 'Please select a country.' })
       return
     }
-    // Hardcoded zones as requested to avoid DB migration block
     const zones: Record<string, { fee: number, days: string }> = {
-      'US': { fee: 3000, days: '7-10 days' },
-      'GB': { fee: 2500, days: '6-8 days' },
       'CA': { fee: 3200, days: '8-12 days' },
-      'AE': { fee: 1500, days: '4-6 days' },
       'AU': { fee: 3500, days: '10-14 days' },
+      'NZ': { fee: 3800, days: '12-16 days' },
+      'US': { fee: 3000, days: '7-10 days' },
     }
     
     setLoading(true)
@@ -62,11 +60,7 @@ export function DeliveryChecker() {
           detail: `Expected delivery in ${zones[country].days}. Shipping: ${formatPrice(zones[country].fee)}`
         })
       } else {
-        setResult({
-          type: 'success',
-          message: `Delivery available to ${country}.`,
-          detail: `Expected delivery in 10-15 days. Shipping: ${formatPrice(4000)} (Standard Intl)`
-        })
+        setResult({ type: 'error', message: 'Delivery not available to this country.' })
       }
       setLoading(false)
     }, 500)
@@ -126,12 +120,10 @@ export function DeliveryChecker() {
               className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:border-[#111111] bg-white transition-colors uppercase"
             >
               <option value="">Select Country</option>
-              <option value="US">United States</option>
-              <option value="GB">United Kingdom</option>
-              <option value="CA">Canada</option>
-              <option value="AE">UAE</option>
-              <option value="AU">Australia</option>
-              <option value="OTHER">Other Country</option>
+              <option value="CA">🇨🇦 Canada</option>
+              <option value="AU">🇦🇺 Australia</option>
+              <option value="NZ">🇳🇿 New Zealand</option>
+              <option value="US">🇺🇸 United States</option>
             </select>
             <button 
               onClick={checkInternational}
