@@ -20,6 +20,14 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.any(),
   sale_price: z.any(),
+  price_cad: z.any().optional(),
+  sale_price_cad: z.any().optional(),
+  price_aud: z.any().optional(),
+  sale_price_aud: z.any().optional(),
+  price_nzd: z.any().optional(),
+  sale_price_nzd: z.any().optional(),
+  price_usd: z.any().optional(),
+  sale_price_usd: z.any().optional(),
   stock: z.any(),
   featured: z.boolean().optional(),
   is_enquiry_only: z.boolean().optional(),
@@ -55,6 +63,14 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       description: product.description || '',
       price: product.price || 0,
       sale_price: product.sale_price || null,
+      price_cad: product.price_cad ?? '',
+      sale_price_cad: product.sale_price_cad ?? '',
+      price_aud: product.price_aud ?? '',
+      sale_price_aud: product.sale_price_aud ?? '',
+      price_nzd: product.price_nzd ?? '',
+      sale_price_nzd: product.sale_price_nzd ?? '',
+      price_usd: product.price_usd ?? '',
+      sale_price_usd: product.sale_price_usd ?? '',
       stock: product.stock || 0,
       featured: product.featured || false,
       is_enquiry_only: isEnquiryMode,
@@ -71,7 +87,9 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       keywords: product.keywords || '',
       canonical_url: product.canonical_url || ''
     } : {
-      name: '', slug: '', category_id: '', short_description: '', description: '', price: 0, sale_price: null, stock: 0, featured: false, is_enquiry_only: isEnquiryMode, status: 'DRAFT'
+      name: '', slug: '', category_id: '', short_description: '', description: '', price: 0, sale_price: null,
+      price_cad: '', sale_price_cad: '', price_aud: '', sale_price_aud: '', price_nzd: '', sale_price_nzd: '', price_usd: '', sale_price_usd: '',
+      stock: 0, featured: false, is_enquiry_only: isEnquiryMode, status: 'DRAFT'
     }
   })
 
@@ -100,10 +118,7 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
   const onSubmit = async (data: ProductFormValues) => {
     setError(null)
 
-    // Collect per-country prices from native inputs (not registered with RHF)
-    const form_el = document.querySelector('form') as HTMLFormElement
-    const fd = form_el ? new FormData(form_el) : null
-    const num = (key: string) => { const v = fd?.get(key); return v && v !== '' ? Number(v) : null }
+    const num = (v: any) => (v === "" || v == null ? null : Number(v))
 
     const payload = {
       id: product?.id,
@@ -116,14 +131,14 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       // Per-country prices
       price_inr: data.price === "" || data.price == null ? 0 : Number(data.price),
       sale_price_inr: data.sale_price === "" || data.sale_price == null ? null : Number(data.sale_price),
-      price_cad: num('price_cad'),
-      sale_price_cad: num('sale_price_cad'),
-      price_aud: num('price_aud'),
-      sale_price_aud: num('sale_price_aud'),
-      price_nzd: num('price_nzd'),
-      sale_price_nzd: num('sale_price_nzd'),
-      price_usd: num('price_usd'),
-      sale_price_usd: num('sale_price_usd'),
+      price_cad: num(data.price_cad),
+      sale_price_cad: num(data.sale_price_cad),
+      price_aud: num(data.price_aud),
+      sale_price_aud: num(data.sale_price_aud),
+      price_nzd: num(data.price_nzd),
+      sale_price_nzd: num(data.sale_price_nzd),
+      price_usd: num(data.price_usd),
+      sale_price_usd: num(data.sale_price_usd),
     }
 
     const res = await saveProductDetails(payload as any)
@@ -318,12 +333,12 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (CA$)' : 'Regular Price (CA$)'}</Label>
-                  <input type="number" step="0.01" name="price_cad" defaultValue={product?.price_cad || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  <Input type="number" step="0.01" {...form.register('price_cad')} className={inputClass} placeholder="0.00" />
                 </div>
                 {!isEnquiryMode && (
                   <div>
                     <Label className={labelClass}>Sale Price (CA$) — Optional</Label>
-                    <input type="number" step="0.01" name="sale_price_cad" defaultValue={product?.sale_price_cad || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                    <Input type="number" step="0.01" {...form.register('sale_price_cad')} className={inputClass} placeholder="0.00" />
                   </div>
                 )}
               </div>
@@ -338,12 +353,12 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (A$)' : 'Regular Price (A$)'}</Label>
-                  <input type="number" step="0.01" name="price_aud" defaultValue={product?.price_aud || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  <Input type="number" step="0.01" {...form.register('price_aud')} className={inputClass} placeholder="0.00" />
                 </div>
                 {!isEnquiryMode && (
                   <div>
                     <Label className={labelClass}>Sale Price (A$) — Optional</Label>
-                    <input type="number" step="0.01" name="sale_price_aud" defaultValue={product?.sale_price_aud || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                    <Input type="number" step="0.01" {...form.register('sale_price_aud')} className={inputClass} placeholder="0.00" />
                   </div>
                 )}
               </div>
@@ -358,12 +373,12 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className={labelClass}>{isEnquiryMode ? 'Starting Price (NZ$)' : 'Regular Price (NZ$)'}</Label>
-                  <input type="number" step="0.01" name="price_nzd" defaultValue={product?.price_nzd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  <Input type="number" step="0.01" {...form.register('price_nzd')} className={inputClass} placeholder="0.00" />
                 </div>
                 {!isEnquiryMode && (
                   <div>
                     <Label className={labelClass}>Sale Price (NZ$) — Optional</Label>
-                    <input type="number" step="0.01" name="sale_price_nzd" defaultValue={product?.sale_price_nzd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                    <Input type="number" step="0.01" {...form.register('sale_price_nzd')} className={inputClass} placeholder="0.00" />
                   </div>
                 )}
               </div>
@@ -378,12 +393,12 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className={labelClass}>{isEnquiryMode ? 'Starting Price ($)' : 'Regular Price ($)'}</Label>
-                  <input type="number" step="0.01" name="price_usd" defaultValue={product?.price_usd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                  <Input type="number" step="0.01" {...form.register('price_usd')} className={inputClass} placeholder="0.00" />
                 </div>
                 {!isEnquiryMode && (
                   <div>
                     <Label className={labelClass}>Sale Price ($) — Optional</Label>
-                    <input type="number" step="0.01" name="sale_price_usd" defaultValue={product?.sale_price_usd || ''} className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ${inputClass}`} placeholder="0.00" />
+                    <Input type="number" step="0.01" {...form.register('sale_price_usd')} className={inputClass} placeholder="0.00" />
                   </div>
                 )}
               </div>
