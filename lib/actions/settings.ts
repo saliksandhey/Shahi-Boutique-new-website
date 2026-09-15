@@ -25,6 +25,17 @@ export async function getStoreSettings() {
 export async function updateStoreSettings(formData: FormData) {
   const supabase = await createAdminClient()
   
+  const maintenanceMode = (formData.get('maintenance_mode') as string) || 'false'
+  const maintenanceTitle = (formData.get('maintenance_title') as string) || 'The site is currently down for maintenance'
+  const maintenanceMessage = (formData.get('maintenance_message') as string) || "We apologize for any inconveniences caused. We've almost done."
+  const maintenanceNotice = (formData.get('maintenance_notice') as string) || 'Our artisans & technical team are currently upgrading the online boutique experience.'
+  const maintenancePhone = (formData.get('maintenance_phone') as string) || '+91 90417-62820'
+  const maintenanceEmail = (formData.get('maintenance_email') as string) || 'info@shahiboutique.com'
+  const maintenanceWhatsapp = (formData.get('maintenance_whatsapp') as string) || '919041762820'
+  const cashfreeAppId = formData.get('cashfree_app_id') as string
+  const cashfreeSecretKey = formData.get('cashfree_secret_key') as string
+  const cashfreeMode = formData.get('cashfree_mode') as string || 'PRODUCTION'
+  const activeGateway = formData.get('active_payment_gateway') as string || 'CASHFREE'
   const razorpayKeyId = formData.get('razorpay_key_id') as string
   const razorpayKeySecret = formData.get('razorpay_key_secret') as string
   const codEnabled = formData.get('cod_enabled') as string
@@ -34,6 +45,17 @@ export async function updateStoreSettings(formData: FormData) {
   const heroSliderSlides = formData.get('hero_slider_slides') as string
   
   const updates = [
+    { key: 'maintenance_mode', value: maintenanceMode },
+    { key: 'maintenance_title', value: maintenanceTitle },
+    { key: 'maintenance_message', value: maintenanceMessage },
+    { key: 'maintenance_notice', value: maintenanceNotice },
+    { key: 'maintenance_phone', value: maintenancePhone },
+    { key: 'maintenance_email', value: maintenanceEmail },
+    { key: 'maintenance_whatsapp', value: maintenanceWhatsapp },
+    { key: 'cashfree_app_id', value: cashfreeAppId },
+    { key: 'cashfree_secret_key', value: cashfreeSecretKey },
+    { key: 'cashfree_mode', value: cashfreeMode },
+    { key: 'active_payment_gateway', value: activeGateway },
     { key: 'razorpay_key_id', value: razorpayKeyId },
     { key: 'razorpay_key_secret', value: razorpayKeySecret },
     { key: 'cod_enabled', value: codEnabled },
@@ -60,6 +82,7 @@ export async function updateStoreSettings(formData: FormData) {
   
   revalidatePath('/2010admin/settings')
   revalidatePath('/', 'layout')
+  revalidatePath('/', 'page')
   return { success: true }
 }
 

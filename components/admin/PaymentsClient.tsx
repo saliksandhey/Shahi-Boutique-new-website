@@ -14,18 +14,23 @@ export function PaymentsClient({ currentFilter }: { currentFilter: string }) {
   }
 
   const filters = [
-    { label: 'All Concierge', value: 'ALL' },
+    { label: 'All Transactions', value: 'ALL' },
+    { label: 'Paid / Completed', value: 'PAID' },
     { label: 'Pending', value: 'PENDING' },
-    { label: 'Paid', value: 'PAID' },
+    { label: 'Failed', value: 'FAILED' },
   ]
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="flex flex-wrap gap-2">
       {filters.map((f) => (
         <Badge
           key={f.value}
           variant={currentFilter === f.value ? 'default' : 'outline'}
-          className="cursor-pointer text-[10px] font-bold uppercase tracking-widest px-4 py-2 hover:bg-[#1C1C1C] hover:text-white transition-colors"
+          className={`cursor-pointer text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all ${
+            currentFilter === f.value 
+              ? 'bg-[#1C1C1C] text-white shadow-sm' 
+              : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+          }`}
           onClick={() => setFilter(f.value)}
         >
           {f.label}

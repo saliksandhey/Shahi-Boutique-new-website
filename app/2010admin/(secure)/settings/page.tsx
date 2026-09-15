@@ -1,7 +1,10 @@
-﻿import { getStoreSettings } from '@/lib/actions/settings'
+import { getStoreSettings } from '@/lib/actions/settings'
 import { SettingsForm } from '@/components/admin/SettingsForm'
 import Link from 'next/link'
 import { Truck } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function AdminSettingsPage() {
   const settings = await getStoreSettings()

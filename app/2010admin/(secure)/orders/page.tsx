@@ -26,7 +26,7 @@ export default async function AdminOrdersPage({
   const supabase = createAdminClient()
   let query = supabase
     .from('orders')
-    .select('id, order_number, total_amount, order_status, payment_status, created_at, customer_name, customer_email')
+    .select('id, order_number, total_amount, order_status, payment_status, created_at, customer_name, customer_email, customer_phone, country')
     .order('created_at', { ascending: false })
 
   if (statusFilter !== 'ALL') {
@@ -99,8 +99,22 @@ export default async function AdminOrdersPage({
                   {new Date(order.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm font-bold text-gray-900">{order.customer_name || 'Guest'}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-gray-900">{order.customer_name || 'Guest'}</span>
+                    {order.country && (
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                        {order.country === 'IN' || order.country === 'India' ? '🇮🇳 IN' :
+                         order.country === 'US' || order.country === 'United States' ? '🇺🇸 US' :
+                         order.country === 'CA' || order.country === 'Canada' ? '🇨🇦 CA' :
+                         order.country === 'GB' || order.country === 'United Kingdom' ? '🇬🇧 UK' :
+                         order.country === 'AU' || order.country === 'Australia' ? '🇦🇺 AU' :
+                         order.country === 'NZ' || order.country === 'New Zealand' ? '🇳🇿 NZ' :
+                         order.country}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-[10px] font-bold text-gray-400">{order.customer_email}</div>
+                  {order.customer_phone && <div className="text-[10px] font-medium text-gray-500">{order.customer_phone}</div>}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={`text-[9px] uppercase font-bold tracking-wider shadow-sm ${
@@ -156,8 +170,22 @@ export default async function AdminOrdersPage({
             </div>
             
             <div>
-              <div className="text-sm font-bold text-gray-900">{order.customer_name || 'Guest'}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900">{order.customer_name || 'Guest'}</span>
+                {order.country && (
+                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                    {order.country === 'IN' || order.country === 'India' ? '🇮🇳 IN' :
+                     order.country === 'US' || order.country === 'United States' ? '🇺🇸 US' :
+                     order.country === 'CA' || order.country === 'Canada' ? '🇨🇦 CA' :
+                     order.country === 'GB' || order.country === 'United Kingdom' ? '🇬🇧 UK' :
+                     order.country === 'AU' || order.country === 'Australia' ? '🇦🇺 AU' :
+                     order.country === 'NZ' || order.country === 'New Zealand' ? '🇳🇿 NZ' :
+                     order.country}
+                  </span>
+                )}
+              </div>
               <div className="text-[10px] font-bold text-gray-400">{order.customer_email}</div>
+              {order.customer_phone && <div className="text-[10px] font-medium text-gray-500">{order.customer_phone}</div>}
             </div>
             
             <div className="flex items-center gap-2">

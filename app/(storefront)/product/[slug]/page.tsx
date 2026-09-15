@@ -7,6 +7,8 @@ import { DeliveryChecker } from '@/components/storefront/DeliveryChecker'
 import { ProductGrid } from '@/components/storefront/ProductGrid'
 import { ReviewCarousel } from '@/components/storefront/ReviewCarousel'
 import { PotliShowcase } from '@/components/storefront/PotliShowcase'
+import { ColorGroupVariants } from '@/components/storefront/ColorGroupVariants'
+import { getColorSiblings } from '@/lib/actions/product-groups'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -66,6 +68,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .eq('product_id', product.id)
     .eq('approved', true)
     .order('created_at', { ascending: false })
+
+  // Color group siblings (other products in same group, excluding current)
+  const colorSiblings = await getColorSiblings(product.id)
 
   // Sort images safely by position
   const sortedImages = (product.product_images || []).sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
@@ -202,6 +207,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="py-8">
+              {/* Color Group Variants — only shows when product is in a group */}
+              <ColorGroupVariants siblings={colorSiblings as any} />
               <AddToCart product={product} variants={variants || []} />
               <DeliveryChecker />
             </div>
@@ -215,6 +222,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {product.material && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Material</span> {product.material}</li>}
                 {product.country_of_origin && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Origin</span> {product.country_of_origin}</li>}
                 {product.weight && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Weight</span> {product.weight}g</li>}
+                {product.height_cm && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Height</span> {product.height_cm} cm</li>}
+                {product.length_cm && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Length</span> {product.length_cm} cm</li>}
                 {product.dimensions && <li className="sm:col-span-2"><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Dimensions</span> {product.dimensions}</li>}
                 {product.care_instructions && <li className="sm:col-span-2"><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Care Instructions</span> {product.care_instructions}</li>}
               </ul>

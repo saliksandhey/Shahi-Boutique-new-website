@@ -15,7 +15,7 @@ export async function RecentOrdersTable() {
   
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, order_number, total_amount, order_status, created_at, profiles(full_name, email)')
+    .select('id, order_number, total_amount, order_status, created_at, customer_name, profiles(full_name, email)')
     .order('created_at', { ascending: false })
     .limit(5)
 
@@ -44,7 +44,7 @@ export async function RecentOrdersTable() {
                     #{order.order_number}
                   </Link>
                 </TableCell>
-                <TableCell className="text-gray-600 font-medium">{(order.profiles as any)?.full_name || 'Guest'}</TableCell>
+                <TableCell className="text-gray-600 font-medium">{order.customer_name || (order.profiles as any)?.full_name || 'Guest'}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={`text-xs font-medium px-2 py-0.5 ${order.order_status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'border-gray-200 bg-gray-50 text-gray-700'}`}>
                     {order.order_status}
@@ -66,7 +66,7 @@ export async function RecentOrdersTable() {
               <span className="text-xs text-gray-500 font-medium">{new Date(order.created_at).toLocaleDateString()}</span>
             </div>
             <div>
-              <div className="text-sm font-medium text-gray-700">{(order.profiles as any)?.full_name || 'Guest User'}</div>
+              <div className="text-sm font-medium text-gray-700">{order.customer_name || (order.profiles as any)?.full_name || 'Guest User'}</div>
             </div>
             <div className="flex justify-between items-end pt-3 mt-1 border-t border-gray-100">
               <Badge variant="outline" className={`text-xs font-medium px-2 py-0.5 ${order.order_status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'border-gray-200 bg-gray-50 text-gray-700'}`}>

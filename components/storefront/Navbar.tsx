@@ -39,10 +39,10 @@ export function Navbar({ categories }: { categories: any[] }) {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
   }, [mobileMenuOpen])
 
@@ -321,7 +321,7 @@ export function Navbar({ categories }: { categories: any[] }) {
                       { name: 'Terms of Service', href: '/terms' },
                     ].map((link, index) => (
                       <Link 
-                        key={link.name}
+                        key={link.name} 
                         href={link.href} 
                         className="inline-flex items-center text-xl font-sans font-light text-gray-500 hover:text-[#111111] uppercase tracking-[0.1em] transition-colors active:opacity-50" 
                         onClick={() => setMobileMenuOpen(false)}
@@ -350,5 +350,3 @@ export function Navbar({ categories }: { categories: any[] }) {
     </>
   )
 }
-
-

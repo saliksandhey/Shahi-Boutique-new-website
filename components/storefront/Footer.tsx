@@ -126,11 +126,13 @@ export function Footer({ categories }: { categories: any[] }) {
         {/* Bottom Section */}
         <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
           
-          <p className="text-[10px] md:text-xs text-gray-500 tracking-widest uppercase text-center md:text-left font-bold order-3 md:order-1 mt-4 md:mt-0">
-            &copy; {new Date().getFullYear()} Shahi Boutique. All Rights Reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-4 order-1">
+            <p className="text-[10px] md:text-xs text-gray-500 tracking-widest uppercase text-center md:text-left font-bold">
+              &copy; {new Date().getFullYear()} Shahi Boutique. All Rights Reserved.
+            </p>
+          </div>
 
-          <div className="hidden md:flex flex-col sm:flex-row items-center gap-6 order-2">
+          <div className="flex flex-col sm:flex-row items-center gap-6 order-2">
             {/* Payment Icons */}
             <div className="flex items-center justify-center gap-4">
               {/* UPI */}

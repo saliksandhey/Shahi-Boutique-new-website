@@ -55,10 +55,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} ${oswald.variable} ${greatVibes.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfair.variable} ${oswald.variable} ${greatVibes.variable} min-h-full antialiased`}
       suppressHydrationWarning
     >
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans text-gray-900 bg-background">
+      <body suppressHydrationWarning className="min-h-screen flex flex-col font-sans text-gray-900 bg-background">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

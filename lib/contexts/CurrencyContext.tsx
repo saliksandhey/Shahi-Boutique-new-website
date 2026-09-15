@@ -1,19 +1,99 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
-export type Currency = 'INR' | 'USD'
+export type Currency = 'INR' | 'USD' | 'GBP' | 'CAD' | 'AUD' | 'NZD'
 
-export interface CurrencyInfo { code: Currency; symbol: string; label: string; flag: string }
+export interface CurrencyInfo {
+  code: Currency
+  countryCode: string
+  symbol: string
+  label: string
+  countryName: string
+  flag: string
+  displayLabel: string
+}
 
 export const SUPPORTED_CURRENCIES: Record<Currency, CurrencyInfo> = {
-  INR: { code: 'INR', symbol: '₹', label: 'Indian Rupee', flag: '🇮🇳' },
-  USD: { code: 'USD', symbol: '$', label: 'US Dollar',    flag: '🇺🇸' },
+  INR: {
+    code: 'INR',
+    countryCode: 'IN',
+    symbol: '₹',
+    label: 'INR ₹',
+    countryName: 'India',
+    flag: '🇮🇳',
+    displayLabel: '🇮🇳 India — INR ₹'
+  },
+  USD: {
+    code: 'USD',
+    countryCode: 'US',
+    symbol: '$',
+    label: 'USD $',
+    countryName: 'United States',
+    flag: '🇺🇸',
+    displayLabel: '🇺🇸 United States — USD $'
+  },
+  GBP: {
+    code: 'GBP',
+    countryCode: 'GB',
+    symbol: '£',
+    label: 'GBP £',
+    countryName: 'United Kingdom',
+    flag: '🇬🇧',
+    displayLabel: '🇬🇧 United Kingdom — GBP £'
+  },
+  CAD: {
+    code: 'CAD',
+    countryCode: 'CA',
+    symbol: 'C$',
+    label: 'CAD C$',
+    countryName: 'Canada',
+    flag: '🇨🇦',
+    displayLabel: '🇨🇦 Canada — CAD C$'
+  },
+  AUD: {
+    code: 'AUD',
+    countryCode: 'AU',
+    symbol: 'A$',
+    label: 'AUD A$',
+    countryName: 'Australia',
+    flag: '🇦🇺',
+    displayLabel: '🇦🇺 Australia — AUD A$'
+  },
+  NZD: {
+    code: 'NZD',
+    countryCode: 'NZ',
+    symbol: 'NZ$',
+    label: 'NZD NZ$',
+    countryName: 'New Zealand',
+    flag: '🇳🇿',
+    displayLabel: '🇳🇿 New Zealand — NZD NZ$'
+  }
+}
+
+export const COUNTRY_CODE_TO_CURRENCY: Record<string, Currency> = {
+  IN: 'INR',
+  US: 'USD',
+  GB: 'GBP',
+  CA: 'CAD',
+  AU: 'AUD',
+  NZ: 'NZD',
+}
+
+export const CURRENCY_TO_COUNTRY_CODE: Record<Currency, string> = {
+  INR: 'IN',
+  USD: 'US',
+  GBP: 'GB',
+  CAD: 'CA',
+  AUD: 'AU',
+  NZD: 'NZ',
 }
 
 interface CurrencyContextType {
   currency: Currency
   currencyInfo: CurrencyInfo
+  rates: Record<Currency, number>
+  setCurrency: (c: Currency) => void
   formatPrice: (amountInInr: number) => string
   getProductPrice: (product: any) => { price: number; salePrice: number | null; formatted: string; formattedSale: string | null }
   isLoading: boolean
@@ -21,105 +101,133 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined)
 
-function formatAmount(amount: number, currency: Currency): string {
-  const info = SUPPORTED_CURRENCIES[currency]
-  if (currency === 'INR') return info.symbol + Math.round(amount).toLocaleString('en-IN')
+const DEFAULT_RATES: Record<Currency, number> = {
+  INR: 1,
+  USD: 0.012,
+  GBP: 0.0094,
+  CAD: 0.016,
+  AUD: 0.018,
+  NZD: 0.020,
+}
+
+function formatAmount(amount: number, cur: Currency): string {
+  const info = SUPPORTED_CURRENCIES[cur] || SUPPORTED_CURRENCIES.INR
+  if (cur === 'INR') {
+    return info.symbol + Math.round(amount).toLocaleString('en-IN')
+  }
   return info.symbol + amount.toFixed(2)
 }
 
-const FALLBACK_RATE_USD = 0.012 // used only if live rate fetch fails
-
 export function CurrencyProvider({ children, initialCountry }: { children: React.ReactNode; initialCountry?: string }) {
-  const [currency, setCurrency] = useState<Currency>('INR')
-  const [usdRate, setUsdRate] = useState<number>(FALLBACK_RATE_USD)
+  const [currency, setCurrencyState] = useState<Currency>('INR')
+  const [rates, setRates] = useState<Record<Currency, number>>(DEFAULT_RATES)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    async function detectCurrencyAndRate() {
+  const setCurrency = useCallback((newCur: Currency) => {
+    if (SUPPORTED_CURRENCIES[newCur]) {
+      setCurrencyState(newCur)
       try {
-        // Fetch country + exchange rate in parallel
-        const countryFetch = initialCountry
-          ? Promise.resolve({ currency: initialCountry.toUpperCase() === 'IN' ? 'INR' : 'USD' })
-          : fetch('/api/country').then(r => r.ok ? r.json() : null)
-
-        const [countryRes, rateRes] = await Promise.allSettled([
-          countryFetch,
-          fetch('/api/exchange-rate').then(r => r.ok ? r.json() : null),
-        ])
-
-        if (countryRes.status === 'fulfilled' && countryRes.value) {
-          const c = countryRes.value.currency
-          if (c === 'USD' || c === 'INR') setCurrency(c)
-        }
-
-        if (rateRes.status === 'fulfilled' && rateRes.value?.rate) {
-          setUsdRate(rateRes.value.rate)
-        }
-      } catch { /* stays INR + fallback rate */ } finally { setIsLoading(false) }
+        localStorage.setItem('shahi_currency', newCur)
+      } catch {
+        // ignore
+      }
     }
-    detectCurrencyAndRate()
+  }, [])
+
+  useEffect(() => {
+    async function initCurrencyAndRates() {
+      try {
+        // 1. Check if user already manually selected a currency in localStorage
+        let savedCurrency: Currency | null = null
+        try {
+          savedCurrency = (localStorage.getItem('shahi_currency') as Currency) || null
+        } catch {
+          savedCurrency = null
+        }
+
+        // 2. Fetch live rates
+        const ratePromise = fetch('/api/exchange-rate').then(r => r.ok ? r.json() : null)
+        
+        // 3. Fetch country if no saved currency
+        const countryPromise = savedCurrency
+          ? Promise.resolve(null)
+          : (initialCountry 
+              ? Promise.resolve({ country: initialCountry }) 
+              : fetch('/api/country').then(r => r.ok ? r.json() : null))
+
+        const [rateRes, countryRes] = await Promise.allSettled([ratePromise, countryPromise])
+
+        if (rateRes.status === 'fulfilled' && rateRes.value?.rates) {
+          setRates(prev => ({ ...prev, ...rateRes.value.rates }))
+        }
+
+        if (savedCurrency && SUPPORTED_CURRENCIES[savedCurrency]) {
+          setCurrencyState(savedCurrency)
+        } else if (countryRes.status === 'fulfilled' && countryRes.value) {
+          const detectedCountry = countryRes.value.country?.toUpperCase() || ''
+          const mapped = COUNTRY_CODE_TO_CURRENCY[detectedCountry] || 'USD'
+          setCurrencyState(mapped)
+        }
+      } catch {
+        // stays fallback
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    initCurrencyAndRates()
   }, [initialCountry])
 
-  const formatPrice = (amountInInr: number): string => {
-    if (currency === 'INR') return formatAmount(amountInInr, 'INR')
-    return formatAmount(amountInInr * usdRate, 'USD')
-  }
+  const formatPrice = useCallback((amountInInr: number): string => {
+    if (amountInInr == null || isNaN(amountInInr)) return '₹0'
+    const rate = rates[currency] || DEFAULT_RATES[currency] || 1
+    const converted = currency === 'INR' ? amountInInr : amountInInr * rate
+    return formatAmount(converted, currency)
+  }, [currency, rates])
 
-  const getProductPrice = (product: any) => {
+  const getProductPrice = useCallback((product: any) => {
     if (!product) return { price: 0, salePrice: null, formatted: '₹0', formattedSale: null }
-    
-    if (currency === 'INR') {
-      const price = product.price_inr ?? product.price ?? 0
-      const salePrice = (product.sale_price_inr !== undefined && product.sale_price_inr !== null)
-        ? product.sale_price_inr
-        : product.sale_price
-      return {
-        price,
-        salePrice: salePrice && salePrice > 0 ? salePrice : null,
-        formatted: formatAmount(price, 'INR'),
-        formattedSale: salePrice && salePrice > 0 ? formatAmount(salePrice, 'INR') : null
-      }
-    } else {
-      // USD for outside India
-      const explicitUsdPrice = product.price_usd
-      const explicitUsdSale = product.sale_price_usd
-      let price: number
-      let salePrice: number | null
 
-      if (explicitUsdPrice !== undefined && explicitUsdPrice !== null && Number(explicitUsdPrice) > 0) {
-        price = Number(explicitUsdPrice)
-        // If explicit USD sale price set, use it; otherwise convert INR sale price to USD
-        if (explicitUsdSale !== undefined && explicitUsdSale !== null && Number(explicitUsdSale) > 0) {
-          salePrice = Number(explicitUsdSale)
-        } else {
-          const baseSale = product.sale_price_inr ?? product.sale_price ?? null
-          salePrice = (baseSale && Number(baseSale) > 0) ? Number(baseSale) * usdRate : null
-        }
-      } else {
-        // No explicit USD price — convert INR price + INR sale price both to USD using live rate
-        const base = product.price_inr ?? product.price ?? 0
-        const baseSale = product.sale_price_inr ?? product.sale_price ?? null
-        price = base * usdRate
-        salePrice = (baseSale && Number(baseSale) > 0) ? Number(baseSale) * usdRate : null
-      }
-      return {
-        price,
-        salePrice,
-        formatted: formatAmount(price, 'USD'),
-        formattedSale: salePrice ? formatAmount(salePrice, 'USD') : null
-      }
+    const basePrice = Number(product.price_inr ?? product.price ?? 0)
+    const baseSale = (product.sale_price_inr !== undefined && product.sale_price_inr !== null && Number(product.sale_price_inr) > 0)
+      ? Number(product.sale_price_inr)
+      : (product.sale_price !== undefined && product.sale_price !== null && Number(product.sale_price) > 0)
+        ? Number(product.sale_price)
+        : null
+
+    const rate = rates[currency] || DEFAULT_RATES[currency] || 1
+    const currentPrice = currency === 'INR' ? basePrice : basePrice * rate
+    const currentSale = baseSale ? (currency === 'INR' ? baseSale : baseSale * rate) : null
+
+    return {
+      price: currentPrice,
+      salePrice: currentSale,
+      formatted: formatAmount(currentPrice, currency),
+      formattedSale: currentSale ? formatAmount(currentSale, currency) : null
     }
-  }
+  }, [currency, rates])
+
+  const currencyInfo = SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.INR
 
   return (
-    <CurrencyContext.Provider value={{ currency, currencyInfo: SUPPORTED_CURRENCIES[currency], formatPrice, getProductPrice, isLoading }}>
+    <CurrencyContext.Provider value={{
+      currency,
+      currencyInfo,
+      rates,
+      setCurrency,
+      formatPrice,
+      getProductPrice,
+      isLoading
+    }}>
       {children}
     </CurrencyContext.Provider>
   )
 }
 
 export function useCurrency() {
-  const ctx = useContext(CurrencyContext)
-  if (!ctx) throw new Error('useCurrency must be used within CurrencyProvider')
-  return ctx
+  const context = useContext(CurrencyContext)
+  if (!context) {
+    throw new Error('useCurrency must be used within a CurrencyProvider')
+  }
+  return context
 }

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -19,7 +19,8 @@ import {
   MessageSquare,
   PenTool,
   LogOut,
-  Search
+  Search,
+  Layers
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Calendar } from 'lucide-react'
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Dashboard', href: '/2010admin', icon: LayoutDashboard },
   { name: 'Orders', href: '/2010admin/orders', icon: ShoppingCart },
   { name: 'Products', href: '/2010admin/products', icon: Package },
+  { name: 'Product Groups', href: '/2010admin/product-groups', icon: Layers },
   { name: 'Customers', href: '/2010admin/customers', icon: Users },
   { name: 'Payments', href: '/2010admin/payments', icon: Ticket },
   { name: 'Categories', href: '/2010admin/categories', icon: Tags },

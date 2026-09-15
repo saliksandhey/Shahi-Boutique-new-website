@@ -49,7 +49,7 @@ export function DeliveryChecker() {
       setResult({
         type: 'success',
         message: `Worldwide Express Delivery available.`,
-        detail: `Expected delivery in 7-10 business days.`
+        detail: `Expected delivery in 7-10 business days. International Shipping: ${formatPrice(1600)}.`
       })
       setLoading(false)
     }, 400)
@@ -110,10 +110,10 @@ export function DeliveryChecker() {
             >
               <option value="">Select Country</option>
               <option value="US">🇺🇸 United States</option>
+              <option value="GB">🇬🇧 United Kingdom</option>
               <option value="CA">🇨🇦 Canada</option>
               <option value="AU">🇦🇺 Australia</option>
-              <option value="GB">🇬🇧 United Kingdom</option>
-              <option value="OTHER">🌍 Other International</option>
+              <option value="NZ">🇳🇿 New Zealand</option>
             </select>
             <button 
               onClick={checkInternational}

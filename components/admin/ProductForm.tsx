@@ -38,6 +38,8 @@ const productSchema = z.object({
   country_of_origin: z.string().optional(),
   weight: z.any(),
   dimensions: z.string().optional(),
+  height_cm: z.any(),
+  length_cm: z.any(),
   meta_title: z.string().optional(),
   meta_description: z.string().optional(),
   og_image: z.string().optional(),
@@ -81,6 +83,8 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       country_of_origin: product.country_of_origin || '',
       weight: product.weight || null,
       dimensions: product.dimensions || '',
+      height_cm: product.height_cm ?? '',
+      length_cm: product.length_cm ?? '',
       meta_title: product.meta_title || '',
       meta_description: product.meta_description || '',
       og_image: product.og_image || '',
@@ -128,6 +132,8 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
       sale_price: data.sale_price === "" || data.sale_price == null ? null : Number(data.sale_price),
       stock: data.stock === "" || data.stock == null ? 0 : Number(data.stock),
       weight: data.weight === "" || data.weight == null ? null : Number(data.weight),
+      height_cm: data.height_cm === "" || data.height_cm == null ? null : Number(data.height_cm),
+      length_cm: data.length_cm === "" || data.length_cm == null ? null : Number(data.length_cm),
       // Per-country prices
       price_inr: data.price === "" || data.price == null ? 0 : Number(data.price),
       sale_price_inr: data.sale_price === "" || data.sale_price == null ? null : Number(data.sale_price),
@@ -349,6 +355,14 @@ export function ProductForm({ product, categories, mode }: { product?: any, cate
             <div>
               <Label htmlFor="weight" className={labelClass}>Weight (grams)</Label>
               <Input id="weight" type="number" {...form.register('weight')} className={inputClass} placeholder="e.g. 450" />
+            </div>
+            <div>
+              <Label htmlFor="height_cm" className={labelClass}>Height (cm)</Label>
+              <Input id="height_cm" type="number" step="0.1" {...form.register('height_cm')} className={inputClass} placeholder="e.g. 120" />
+            </div>
+            <div>
+              <Label htmlFor="length_cm" className={labelClass}>Length (cm)</Label>
+              <Input id="length_cm" type="number" step="0.1" {...form.register('length_cm')} className={inputClass} placeholder="e.g. 45" />
             </div>
             <div className="md:col-span-2">
               <Label htmlFor="dimensions" className={labelClass}>Dimensions</Label>

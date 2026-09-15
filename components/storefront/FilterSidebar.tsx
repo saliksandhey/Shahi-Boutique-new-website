@@ -3,11 +3,13 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
+import { useCurrency } from '@/lib/contexts/CurrencyContext'
 
 export function FilterSidebar({ categories }: { categories?: any[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { currencyInfo } = useCurrency()
 
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '')
@@ -39,7 +41,7 @@ export function FilterSidebar({ categories }: { categories?: any[] }) {
     setMinPrice('')
     setMaxPrice('')
     setCategory('')
-    router.push(`${pathname}?${params.toString()}`)
+    router.push(pathname)
     setIsOpen(false)
   }
 
@@ -47,31 +49,35 @@ export function FilterSidebar({ categories }: { categories?: any[] }) {
     <>
       {/* Mobile Toggle Button */}
       <button 
-        type="button"
+        type="button" 
         onClick={() => setIsOpen(true)}
-        className="lg:hidden w-full flex items-center justify-center gap-2 bg-[#1C1C1C] text-white py-4 rounded-full text-xs font-bold uppercase tracking-widest shadow-xl transition-transform active:scale-95"
+        className="lg:hidden flex items-center justify-center space-x-2 w-full py-3.5 px-4 bg-white border border-gray-200 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-900 shadow-sm"
       >
-        <SlidersHorizontal className="w-4 h-4" />
-        Filter
+        <SlidersHorizontal className="w-4 h-4 text-[#FF7A00]" />
+        <span>Filters</span>
       </button>
 
-      {/* Mobile Backdrop */}
-      <div 
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setIsOpen(false)}
-      />
+      {/* Backdrop for mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-xs transition-opacity"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      {/* Filter Form */}
-      <form 
-        className={`
-          fixed lg:static inset-x-0 bottom-0 z-50 lg:z-auto
-          bg-white rounded-t-[2rem] lg:rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-sm border-t lg:border border-gray-100 
-          p-6 sm:p-8 lg:p-8 space-y-8 lg:space-y-10 lg:sticky lg:top-32
-          transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-          ${isOpen ? 'translate-y-0' : 'translate-y-[120%] lg:translate-y-0'}
-          flex flex-col max-h-[85vh] lg:max-h-none lg:block
-        `}
-      >
+      {/* Sidebar Container */}
+      <div className={`
+        fixed lg:static inset-x-0 bottom-0 z-50 lg:z-0
+        bg-white lg:bg-transparent
+        rounded-t-3xl lg:rounded-none
+        p-6 lg:p-0
+        max-h-[85vh] lg:max-h-none
+        flex flex-col
+        shadow-2xl lg:shadow-none
+        border-t lg:border-t-0 border-gray-100
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+      `}>
         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2 lg:hidden shrink-0" />
         <div className="flex items-center justify-between lg:hidden mb-2 shrink-0">
            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Filters</h3>
@@ -83,7 +89,7 @@ export function FilterSidebar({ categories }: { categories?: any[] }) {
           <h3 className="hidden lg:block text-sm font-bold text-gray-900 uppercase tracking-widest mb-6">Price Range</h3>
           <div className="pt-2 flex items-center space-x-3">
             <div className="relative w-full">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">₹</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">{currencyInfo.symbol}</span>
               <input 
                 type="number" 
                 placeholder="Min" 
@@ -94,7 +100,7 @@ export function FilterSidebar({ categories }: { categories?: any[] }) {
             </div>
             <span className="text-gray-400 font-bold text-xs uppercase">To</span>
             <div className="relative w-full">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">₹</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">{currencyInfo.symbol}</span>
               <input 
                 type="number" 
                 placeholder="Max" 
@@ -146,7 +152,7 @@ export function FilterSidebar({ categories }: { categories?: any[] }) {
             </button>
           </div>
         </div>
-      </form>
+      </div>
     </>
   )
 }

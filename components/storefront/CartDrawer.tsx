@@ -1,28 +1,18 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cart-store'
 import { X, Trash2, ShoppingBag } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { getUpsellProducts } from '@/lib/actions/products'
-import { Clock, Eye, EyeOff } from 'lucide-react'
-import { loginWithEmail, signupWithEmail } from '@/lib/actions/auth-email'
-import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
-import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { Clock } from 'lucide-react'
+import { PriceDisplay } from '@/components/storefront/PriceDisplay'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, getSubtotal, addItem } = useCartStore()
   const router = useRouter()
-  const [showLoginSheet, setShowLoginSheet] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [loginMessage, setLoginMessage] = useState<string|null>(null)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loginError, setLoginError] = useState<string | null>(null)
   const [upsellItems, setUpsellItems] = useState<any[]>([])
   const [countdown, setCountdown] = useState<string>('')
   const [upsellPhase, setUpsellPhase] = useState<'flash' | 'last-chance' | 'expired'>('flash')
@@ -117,81 +107,18 @@ export function CartDrawer() {
 
   // Prevent background scrolling when cart is open
   useEffect(() => {
-    if (isOpen || showLoginSheet) {
+    if (isOpen) {
       document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = 'unset' }
-  }, [isOpen, showLoginSheet])
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
 
-  const handleCheckoutClick = async (e: React.MouseEvent) => {
+  const handleCheckoutClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    setIsCheckingAuth(true)
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    setIsCheckingAuth(false)
-    
-    if (session) {
-      closeCart()
-      router.push('/checkout')
-    } else {
-      setShowLoginSheet(true)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    setLoginError(null)
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/checkout&mode=popup`,
-        skipBrowserRedirect: true,
-        queryParams: {
-          prompt: 'select_account'
-        }
-      }
-    })
-    
-    if (error) {
-      setLoginError(error.message)
-      return
-    }
-
-    if (data?.url) {
-      // Open a popup "card" for Google Login
-      const width = 500
-      const height = 600
-      const left = window.screen.width / 2 - width / 2
-      const top = window.screen.height / 2 - height / 2
-      const popup = window.open(
-        data.url,
-        'Google Login',
-        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
-      )
-
-      // Listen for the success message from the popup
-      const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return
-        if (event.data === 'auth_success') {
-          window.removeEventListener('message', handleMessage)
-          setShowLoginSheet(false)
-          closeCart()
-          router.push('/checkout')
-          router.refresh()
-        }
-      }
-      window.addEventListener('message', handleMessage)
-
-      // Check periodically if user closed popup manually
-      const checkClosed = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(checkClosed)
-          window.removeEventListener('message', handleMessage)
-        }
-      }, 1000)
-    }
+    closeCart()
+    router.push('/checkout')
   }
 
   const displayUpsells = upsellItems.filter(ui => !items.some(ci => ci.productId === ui.productId))
@@ -208,7 +135,6 @@ export function CartDrawer() {
       
       {/* Drawer */}
       <div 
-        data-lenis-prevent
         className="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300"
       >
         
@@ -223,101 +149,131 @@ export function CartDrawer() {
           </button>
         </div>
 
-        {/* Cart Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-6" data-lenis-prevent>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center">
-                <ShoppingBag className="w-10 h-10 text-gray-300" />
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
+              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
+                <ShoppingBag className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Your cart is empty</h3>
-                <p className="text-sm text-gray-500 font-medium">Looks like you haven't added anything yet.</p>
+                <p className="font-bold text-gray-900 text-sm uppercase tracking-widest">Your cart is empty</p>
+                <p className="text-xs text-gray-400 mt-1">Discover our collection and find something you love.</p>
               </div>
               <button 
                 onClick={closeCart}
-                className="px-8 py-4 bg-[#1C1C1C] text-white rounded-full font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors"
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-[#1C1C1C] text-white px-8 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors shadow-md"
               >
-                Continue Shopping
+                Start Shopping
               </button>
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Actual Cart Items */}
-              {items.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="relative w-24 h-32 bg-gray-50 rounded-2xl overflow-hidden shrink-0">
-                    <Image 
-                      src={item.image} 
-                      alt={item.name} 
-                      fill 
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col justify-between py-1">
-                    <div>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-sm leading-tight pr-4">{item.name}</h3>
-                          {(item.color || item.size) && (
-                            <p className="text-xs text-gray-500 mt-1 capitalize">
-                              {item.color} {item.color && item.size && '|'} {item.size}
-                            </p>
+              {/* Cart Items List */}
+              <div className="divide-y divide-gray-100">
+                {items.map((item) => (
+                  <div key={item.id} className="py-4 flex gap-4 first:pt-0 last:pb-0">
+                    {/* Image */}
+                    <div className="relative w-20 h-24 bg-gray-50 rounded-xl overflow-hidden shrink-0 border border-gray-100">
+                      {item.image ? (
+                        <Image 
+                          src={item.image} 
+                          alt={item.name} 
+                          fill 
+                          className="object-cover object-center" 
+                          sizes="80px"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100" />
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                      <div>
+                        <div className="flex justify-between items-start gap-2">
+                          <h3 className="font-bold text-gray-900 text-xs uppercase tracking-wider line-clamp-1">
+                            {item.name}
+                          </h3>
+                          <button 
+                            onClick={() => removeItem(item.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1 -mr-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        {(item.color || item.size) && (
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {[item.color, item.size].filter(Boolean).join(' / ')}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-2 mt-1">
+                          {item.salePrice ? (
+                            <>
+                              <span className="font-black text-xs text-[#FF7A00]">
+                                <PriceDisplay amount={item.salePrice} />
+                              </span>
+                              <span className="text-[10px] text-gray-400 line-through">
+                                <PriceDisplay amount={item.price} />
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-black text-xs text-gray-900">
+                              <PriceDisplay amount={item.price} />
+                            </span>
                           )}
                         </div>
-                        <button 
-                          onClick={() => removeItem(item.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
-                      <p className="text-sm font-black text-[#FF7A00] mt-1">
-                        ₹{(item.salePrice || item.price).toFixed(2)}
-                      </p>
-                    </div>
-                    
-                    {/* Quantity Control */}
-                    <div className="flex items-center justify-between rounded-full border border-gray-200 h-10 w-28 bg-gray-50 px-1">
-                      <button 
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        className="w-8 h-8 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="text-xs font-bold text-gray-900">{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white transition-colors"
-                      >
-                        +
-                      </button>
+
+                      {/* Quantity selector */}
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center border border-gray-200 rounded-full h-7">
+                          <button 
+                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            className="px-2.5 h-full text-gray-500 hover:text-gray-900 text-xs font-bold"
+                          >
+                            -
+                          </button>
+                          <span className="px-2 text-xs font-bold text-gray-900">
+                            {item.quantity}
+                          </span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="px-2.5 h-full text-gray-500 hover:text-gray-900 text-xs font-bold"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
 
-              {/* End of Cart Items */}
-
-              {/* Upsell Cards in Scrollable Area */}
+              {/* In-Cart Flash Sale / Upsell Section */}
               {displayUpsells.length > 0 && (
                 <div className="mt-8 border-t border-gray-100 pt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className={`text-xs font-black uppercase tracking-widest ${upsellPhase === 'expired' ? 'text-gray-400' : 'text-gray-900'}`}>
-                      {upsellPhase === 'flash' ? 'Flash Offer: 10% OFF' : upsellPhase === 'last-chance' ? 'Last Chance: 10% OFF' : 'Offer Expired'}
-                    </h3>
-                    <div className={`flex items-center gap-1.5 text-white px-2 py-1 rounded text-[10px] font-bold ${
-                      upsellPhase === 'flash' ? 'bg-[#FF7A00]' : upsellPhase === 'last-chance' ? 'bg-red-600 animate-pulse' : 'bg-gray-400'
-                    }`}>
-                      <Clock className="w-3 h-3" />
-                      <span>{countdown}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#FF7A00] animate-pulse" />
+                      <h3 className="font-sans font-black text-xs uppercase tracking-widest text-gray-900">
+                        {upsellPhase === 'flash' ? 'Exclusive Cart Offer (10% Off)' : upsellPhase === 'last-chance' ? 'Last Chance Deal!' : 'Offer Ended'}
+                      </h3>
                     </div>
+                    {countdown && upsellPhase !== 'expired' && (
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-[#FF7A00] bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                        <Clock className="w-3 h-3" />
+                        <span>{countdown}</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className={`grid grid-cols-2 gap-3 transition-all duration-700 ${upsellPhase === 'expired' ? 'opacity-50 grayscale' : ''}`}>
+
+                  <div className="grid grid-cols-2 gap-3">
                     {displayUpsells.map((upsell) => (
-                      <div key={upsell.id} className={`border rounded-xl relative overflow-hidden bg-white transition-colors ${
-                        upsellPhase === 'expired' ? 'border-gray-100 pointer-events-none' : 'border-gray-200 group hover:border-[#FF7A00]'
+                      <div key={upsell.id} className={`rounded-xl border bg-white overflow-hidden transition-all duration-300 ${
+                        upsellPhase === 'expired' ? 'border-gray-100 pointer-events-none opacity-50' : 'border-gray-200 group hover:border-[#FF7A00]'
                       }`}>
                         <div className="flex flex-col p-2 h-full">
                           <div className="relative w-full aspect-[4/5] bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100 mb-2">
@@ -367,173 +323,14 @@ export function CartDrawer() {
             <p className="text-[10px] text-gray-400 font-medium">Shipping and taxes calculated at checkout.</p>
             <button 
               onClick={handleCheckoutClick}
-              disabled={isCheckingAuth}
-              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-12 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-md disabled:opacity-50 mt-1"
+              className="flex w-full items-center justify-center rounded-full bg-[#1C1C1C] text-white h-12 font-bold uppercase tracking-widest text-xs hover:bg-[#FF7A00] transition-colors shadow-md mt-1"
             >
-              {isCheckingAuth ? 'Processing...' : 'Proceed to Checkout'}
+              Proceed to Checkout
             </button>
           </div>
         )}
 
       </div>
-
-      {/* Login Bottom Sheet */}
-      <div 
-        className={`fixed inset-x-0 bottom-0 z-[60] bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-500 ease-in-out transform ${
-          showLoginSheet ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="w-full max-w-md mx-auto p-8 relative">
-          <button 
-            onClick={() => setShowLoginSheet(false)}
-            className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-colors"
-          >
-            <X size={20} />
-          </button>
-          
-          <div className="pt-2">
-            <div className="text-center mt-4 mb-8">
-              <h3 className="text-2xl font-black font-sans uppercase tracking-tighter text-gray-900">{isSignUp ? 'Create Account' : 'Sign in to Checkout'}</h3>
-              <p className="text-sm text-gray-500 font-medium mt-2">{isSignUp ? 'Create an account to track your orders.' : 'Enter your email and password to continue.'}</p>
-            </div>
-            
-            <form 
-              onSubmit={async (e) => {
-                e.preventDefault()
-                setIsCheckingAuth(true)
-                setLoginError(null)
-                setLoginMessage(null)
-                const formData = new FormData(e.currentTarget)
-                
-                try {
-                  if (isSignUp) {
-                    const res = await signupWithEmail(formData)
-                    if (res.error) {
-                      setLoginError(res.error)
-                    } else if (res.requireVerification) {
-                      setLoginMessage('Account created! Please check your email to verify before continuing.')
-                    } else {
-                      setShowLoginSheet(false)
-                      closeCart()
-                      router.push('/checkout')
-                      router.refresh()
-                    }
-                  } else {
-                    const res = await loginWithEmail(formData)
-                    if (res.error) {
-                      setLoginError(res.error)
-                    } else {
-                      setShowLoginSheet(false)
-                      closeCart()
-                      router.push('/checkout')
-                      router.refresh()
-                    }
-                  }
-                } catch(err) {
-                  setLoginError("An unexpected error occurred.")
-                } finally {
-                  setIsCheckingAuth(false)
-                }
-              }}
-              className="space-y-4 mb-6"
-            >
-              {isSignUp && (
-                <div className="space-y-2">
-                  <input name="name" type="text" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Full Name" />
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <input name="email" type="email" required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Email Address" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-end">
-                  {!isSignUp && (
-                    <Link href="/forgot-password" onClick={closeCart} className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#111111] transition-colors">
-                      Forgot?
-                    </Link>
-                  )}
-                </div>
-                <div className="relative">
-                  <input name="password" type={showPassword ? "text" : "password"} required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 pr-12 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Password" />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
-                  >
-                    {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-              
-              {isSignUp && (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <input name="confirm_password" type={showConfirmPassword ? "text" : "password"} required className="flex h-12 w-full rounded-full border border-gray-200 bg-white px-6 pr-12 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-[#111111]" placeholder="Confirm Password" />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-900 focus:outline-none"
-                    >
-                      {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <button 
-                type="submit" 
-                disabled={isCheckingAuth} 
-                className="w-full rounded-full h-12 bg-[#111111] hover:bg-gray-800 text-white font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-md"
-              >
-                {isCheckingAuth ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
-              </button>
-
-              <div className="text-center mt-2">
-                <button 
-                  type="button" 
-                  onClick={() => { setIsSignUp(!isSignUp); setLoginError(null); setLoginMessage(null); }} 
-                  className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black"
-                >
-                  {isSignUp ? 'Already have an account? Sign In' : 'New here? Create Account'}
-                </button>
-              </div>
-            </form>
-
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest">
-                <span className="bg-white px-4 text-gray-400">Or</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleGoogleLogin}
-              className="w-full bg-white text-gray-900 border border-gray-300 rounded-full h-12 flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-                <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"/>
-                <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"/>
-                <path d="M5.26498 14.2949C5.02498 13.5699 4.87998 12.7999 4.87998 12.0049C4.87998 11.2099 5.01998 10.4399 5.26498 9.71497L1.275 6.61997C0.465 8.22997 0 10.0599 0 12.0049C0 13.9499 0.465 15.7799 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"/>
-                <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.87037 19.245 6.21537 17.135 5.26537 14.29L1.27539 17.385C3.25539 21.31 7.31037 24.0001 12.0004 24.0001Z" fill="#34A853"/>
-              </svg>
-              <span className="font-bold tracking-widest text-xs uppercase">Google</span>
-            </button>
-            
-            {loginError && <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200 mt-4 text-center">{loginError}</p>}
-          </div>
-        </div>
-      </div>
-
     </div>
   )
 }
-
-
-
-
-
-

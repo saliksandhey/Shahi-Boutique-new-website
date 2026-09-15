@@ -5,6 +5,8 @@ import { updateStoreSettings, updateAdminPin, uploadHeroBanner } from '@/lib/act
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Power, Eye, AlertTriangle } from 'lucide-react'
+import { MaintenanceScreen } from '@/components/storefront/MaintenanceScreen'
 
 export function SettingsForm({ initialSettings }: { initialSettings: Record<string, string> }) {
   const [storeLoading, setStoreLoading] = useState(false)
@@ -16,6 +18,15 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
   const [bannerLoading, setBannerLoading] = useState(false)
   const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  const [maintenanceMode, setMaintenanceMode] = useState(initialSettings?.maintenance_mode === 'true')
+  const [maintenanceTitle, setMaintenanceTitle] = useState(initialSettings?.maintenance_title || "The site is currently down for maintenance")
+  const [maintenanceMessage, setMaintenanceMessage] = useState(initialSettings?.maintenance_message || "We apologize for any inconveniences caused. We've almost done.")
+  const [maintenanceNotice, setMaintenanceNotice] = useState(initialSettings?.maintenance_notice || "Our artisans & technical team are currently upgrading the online boutique experience.")
+  const [maintenancePhone, setMaintenancePhone] = useState(initialSettings?.maintenance_phone || "+91 90417-62820")
+  const [maintenanceEmail, setMaintenanceEmail] = useState(initialSettings?.maintenance_email || "info@shahiboutique.com")
+  const [maintenanceWhatsapp, setMaintenanceWhatsapp] = useState(initialSettings?.maintenance_whatsapp || "919041762820")
+  const [showMaintenancePreview, setShowMaintenancePreview] = useState(false)
+
   const [marqueeContent, setMarqueeContent] = useState(initialSettings?.marquee_content || '✦ Shop the Exclusive Bridal Collection ✦ Free Worldwide Shipping ✦')
   const [marqueeSpeed, setMarqueeSpeed] = useState(initialSettings?.marquee_speed || '25')
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
@@ -26,25 +37,6 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
     setStoreMessage(null)
 
     const formData = new FormData(e.currentTarget)
-    
-    // Only save if there's a difference
-    const razorpayKeyId = formData.get('razorpay_key_id') as string
-    const razorpayKeySecret = formData.get('razorpay_key_secret') as string
-    const codEnabled = formData.get('cod_enabled') as string
-    const newMarqueeContent = formData.get('marquee_content') as string
-    const newMarqueeSpeed = formData.get('marquee_speed') as string
-
-    if (
-      razorpayKeyId === (initialSettings?.razorpay_key_id || '') &&
-      razorpayKeySecret === (initialSettings?.razorpay_key_secret || '') &&
-      codEnabled === (initialSettings?.cod_enabled || 'false') &&
-      newMarqueeContent === (initialSettings?.marquee_content || '') &&
-      newMarqueeSpeed === (initialSettings?.marquee_speed || '')
-    ) {
-      setStoreMessage({ type: 'success', text: 'No changes to save.' })
-      setStoreLoading(false)
-      return
-    }
 
     const result = await updateStoreSettings(formData)
     if (result.success) {
@@ -105,9 +97,257 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
       {/* Store Settings Form */}
       <form onSubmit={handleStoreSubmit} className="space-y-12">
 
+        {/* Website Maintenance Mode Configuration */}
+        <div className="bg-[#FAF9F6] border-2 border-amber-200/80 rounded-2xl md:rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/60 pb-6">
+            <div>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <span className="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                  <Power className="w-5 h-5" />
+                </span>
+                <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase">
+                  Website Maintenance Mode (Close Storefront)
+                </h3>
+              </div>
+              <p className="text-xs font-medium text-gray-600 max-w-xl">
+                When enabled, the user-facing website is closed and visitors will only see the luxury maintenance screen. 
+                <strong className="text-gray-900"> The Admin Panel remains 100% accessible to you.</strong>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                maintenanceMode 
+                  ? 'bg-red-100 text-red-800 border border-red-200 animate-pulse' 
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${maintenanceMode ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                {maintenanceMode ? 'Website Closed (Offline)' : 'Website Public (Online)'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            <div className="grid gap-2 max-w-xl">
+              <Label htmlFor="maintenance_mode" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                Maintenance Mode Control
+              </Label>
+              <select
+                id="maintenance_mode"
+                name="maintenance_mode"
+                value={maintenanceMode ? 'true' : 'false'}
+                onChange={(e) => setMaintenanceMode(e.target.value === 'true')}
+                className={`flex h-11 w-full items-center justify-between rounded-xl border px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#FF7A00] focus:ring-offset-2 transition-colors ${
+                  maintenanceMode 
+                    ? 'border-red-300 bg-red-50 text-red-900 font-black' 
+                    : 'border-gray-200 bg-white text-gray-900'
+                }`}
+              >
+                <option value="false">🟢 Disabled — Website is Live &amp; Publicly Open</option>
+                <option value="true">🔴 Enabled — Close Website (Show Maintenance Screen to Visitors)</option>
+              </select>
+            </div>
+
+              <div className="space-y-4 pt-4 border-t border-amber-200/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-widest text-gray-800">
+                    Maintenance Screen Content &amp; Contact Info
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-medium">
+                    (Visible to customers when Maintenance Mode is Enabled)
+                  </span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="maintenance_title" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                      Maintenance Heading
+                    </Label>
+                    <Input 
+                      id="maintenance_title"
+                      name="maintenance_title"
+                      value={maintenanceTitle}
+                      onChange={(e) => setMaintenanceTitle(e.target.value)}
+                      placeholder="The site is currently down for maintenance"
+                      className="rounded-xl border-gray-200 bg-white"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="maintenance_notice" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                      Sub-Notice / Status Text
+                    </Label>
+                    <Input 
+                      id="maintenance_notice"
+                      name="maintenance_notice"
+                      value={maintenanceNotice}
+                      onChange={(e) => setMaintenanceNotice(e.target.value)}
+                      placeholder="Our artisans are currently upgrading the online experience."
+                      className="rounded-xl border-gray-200 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="maintenance_message" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                    Maintenance Description / Message
+                  </Label>
+                  <textarea 
+                    id="maintenance_message"
+                    name="maintenance_message"
+                    value={maintenanceMessage}
+                    onChange={(e) => setMaintenanceMessage(e.target.value)}
+                    rows={2}
+                    placeholder="We apologize for any inconveniences caused. We've almost done."
+                    className="w-full rounded-xl border border-gray-200 bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+                  />
+                </div>
+
+                <div className="grid sm:grid-cols-3 gap-4 pt-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="maintenance_whatsapp" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                      WhatsApp Number (For Direct Orders)
+                    </Label>
+                    <Input 
+                      id="maintenance_whatsapp"
+                      name="maintenance_whatsapp"
+                      value={maintenanceWhatsapp}
+                      onChange={(e) => setMaintenanceWhatsapp(e.target.value)}
+                      placeholder="919041762820"
+                      className="rounded-xl border-gray-200 bg-white"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="maintenance_phone" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                      Support Phone Number
+                    </Label>
+                    <Input 
+                      id="maintenance_phone"
+                      name="maintenance_phone"
+                      value={maintenancePhone}
+                      onChange={(e) => setMaintenancePhone(e.target.value)}
+                      placeholder="+91 90417-62820"
+                      className="rounded-xl border-gray-200 bg-white"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="maintenance_email" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                      Support Email
+                    </Label>
+                    <Input 
+                      id="maintenance_email"
+                      name="maintenance_email"
+                      type="email"
+                      value={maintenanceEmail}
+                      onChange={(e) => setMaintenanceEmail(e.target.value)}
+                      placeholder="info@shahiboutique.com"
+                      className="rounded-xl border-gray-200 bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Preview Toggle */}
+                <div className="pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setShowMaintenancePreview(!showMaintenancePreview)}
+                    className="text-xs font-bold text-[#FF7A00] hover:underline flex items-center gap-1.5"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    {showMaintenancePreview ? 'Hide Maintenance Screen Preview' : 'Show Maintenance Screen Preview in Admin'}
+                  </button>
+
+                  {showMaintenancePreview && (
+                    <div className="mt-4 border border-gray-300 rounded-2xl overflow-hidden shadow-sm bg-white">
+                      <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 text-[10px] font-bold uppercase tracking-wider text-gray-600 flex justify-between items-center">
+                        <span>Customer View Preview</span>
+                        <span className="text-gray-400">Read-Only</span>
+                      </div>
+                      <div className="p-2 sm:p-4 scale-90 sm:scale-95 origin-top pointer-events-none">
+                        <MaintenanceScreen settings={{
+                          maintenance_title: maintenanceTitle,
+                          maintenance_message: maintenanceMessage,
+                          maintenance_notice: maintenanceNotice,
+                          maintenance_phone: maintenancePhone,
+                          maintenance_email: maintenanceEmail,
+                          maintenance_whatsapp: maintenanceWhatsapp
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+          </div>
+        </div>
+
         <div className="space-y-4 pt-8 border-t-2 border-gray-50">
           <div>
-            <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Razorpay Configuration</h3>
+            <div className="flex items-center gap-3 mb-1">
+              <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase">Cashfree Payment Gateway (Recommended)</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800">
+                Domestic UPI + International Cards
+              </span>
+            </div>
+            <p className="text-xs font-medium text-gray-500 mb-4">
+              Get your App ID &amp; Secret Key from <a href="https://merchant.cashfree.com" target="_blank" rel="noopener noreferrer" className="text-[#FF7A00] underline font-bold">Cashfree Merchant Dashboard</a> under Payment Gateway &gt; Developers &gt; API Keys.
+            </p>
+            
+            <div className="grid gap-4 max-w-xl">
+              <div className="grid gap-2">
+                <Label htmlFor="cashfree_app_id" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Cashfree App ID / Client ID</Label>
+                <Input 
+                  id="cashfree_app_id" 
+                  name="cashfree_app_id" 
+                  defaultValue={initialSettings?.cashfree_app_id || ''} 
+                  placeholder="e.g. 123456... or TEST..."
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="cashfree_secret_key" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Cashfree Secret Key</Label>
+                <Input 
+                  id="cashfree_secret_key" 
+                  name="cashfree_secret_key" 
+                  type="password"
+                  defaultValue={initialSettings?.cashfree_secret_key || ''} 
+                  placeholder="e.g. cfsk_ma_..."
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="cashfree_mode" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Environment Mode</Label>
+                <select
+                  id="cashfree_mode"
+                  name="cashfree_mode"
+                  defaultValue={initialSettings?.cashfree_mode || 'PRODUCTION'}
+                  className="flex h-10 w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7A00] focus:ring-offset-2"
+                >
+                  <option value="PRODUCTION">Production (Live Payments)</option>
+                  <option value="SANDBOX">Sandbox (Test Mode)</option>
+                </select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="active_payment_gateway" className="text-[10px] uppercase font-black tracking-widest text-gray-400">Primary Active Gateway</Label>
+                <select
+                  id="active_payment_gateway"
+                  name="active_payment_gateway"
+                  defaultValue={initialSettings?.active_payment_gateway || 'CASHFREE'}
+                  className="flex h-10 w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7A00] focus:ring-offset-2"
+                >
+                  <option value="CASHFREE">Cashfree Payments (UPI, Cards &amp; International)</option>
+                  <option value="RAZORPAY">Razorpay</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-gray-100">
+            <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase mb-1">Razorpay Configuration (Alternative)</h3>
             <p className="text-xs font-medium text-gray-500 mb-4">You can find these in your Razorpay Dashboard under Settings &gt; API Keys.</p>
             
             <div className="grid gap-4 max-w-xl">

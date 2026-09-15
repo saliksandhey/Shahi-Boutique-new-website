@@ -8,7 +8,7 @@ import { X, Search as SearchIcon, ShoppingBag, MessageCircle } from 'lucide-reac
 import { createClient } from '@/lib/supabase/client'
 import { useCartStore } from '@/store/cart-store'
 import { useRouter } from 'next/navigation'
-import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { PriceDisplay } from '@/components/storefront/PriceDisplay'
 
 export function SearchDrawer() {
   const router = useRouter()
@@ -25,9 +25,9 @@ export function SearchDrawer() {
       setSearchTerm('')
       setResults([])
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = 'unset' }
+    return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export function SearchDrawer() {
                         </div>
                       ) : (
                         <span className="text-sm font-black text-gray-900">
-                          {product.is_enquiry_only ? `Starting from ₹${product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : `₹${product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                          {product.is_enquiry_only ? <span>Starting from <PriceDisplay amount={product.price} /></span> : <PriceDisplay amount={product.price} />}
                         </span>
                       )}
                       
@@ -164,7 +164,7 @@ export function SearchDrawer() {
                                  salePrice: product.sale_price,
                                  quantity: 1,
                                  image: primaryImage
-                               })
+                                })
                                closeSearch()
                                openCart()
                              }

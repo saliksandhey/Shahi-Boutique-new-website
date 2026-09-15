@@ -2,6 +2,7 @@
 
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { getRazorpayInstance } from '@/lib/razorpay'
+import { createCashfreeOrderSession, verifyCashfreeOrderPayment } from '@/lib/cashfree'
 import crypto from 'crypto'
 import { sendOrderConfirmationEmail } from '@/lib/actions/emails'
 
@@ -24,21 +25,13 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
   
   let subtotal = 0
   let discount = 0
-  let shipping = 0;
-  
-  try {
-    const { data: zone } = await supabase.from('shipping_zones').select('shipping_fee_inr').eq('country_code', country).single();
-    if (zone) {
-      shipping = zone.shipping_fee_inr;
-    } else {
-      // Fallback if not found or table doesn't exist yet
-      const fallbacks: any = { 'IN': 0, 'US': 3000, 'GB': 2500, 'CA': 3200, 'AE': 1500, 'AU': 3500 };
-      shipping = fallbacks[country] !== undefined ? fallbacks[country] : 4000;
-    }
-  } catch (e) {
-    console.error("SHIPPING FETCH ERROR:", e);
-    const fallbacks: any = { 'IN': 0, 'US': 3000, 'GB': 2500, 'CA': 3200, 'AE': 1500, 'AU': 3500 };
-    shipping = fallbacks[country] !== undefined ? fallbacks[country] : 4000;
+  let shipping = 0
+
+  // India: Free Shipping (0), Outside India: ₹1600 INR flat international shipping
+  if (country === 'IN') {
+    shipping = 0
+  } else {
+    shipping = 1600
   }
 
   const validatedItems = []
@@ -65,9 +58,6 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
       name: product.name + variantNameStr,
     })
   }
-
-  // Free shipping over $150
-  // Free shipping logic removed
 
   let couponId = null
   let appliedDiscountText = ''
@@ -97,11 +87,86 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
     couponId,
     appliedDiscountText,
     couponApplied: !!couponId,
-    isFreeGift: couponId && discount === 0 // If it's applied but discount is 0, it's a free gift
+    isFreeGift: couponId && discount === 0
   }
 }
 
-// 2. Create Concierge Order
+// 2. Create Cashfree Order Action
+export async function createCashfreeOrderAction(
+  address: any,
+  items: CartInputItem[],
+  shippingMethod: string,
+  couponCode?: string
+) {
+  try {
+    const country = address.country || 'IN'
+    const totals = await calculateOrderTotal(items, shippingMethod, couponCode, country)
+    const tempOrderId = `SHAHI_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`
+    const fullName = `${address.firstName || ''} ${address.lastName || ''}`.trim() || 'Valued Customer'
+
+    const cfSession = await createCashfreeOrderSession({
+      orderId: tempOrderId,
+      orderAmount: totals.total,
+      orderCurrency: 'INR',
+      customerDetails: {
+        customerId: `cust_${address.email ? address.email.replace(/[^a-zA-Z0-9]/g, '_') : Date.now()}`,
+        customerName: fullName,
+        customerEmail: address.email || 'customer@shahiboutique.com',
+        customerPhone: address.phone || '9999999999'
+      }
+    })
+
+    return {
+      success: true,
+      paymentSessionId: cfSession.paymentSessionId,
+      cfOrderId: cfSession.orderId,
+      environment: cfSession.environment,
+      totals
+    }
+  } catch (error: any) {
+    console.error('Error initiating Cashfree order:', error)
+    return { success: false, error: error.message || 'Failed to initiate Cashfree payment.' }
+  }
+}
+
+// 3. Verify & Complete Cashfree Order Action
+export async function verifyAndCompleteCashfreeOrderAction(
+  cfOrderId: string,
+  address: any,
+  items: CartInputItem[],
+  shippingMethod: string,
+  couponCode?: string
+) {
+  try {
+    const verification = await verifyCashfreeOrderPayment(cfOrderId)
+
+    if (!verification.isPaid) {
+      return { 
+        success: false, 
+        error: `Payment status is ${verification.orderStatus}. Please complete the payment or try again.` 
+      }
+    }
+
+    // Payment is verified successfully -> Create final order in database
+    return await createFinalOrder(
+      items, 
+      address, 
+      shippingMethod, 
+      'PAID', 
+      'CASHFREE', 
+      null, 
+      null, 
+      couponCode,
+      verification.cfOrderId,
+      verification.paymentId
+    )
+  } catch (error: any) {
+    console.error('Error completing Cashfree order:', error)
+    return { success: false, error: error.message || 'Failed to verify and create order.' }
+  }
+}
+
+// 4. Create Concierge / COD Order Action
 export async function createConciergeOrderAction(
   address: any,
   items: CartInputItem[],
@@ -124,18 +189,22 @@ async function createFinalOrder(
   paymentMethod: string,
   razorpayOrderId?: string | null,
   razorpayPaymentId?: string | null,
-  couponCode?: string
+  couponCode?: string,
+  cashfreeOrderId?: string | null,
+  cashfreePaymentId?: string | null
 ) {
   const supabaseAdmin = await createAdminClient()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    throw new Error("You must be logged in to place an order.")
+  let user: any = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data?.user || null
+  } catch (e) {
+    user = null
   }
   
   // 1. Recalculate and validate again
-  const totals = await calculateOrderTotal(items, shippingMethod, couponCode)
+  const totals = await calculateOrderTotal(items, shippingMethod, couponCode, address.country || 'IN')
 
   // 2. Generate Order Number
   const orderNumber = `SHAHI-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`
@@ -162,38 +231,46 @@ async function createFinalOrder(
     })
   }
 
-  // 3.5 Save or update default address
-  const { data: existingAddress } = await supabaseAdmin
-    .from('addresses')
-    .select('id')
-    .eq('user_id', user.id)
-    .single()
+  // 3.5 Save or update default address (only if logged in)
+  if (user?.id) {
+    const { data: existingAddress } = await supabaseAdmin
+      .from('addresses')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
 
-  const addressData = {
-    user_id: user.id,
-    full_name: fullName,
-    phone: address.phone,
-    address_line1: address.street,
-    city: address.city,
-    state: address.state,
-    postal_code: address.zip,
-    country: address.country || 'India',
-    is_default: true
-  }
+    const addressData = {
+      user_id: user.id,
+      full_name: fullName,
+      phone: address.phone,
+      address_line1: address.street,
+      address_line2: address.apartment || null,
+      city: address.city,
+      state: address.state,
+      postal_code: address.zip,
+      country: address.country || 'India',
+      is_default: true
+    }
 
-  if (existingAddress) {
-    await supabaseAdmin.from('addresses').update(addressData).eq('id', existingAddress.id)
-  } else {
-    await supabaseAdmin.from('addresses').insert(addressData)
+    if (existingAddress) {
+      await supabaseAdmin.from('addresses').update(addressData).eq('id', existingAddress.id)
+    } else {
+      await supabaseAdmin.from('addresses').insert(addressData)
+    }
   }
 
   // 4. Insert Order (Flat schema)
-  const { data: order, error: orderError } = await supabaseAdmin.from('orders').insert({
+  const fullShippingAddress = address.apartment 
+    ? `${address.street}, ${address.apartment}`
+    : address.street
+
+  const insertPayload: any = {
     order_number: orderNumber,
+    user_id: user?.id || null,
     customer_name: fullName,
     customer_email: address.email,
     customer_phone: address.phone,
-    shipping_address: address.street,
+    shipping_address: fullShippingAddress,
     city: address.city,
     state: address.state,
     postal_code: address.zip,
@@ -208,7 +285,20 @@ async function createFinalOrder(
     payment_method: paymentMethod,
     razorpay_order_id: razorpayOrderId,
     razorpay_payment_id: razorpayPaymentId,
-  }).select().single()
+  }
+
+  if (cashfreeOrderId) {
+    insertPayload.cashfree_order_id = cashfreeOrderId
+  }
+  if (cashfreePaymentId) {
+    insertPayload.cashfree_payment_id = cashfreePaymentId
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from('orders')
+    .insert(insertPayload)
+    .select()
+    .single()
 
   if (orderError) throw new Error("Failed to create order record: " + orderError.message)
 
@@ -216,7 +306,7 @@ async function createFinalOrder(
   await supabaseAdmin.from('order_timeline').insert({
     order_id: order.id,
     event_type: 'Order Placed',
-    description: `Order successfully placed via ${paymentMethod}.`
+    description: `Order successfully placed via ${paymentMethod} (${paymentStatus}).`
   })
 
   // 5. Insert Order Items and Deduct Stock
@@ -239,7 +329,7 @@ async function createFinalOrder(
 
   // 6. Send Order Confirmation Email
   try {
-    const fullAddress = `${address.street}, ${address.city}, ${address.state} ${address.zip}, ${address.country || 'IN'}`
+    const fullAddress = `${fullShippingAddress}, ${address.city}, ${address.state} ${address.zip}, ${address.country || 'IN'}`
     await sendOrderConfirmationEmail(
       address.email,
       fullName,

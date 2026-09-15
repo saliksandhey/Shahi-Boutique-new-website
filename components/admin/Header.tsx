@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export function Header() {
+export function Header({ isMaintenanceActive = false }: { isMaintenanceActive?: boolean }) {
   const pathname = usePathname()
   const paths = pathname.split('/').filter(Boolean)
 
@@ -21,7 +21,7 @@ export function Header() {
             src="/logo.png" 
             alt="SHAHI" 
             fill 
-            className="object-contain object-left"
+            className="object-contain object-left" 
             quality={100}
             priority
           />
@@ -51,7 +51,19 @@ export function Header() {
         })}
       </div>
 
-      <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-end items-center">
+      <div className="flex flex-1 gap-x-3 sm:gap-x-4 self-stretch lg:gap-x-6 justify-end items-center">
+        {isMaintenanceActive && (
+          <Link 
+            href="/2010admin/settings"
+            className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider transition-colors shadow-xs"
+            title="Website is closed for maintenance. Click to manage settings."
+          >
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+            <span className="hidden sm:inline">Store Closed (Maintenance)</span>
+            <span className="sm:hidden">Offline</span>
+          </Link>
+        )}
+
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           <div className="flex items-center gap-x-4">
             <span className="hidden lg:flex lg:items-center">

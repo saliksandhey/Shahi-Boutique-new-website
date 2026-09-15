@@ -1,45 +1,41 @@
 'use client'
 
 import { useCartStore } from '@/store/cart-store'
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Trash2 } from 'lucide-react'
-import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { PriceDisplay } from '@/components/storefront/PriceDisplay'
 
 export function CartClient() {
   const { items, removeItem, updateQuantity, getSubtotal } = useCartStore()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return null
+  const subtotal = getSubtotal()
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-32 bg-muted border border-border">
-        <h2 className="text-3xl font-serif text-foreground tracking-widest uppercase mb-6">Your cart is empty</h2>
-        <p className="text-muted-foreground mb-10 font-light leading-relaxed">Explore our collections and add something beautiful to your cart.</p>
-        <Link href="/shop" className="inline-block bg-primary text-primary-foreground px-10 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-accent hover:text-accent-foreground transition-colors duration-300">
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-serif text-foreground uppercase tracking-widest mb-4">Your cart is empty</h2>
+        <p className="text-muted-foreground mb-8 text-sm font-light">Looks like you haven't added anything to your cart yet.</p>
+        <Link
+          href="/shop"
+          className="inline-block bg-primary text-primary-foreground px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
+        >
           Continue Shopping
         </Link>
       </div>
     )
   }
 
-  const subtotal = getSubtotal()
-
   return (
-    <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-16">
+    <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
       <section aria-labelledby="cart-heading" className="lg:col-span-8">
-        <h2 id="cart-heading" className="sr-only">Items in your shopping cart</h2>
+        <h2 id="cart-heading" className="sr-only">
+          Items in your shopping cart
+        </h2>
 
         <ul role="list" className="divide-y divide-border border-t border-b border-border">
           {items.map((item) => (
-            <li key={item.id} className="flex py-10">
-              <div className="flex-shrink-0 relative w-28 h-40 sm:w-40 sm:h-56 bg-muted overflow-hidden">
+            <li key={item.id} className="flex py-6 sm:py-10">
+              <div className="flex-shrink-0 relative w-24 h-32 sm:w-32 sm:h-40 bg-muted overflow-hidden">
                 <Image
                   src={item.image}
                   alt={item.name}
@@ -48,7 +44,7 @@ export function CartClient() {
                 />
               </div>
 
-              <div className="ml-6 flex flex-1 flex-col justify-between sm:ml-10">
+              <div className="ml-4 flex-1 flex flex-col justify-between sm:ml-6">
                 <div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
                   <div>
                     <div className="flex justify-between">
@@ -68,9 +64,9 @@ export function CartClient() {
                     <div className="mt-2 flex text-xs text-muted-foreground uppercase tracking-widest font-light">
                       <p>Qty: {item.quantity}</p>
                     </div>
-                    <p className="mt-4 text-sm font-medium text-foreground tracking-wide">
-                      ₹{item.salePrice ? item.salePrice.toFixed(2) : item.price.toFixed(2)}
-                    </p>
+                    <div className="mt-4 text-sm font-medium text-foreground tracking-wide">
+                      <PriceDisplay amount={item.salePrice || item.price} />
+                    </div>
                   </div>
 
                   <div className="mt-6 sm:mt-0 sm:pr-9 flex flex-col items-start sm:items-end justify-between">
