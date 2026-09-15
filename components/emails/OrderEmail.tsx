@@ -76,9 +76,9 @@ export default function OrderEmail({
             )}
 
             {websiteTrackingUrl && (
-              <Section style={{ textAlign: 'center', margin: '32px 0' }}>
+              <Section style={{ textAlign: 'center', margin: '28px 0' }}>
                 <a href={websiteTrackingUrl} style={button}>
-                  Track Your Order Online
+                  ✦ Track Live Order Status &amp; Updates ➔
                 </a>
               </Section>
             )}
@@ -212,20 +212,22 @@ const trackingText = {
 }
 
 const button = {
-  backgroundColor: '#FF7A00',
-  borderRadius: '4px',
-  color: '#fff',
+  backgroundColor: '#5E1218',
+  borderRadius: '8px',
+  color: '#ffffff',
   fontSize: '14px',
   fontWeight: 'bold',
   textDecoration: 'none',
   textAlign: 'center' as const,
   display: 'inline-block',
-  padding: '12px 32px',
+  padding: '14px 32px',
+  letterSpacing: '1px',
 }
 
 const buttonSecondary = {
   ...button,
   backgroundColor: '#1C1C1C',
+  padding: '10px 24px',
 }
 
 const hr = {

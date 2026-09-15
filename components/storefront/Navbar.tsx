@@ -62,6 +62,7 @@ export function Navbar({ categories }: { categories: any[] }) {
       name: 'More', 
       isDropdown: true,
       dropdownItems: [
+        { name: 'Track Order', href: '/track-order' },
         { name: 'Stores', href: '/stores' },
         { name: 'Feed', href: '/feed' }
       ]
@@ -71,6 +72,7 @@ export function Navbar({ categories }: { categories: any[] }) {
   const mobileLinks = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
+    { name: 'Track Order', href: '/track-order' },
     { name: 'Services', href: '/services' },
     { name: 'Stores', href: '/stores' },
     { name: 'Feed', href: '/feed' },

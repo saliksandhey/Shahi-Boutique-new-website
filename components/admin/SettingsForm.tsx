@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { updateStoreSettings, updateAdminPin, uploadHeroBanner } from '@/lib/actions/settings'
+import { sendTestEmailAction } from '@/lib/actions/emails'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Power, Eye, AlertTriangle } from 'lucide-react'
+import { Power, Eye, AlertTriangle, Mail, Send, RefreshCw } from 'lucide-react'
 import { MaintenanceScreen } from '@/components/storefront/MaintenanceScreen'
 
 export function SettingsForm({ initialSettings }: { initialSettings: Record<string, string> }) {
@@ -17,6 +18,10 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
 
   const [bannerLoading, setBannerLoading] = useState(false)
   const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const [testEmailRecipient, setTestEmailRecipient] = useState(initialSettings?.maintenance_email || initialSettings?.smtp_user || 'contact.shahiboutique@gmail.com')
+  const [testEmailLoading, setTestEmailLoading] = useState(false)
+  const [testEmailStatus, setTestEmailStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
   const [maintenanceMode, setMaintenanceMode] = useState(initialSettings?.maintenance_mode === 'true')
   const [maintenanceTitle, setMaintenanceTitle] = useState(initialSettings?.maintenance_title || "The site is currently down for maintenance")
@@ -30,6 +35,23 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
   const [marqueeContent, setMarqueeContent] = useState(initialSettings?.marquee_content || '✦ Shop the Exclusive Bridal Collection ✦ Free Worldwide Shipping ✦')
   const [marqueeSpeed, setMarqueeSpeed] = useState(initialSettings?.marquee_speed || '25')
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop')
+
+  const handleSendTestEmail = async () => {
+    if (!testEmailRecipient || !testEmailRecipient.includes('@')) {
+      setTestEmailStatus({ type: 'error', message: 'Please enter a valid email address.' })
+      return
+    }
+    setTestEmailLoading(true)
+    setTestEmailStatus(null)
+
+    const res = await sendTestEmailAction(testEmailRecipient)
+    if (res.success) {
+      setTestEmailStatus({ type: 'success', message: `✓ Test email sent successfully to ${testEmailRecipient}! Check your inbox (or spam folder).` })
+    } else {
+      setTestEmailStatus({ type: 'error', message: `✗ Failed: ${res.error}` })
+    }
+    setTestEmailLoading(false)
+  }
 
   const handleStoreSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -279,6 +301,124 @@ export function SettingsForm({ initialSettings }: { initialSettings: Record<stri
                   )}
                 </div>
               </div>
+          </div>
+        </div>
+
+        {/* Automated Customer Email Notifications (SMTP) */}
+        <div className="bg-white border border-gray-200 rounded-2xl md:rounded-3xl p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+            <div>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <span className="p-2 bg-amber-50 text-[#FF7A00] rounded-xl">
+                  <Mail className="w-5 h-5" />
+                </span>
+                <h3 className="text-lg font-black tracking-tight text-gray-900 uppercase">
+                  Customer Email Notifications (Order Invoices &amp; Tracking)
+                </h3>
+              </div>
+              <p className="text-xs font-medium text-gray-500 max-w-xl">
+                Emails are automatically sent to the customer&apos;s email address entered at checkout for Order Confirmation, Invoices, Status updates (Shipped, Delivered), and Courier Tracking links.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="smtp_user" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                  Sender Gmail Address
+                </Label>
+                <Input 
+                  id="smtp_user"
+                  name="smtp_user"
+                  type="email"
+                  defaultValue={initialSettings?.smtp_user || 'contact.shahiboutique@gmail.com'}
+                  placeholder="contact.shahiboutique@gmail.com"
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="smtp_sender_name" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                  Sender Display Name
+                </Label>
+                <Input 
+                  id="smtp_sender_name"
+                  name="smtp_sender_name"
+                  defaultValue={initialSettings?.smtp_sender_name || 'Shahi Boutique'}
+                  placeholder="Shahi Boutique"
+                  className="rounded-xl border-gray-200"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2 max-w-xl">
+              <Label htmlFor="smtp_password" className="text-[10px] uppercase font-black tracking-widest text-gray-500">
+                Google 16-Character App Password
+              </Label>
+              <Input 
+                id="smtp_password"
+                name="smtp_password"
+                type="password"
+                defaultValue={initialSettings?.smtp_password || ''}
+                placeholder="Enter 16-character App Password (e.g. abcd efgh ijkl mnop)"
+                className="rounded-xl border-gray-200 font-mono text-sm"
+              />
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                <strong>How to get Google App Password:</strong> Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" className="text-[#FF7A00] font-bold underline">Google Account Security &gt; App Passwords</a>, create a password for &quot;Shahi Website&quot;, and copy the 16 letters here.
+              </p>
+            </div>
+
+            {/* Send Test Email Card */}
+            <div className="bg-gray-50 border border-gray-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+                  <Send className="w-3.5 h-3.5 text-[#FF7A00]" />
+                  Verify &amp; Test Live Email Sending
+                </span>
+                <span className="text-[10px] text-gray-400 font-medium">Instant Test</span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Test if automated emails are reaching inboxes. <em>(Save Store Settings first if you just updated your App Password)</em>.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                <Input 
+                  type="email"
+                  value={testEmailRecipient}
+                  onChange={(e) => setTestEmailRecipient(e.target.value)}
+                  placeholder="Enter email to receive test message"
+                  className="rounded-xl border-gray-200 bg-white sm:max-w-xs"
+                />
+                <Button
+                  type="button"
+                  disabled={testEmailLoading}
+                  onClick={handleSendTestEmail}
+                  variant="outline"
+                  className="rounded-xl border-[#1C1C1C] text-[#1C1C1C] hover:bg-[#1C1C1C] hover:text-white font-bold text-xs"
+                >
+                  {testEmailLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Sending...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5" /> Send Test Email
+                    </span>
+                  )}
+                </Button>
+              </div>
+
+              {testEmailStatus && (
+                <div className={`p-3 rounded-xl text-xs font-bold ${
+                  testEmailStatus.type === 'success' 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                    : 'bg-red-100 text-red-800 border border-red-200'
+                }`}>
+                  {testEmailStatus.message}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

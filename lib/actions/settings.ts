@@ -32,6 +32,9 @@ export async function updateStoreSettings(formData: FormData) {
   const maintenancePhone = (formData.get('maintenance_phone') as string) || '+91 90417-62820'
   const maintenanceEmail = (formData.get('maintenance_email') as string) || 'info@shahiboutique.com'
   const maintenanceWhatsapp = (formData.get('maintenance_whatsapp') as string) || '919041762820'
+  const smtpUser = formData.get('smtp_user') as string
+  const smtpPassword = formData.get('smtp_password') as string
+  const smtpSenderName = formData.get('smtp_sender_name') as string
   const cashfreeAppId = formData.get('cashfree_app_id') as string
   const cashfreeSecretKey = formData.get('cashfree_secret_key') as string
   const cashfreeMode = formData.get('cashfree_mode') as string || 'PRODUCTION'
@@ -52,6 +55,9 @@ export async function updateStoreSettings(formData: FormData) {
     { key: 'maintenance_phone', value: maintenancePhone },
     { key: 'maintenance_email', value: maintenanceEmail },
     { key: 'maintenance_whatsapp', value: maintenanceWhatsapp },
+    { key: 'smtp_user', value: smtpUser },
+    { key: 'smtp_password', value: smtpPassword },
+    { key: 'smtp_sender_name', value: smtpSenderName },
     { key: 'cashfree_app_id', value: cashfreeAppId },
     { key: 'cashfree_secret_key', value: cashfreeSecretKey },
     { key: 'cashfree_mode', value: cashfreeMode },

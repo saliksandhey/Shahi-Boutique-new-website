@@ -67,9 +67,9 @@ export function Footer({ categories }: { categories: any[] }) {
               <ul className={`space-y-3 md:space-y-4 mt-4 md:mt-0 ${openSection === 'quick-links' ? 'block' : 'hidden md:block'}`}>
                 <li><Link href="/shop" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Shop All</Link></li>
                 <li><Link href="/shop?collection=new" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">New Arrivals</Link></li>
+                <li><Link href="/track-order" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors flex items-center gap-1.5"><span>✦</span> Track Your Order</Link></li>
                 <li><Link href="/about" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Our Story</Link></li>
                 <li><Link href="/contact" className="text-sm font-medium text-gray-500 hover:text-[#FF7A00] transition-colors">Contact Us</Link></li>
-
               </ul>
             </div>
 
