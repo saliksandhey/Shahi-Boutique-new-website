@@ -153,7 +153,7 @@ export async function verifyAndCompleteCashfreeOrderAction(
       address, 
       shippingMethod, 
       'PAID', 
-      'CASHFREE', 
+      'RAZORPAY', 
       null, 
       null, 
       couponCode,
@@ -303,10 +303,11 @@ async function createFinalOrder(
   if (orderError) throw new Error("Failed to create order record: " + orderError.message)
 
   // Insert initial timeline event
+  const methodLabel = cashfreeOrderId ? 'Cashfree Payments' : (paymentMethod === 'RAZORPAY' ? 'Razorpay' : paymentMethod)
   await supabaseAdmin.from('order_timeline').insert({
     order_id: order.id,
     event_type: 'Order Placed',
-    description: `Order successfully placed via ${paymentMethod} (${paymentStatus}).`
+    description: `Order successfully placed via ${methodLabel} (${paymentStatus}).`
   })
 
   // 5. Insert Order Items and Deduct Stock

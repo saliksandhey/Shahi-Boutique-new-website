@@ -212,7 +212,9 @@ export default async function AdminOrderDetailsPage({ params }: { params: Promis
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-500 font-bold tracking-widest text-xs uppercase">Method</span>
-                      <span className="font-black text-gray-900 uppercase tracking-widest text-[10px] bg-white px-3 py-1 rounded-full border border-gray-200">{order.payment_method}</span>
+                      <span className="font-black text-gray-900 uppercase tracking-widest text-[10px] bg-white px-3 py-1 rounded-full border border-gray-200">
+                        {order.cashfree_order_id ? 'Cashfree PG' : order.payment_method}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-500 font-bold tracking-widest text-xs uppercase">Status</span>

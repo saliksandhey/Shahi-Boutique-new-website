@@ -195,7 +195,7 @@ export async function OrderDetailsView({ id, onCloseHref }: { id: string, onClos
               <div className="pt-4 border-t">
                 <h4 className="text-sm font-medium mb-2 text-gray-900">Payment</h4>
                 <div className="text-sm text-gray-500 space-y-1">
-                  <p>Method: <span className="uppercase">{order.payment_method}</span></p>
+                  <p>Method: <span className="uppercase">{order.cashfree_order_id ? 'Cashfree PG' : order.payment_method}</span></p>
                   <p>Status: <span className={`uppercase font-medium ${order.payment_status === 'PAID' ? 'text-green-600' : 'text-orange-500'}`}>{order.payment_status}</span></p>
                 </div>
               </div>
