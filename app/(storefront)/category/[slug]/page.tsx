@@ -55,7 +55,7 @@ export default async function CategoryPage({
 
   let query = supabase.from('products')
     .select('*, product_images(url, is_primary), categories(name)', { count: 'exact' })
-    .eq('status', 'ACTIVE')
+    .in('status', ['ACTIVE', 'OUT_OF_STOCK'])
     .eq('category_id', category.id)
 
   if (sort === 'price-asc') {

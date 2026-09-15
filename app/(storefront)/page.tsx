@@ -29,10 +29,10 @@ export default async function HomePage() {
   }
   const heroInterval = parseInt(settings?.hero_slider_interval || '5', 10)
 
-  // Fetch All Active Products for New Arrivals
+  // Fetch All Active & Out of Stock Products for New Arrivals
   const { data: recentProducts } = await supabase.from('products')
     .select('*, product_images(url, is_primary), categories(name)')
-    .eq('status', 'ACTIVE')
+    .in('status', ['ACTIVE', 'OUT_OF_STOCK'])
     .order('created_at', { ascending: false })
 
   const newArrivals = recentProducts || []
@@ -72,16 +72,15 @@ export default async function HomePage() {
       {/* Section 6: Worldwide Delivery */}
       <WorldwideDelivery />
 
-      {/* Section 7: Customer Reviews */}
-      <CustomerReviews />
+      {/* Section 7: Store Location */}
+      <StoreLocationSection />
 
-      {/* Section 8: Appointment Banner (Replaced Newsletter) */}
+      {/* Section 8: Book Appointment Banner */}
       <AppointmentBanner />
 
-      {/* Section 9: Store Location (Visit Us) */}
-      <StoreLocationSection />
-      
-      {/* Section 10: Footer is in layout.tsx */}
+      {/* Section 9: Customer Reviews */}
+      <CustomerReviews />
+
     </div>
   )
 }

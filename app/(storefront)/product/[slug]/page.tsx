@@ -1,5 +1,5 @@
 import { PriceDisplay } from '@/components/storefront/PriceDisplay';
-﻿import { createPublicClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { AddToCart } from '@/components/storefront/AddToCart'
@@ -43,7 +43,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .eq('slug', slug)
     .single()
 
-  if (!product || product.status !== 'ACTIVE') {
+  if (!product || product.status === 'DRAFT' || product.status === 'ARCHIVED') {
     notFound()
   }
 
@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .select('*, product_images(url, is_primary)')
     .eq('category_id', product.category_id)
     .neq('id', product.id)
-    .eq('status', 'ACTIVE')
+    .in('status', ['ACTIVE', 'OUT_OF_STOCK'])
     .limit(4)
 
   const { data: reviews } = await supabase
@@ -70,11 +70,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // Sort images safely by position
   const sortedImages = (product.product_images || []).sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
 
+  const isOutOfStock = product.status === 'OUT_OF_STOCK' || (typeof product.stock === 'number' && product.stock <= 0 && !product.is_enquiry_only)
+
   return (
     <div className="bg-white pt-16 md:pt-24 pb-40 md:pb-32">
-      <div className="mx-auto max-w-[1400px] px-0 lg:px-12">
+      <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
         
-        <nav className="px-6 sm:px-8 lg:px-0 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 md:mb-12 pb-2 sm:pb-0">
+        <nav className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 md:mb-12 pb-2 sm:pb-0">
           <ol className="flex items-center flex-wrap gap-y-2">
             <li><a href="/" className="hover:text-[#FF7A00] transition-colors">Home</a></li>
             <li><span className="mx-2">/</span></li>
@@ -90,15 +92,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </ol>
         </nav>
 
+        {/* 2-Column Product Detail Layout */}
         <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16 xl:gap-x-24">
           
-          {/* Image Gallery */}
+          {/* Left Column: Image Gallery */}
           <div className="flex flex-col-reverse lg:sticky lg:top-32">
             <ProductGallery images={sortedImages} />
           </div>
 
-          {/* Product info */}
-          <div className="mt-6 md:mt-12 lg:mt-0 px-6 sm:px-8 lg:px-0">
+          {/* Right Column: Product info & Actions */}
+          <div className="mt-6 md:mt-12 lg:mt-0">
             {/* Product JSON-LD Schema */}
             <script
               type="application/ld+json"
@@ -116,12 +119,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     "priceCurrency": "INR",
                     "price": product.price,
                     "itemCondition": "https://schema.org/NewCondition",
-                    "availability": product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                    "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
                   }
                 })
               }}
             />
             
+            {isOutOfStock && (
+              <span className="inline-block bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">
+                Out of Stock
+              </span>
+            )}
+
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-3 md:mb-4 leading-none">
               {product.name}
             </h1>
@@ -142,7 +151,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
               
-              <div className="mb-8 md:mb-10">
+            <div className="mb-8 md:mb-10">
               <h3 className="sr-only">Description</h3>
               <div className="text-sm md:text-base text-gray-500 leading-relaxed font-medium whitespace-pre-wrap">
                 {product.description}
@@ -203,38 +212,26 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
 
-        {/* Reviews */}
+        {/* Full-Width Sections Below Main Grid */}
+        {relatedProducts && relatedProducts.length > 0 && (
+          <div className="mt-20 md:mt-32 pt-16 border-t border-gray-100">
+            <h2 className="text-2xl md:text-4xl font-sans font-black uppercase tracking-tighter text-gray-900 mb-8 md:mb-12">
+              You May Also Like
+            </h2>
+            <ProductGrid products={relatedProducts} />
+          </div>
+        )}
+        
         {reviews && reviews.length > 0 && (
-          <div className="mt-24 md:mt-32 pt-12 md:pt-16 px-6 sm:px-8 lg:px-0">
-            <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-4 leading-none">
-                CLIENT REVIEWS
-              </h2>
-            </div>
+          <div className="mt-20 md:mt-32 pt-16 border-t border-gray-100">
+            <h2 className="text-2xl md:text-4xl font-sans font-black uppercase tracking-tighter text-gray-900 mb-8 md:mb-12">
+              Customer Reviews
+            </h2>
             <ReviewCarousel reviews={reviews} />
           </div>
         )}
 
-        {/* Potli Showcase for Potli category products */}
-        {product.categories?.slug === 'potli' && (
-          <div className="mt-16 md:mt-24 pt-12 md:pt-16 border-t border-gray-100">
-            <PotliShowcase hideHeader={true} />
-          </div>
-        )}
-
-        {/* Related Products */}
-        {relatedProducts && relatedProducts.length > 0 && (
-          <div className="mt-24 md:mt-32 pt-12 md:pt-16 border-t border-gray-100 px-6 sm:px-8 lg:px-0">
-            <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-4 leading-none">
-                YOU MAY ALSO LIKE
-              </h2>
-            </div>
-            <ProductGrid products={relatedProducts} />
-          </div>
-        )}
       </div>
     </div>
   )
 }
-

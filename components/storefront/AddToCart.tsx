@@ -24,7 +24,7 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
   const openCart = useCartStore(state => state.openCart)
 
   const currentStock = selectedVariant ? (selectedVariant.stock || 0) : product.stock
-  const outOfStock = currentStock <= 0
+  const outOfStock = product.status === 'OUT_OF_STOCK' || (currentStock <= 0 && !product.is_enquiry_only)
   const hasSizes = product.product_size_guides && product.product_size_guides.length > 0
 
   const handleAddToCart = () => {
@@ -132,7 +132,8 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
               <button 
                 type="button" 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
+                disabled={outOfStock || quantity <= 1}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
               >
                 -
               </button>
@@ -176,7 +177,17 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
         )}
       </div>
 
-      {currentStock > 0 && currentStock <= 5 && (
+      {outOfStock && !product.is_enquiry_only && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 flex items-center gap-3 text-red-700">
+          <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shrink-0"></span>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider">Currently Out of Stock</p>
+            <p className="text-[11px] font-medium text-red-600 mt-0.5">This item is temporarily unavailable for purchase.</p>
+          </div>
+        </div>
+      )}
+
+      {!outOfStock && currentStock > 0 && currentStock <= 5 && (
         <p className="text-xs text-red-500 font-bold tracking-widest uppercase flex items-center justify-center sm:justify-start gap-2 pt-2">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           Only {currentStock} pieces remaining

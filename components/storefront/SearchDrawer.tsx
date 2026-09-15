@@ -44,7 +44,7 @@ export function SearchDrawer() {
         .from('products')
         .select('*, product_images(url, is_primary)')
         .ilike('name', `%${searchTerm}%`)
-        .eq('status', 'ACTIVE')
+        .in('status', ['ACTIVE', 'OUT_OF_STOCK'])
         .limit(10)
 
       setResults(data || [])

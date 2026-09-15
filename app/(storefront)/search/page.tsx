@@ -19,7 +19,7 @@ export default async function SearchPage({
     const { data } = await supabase
       .from('products')
       .select('*, product_images(url, is_primary)')
-      .eq('status', 'ACTIVE')
+      .in('status', ['ACTIVE', 'OUT_OF_STOCK'])
       .or(`name.ilike.%${q}%,description.ilike.%${q}%,slug.ilike.%${q}%`)
       .limit(40)
     

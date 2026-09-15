@@ -14,6 +14,8 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
   const primaryImage = product.product_images?.find((img: any) => img.is_primary)?.url || product.product_images?.[0]?.url || '/placeholder.png'
   const secondaryImage = product.product_images?.find((img: any) => img.url !== primaryImage)?.url || primaryImage
 
+  const isOutOfStock = product.status === 'OUT_OF_STOCK' || (typeof product.stock === 'number' && product.stock <= 0 && !product.is_enquiry_only)
+
   return (
     <Link href={`/product/${product.slug}`} className={`group flex flex-col h-full bg-white transition-all duration-300 ${variant === 'horizontal' ? 'flex-row gap-4' : ''}`}>
       {/* Image Container */}
@@ -24,7 +26,7 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
               src={primaryImage}
               alt={product.name}
               fill
-              className="object-cover object-center transition-opacity duration-700 ease-in-out group-hover:opacity-0"
+              className={`object-cover object-center transition-all duration-700 ease-in-out group-hover:opacity-0 ${isOutOfStock ? 'opacity-70 grayscale-[30%]' : ''}`}
               sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             />
             {/* Secondary image on hover */}
@@ -32,7 +34,7 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
               src={secondaryImage}
               alt={product.name}
               fill
-              className="object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-in-out"
+              className={`object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out ${isOutOfStock ? 'opacity-70 grayscale-[30%]' : ''}`}
               sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             />
           </>
@@ -46,7 +48,11 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
         <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex justify-between items-start z-10 pointer-events-none">
           {/* Left Badge */}
           <div>
-            {product.sale_price ? (
+            {isOutOfStock ? (
+              <span className="bg-red-600 text-white text-[8px] sm:text-[10px] font-bold px-3 py-1 rounded-full shadow-sm tracking-wider uppercase">
+                Out of Stock
+              </span>
+            ) : product.sale_price ? (
               <span className="bg-[#6B46C1] text-white text-[8px] sm:text-[10px] font-bold px-3 py-1 rounded-full shadow-sm tracking-wider">
                 Sale
               </span>
@@ -60,33 +66,44 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
 
         {/* Quick Action Button */}
         <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 md:translate-y-4 md:group-hover:translate-y-0">
-           <button 
-             onClick={(e) => {
-               e.preventDefault();
-               if (product.is_enquiry_only) {
-                 router.push(`/product/${product.slug}/enquiry`)
-               } else {
-                 addItem({
-                   id: product.id,
-                   productId: product.id,
-                   name: product.name,
-                   price: product.price,
-                   salePrice: product.sale_price,
-                   quantity: 1,
-                   image: primaryImage
-                 })
-                 openCart()
-               }
-             }}
-             className="bg-white text-gray-900 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:scale-110 transition-transform"
-             title={product.is_enquiry_only ? "Enquire Now" : "Add to Cart"}
-           >
-             {product.is_enquiry_only ? (
-               <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-             ) : (
-               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-             )}
-           </button>
+           {isOutOfStock ? (
+             <button 
+               onClick={(e) => e.preventDefault()}
+               disabled
+               className="bg-gray-100 text-gray-400 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-sm cursor-not-allowed border border-gray-200"
+               title="Out of Stock"
+             >
+               <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-40" />
+             </button>
+           ) : (
+             <button 
+               onClick={(e) => {
+                 e.preventDefault();
+                 if (product.is_enquiry_only) {
+                   router.push(`/product/${product.slug}/enquiry`)
+                 } else {
+                   addItem({
+                     id: product.id,
+                     productId: product.id,
+                     name: product.name,
+                     price: product.price,
+                     salePrice: product.sale_price,
+                     quantity: 1,
+                     image: primaryImage
+                   })
+                   openCart()
+                 }
+               }}
+               className="bg-white text-gray-900 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:scale-110 transition-transform"
+               title={product.is_enquiry_only ? "Enquire Now" : "Add to Cart"}
+             >
+               {product.is_enquiry_only ? (
+                 <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+               ) : (
+                 <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+               )}
+             </button>
+           )}
         </div>
       </div>
 
@@ -114,6 +131,12 @@ export function ProductCard({ product, variant = 'vertical' }: { product: any, v
               <span className="text-[13px] sm:text-[15px] font-black text-[#FF7A00]"><PriceDisplay amount={product.price} /></span>
             )}
           </div>
+
+          {isOutOfStock && (
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest block mt-0.5">
+              Out of Stock
+            </span>
+          )}
         </div>
       </div>
     </Link>

@@ -32,7 +32,7 @@ export default async function ShopPage({
   const from = (page - 1) * limit
   const to = from + limit - 1
 
-  let query = supabase.from('products').select('*, product_images(url, is_primary), categories!inner(name, slug)', { count: 'exact' }).eq('status', 'ACTIVE')
+  let query = supabase.from('products').select('*, product_images(url, is_primary), categories!inner(name, slug)', { count: 'exact' }).in('status', ['ACTIVE', 'OUT_OF_STOCK'])
 
   if (sort === 'price-asc') {
     query = query.order('price', { ascending: true })
