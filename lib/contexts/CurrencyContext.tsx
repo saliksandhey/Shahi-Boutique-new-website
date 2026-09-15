@@ -2,19 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
-export type Currency = 'INR' | 'CAD' | 'AUD' | 'NZD' | 'USD'
+export type Currency = 'INR' | 'USD'
 
 export interface CurrencyInfo { code: Currency; symbol: string; label: string; flag: string }
 
 export const SUPPORTED_CURRENCIES: Record<Currency, CurrencyInfo> = {
-  INR: { code: 'INR', symbol: '₹',   label: 'Indian Rupee',       flag: '🇮🇳' },
-  CAD: { code: 'CAD', symbol: 'CA$', label: 'Canadian Dollar',    flag: '🇨🇦' },
-  AUD: { code: 'AUD', symbol: 'A$',  label: 'Australian Dollar',  flag: '🇦🇺' },
-  NZD: { code: 'NZD', symbol: 'NZ$', label: 'New Zealand Dollar', flag: '🇳🇿' },
-  USD: { code: 'USD', symbol: '$',   label: 'US Dollar',          flag: '🇺🇸' },
+  INR: { code: 'INR', symbol: '₹', label: 'Indian Rupee', flag: '🇮🇳' },
+  USD: { code: 'USD', symbol: '$', label: 'US Dollar',    flag: '🇺🇸' },
 }
-
-const COUNTRY_TO_CURRENCY: Record<string, Currency> = { IN: 'INR', CA: 'CAD', AU: 'AUD', NZ: 'NZD', US: 'USD' }
 
 interface CurrencyContextType {
   currency: Currency
@@ -32,52 +27,88 @@ function formatAmount(amount: number, currency: Currency): string {
   return info.symbol + amount.toFixed(2)
 }
 
-const FALLBACK_RATES: Record<Currency, number> = { INR: 1, CAD: 0.016, AUD: 0.018, NZD: 0.020, USD: 0.012 }
+const FALLBACK_RATE_USD = 0.012 // used only if live rate fetch fails
 
 export function CurrencyProvider({ children, initialCountry }: { children: React.ReactNode; initialCountry?: string }) {
   const [currency, setCurrency] = useState<Currency>('INR')
+  const [usdRate, setUsdRate] = useState<number>(FALLBACK_RATE_USD)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function detectCurrency() {
+    async function detectCurrencyAndRate() {
       try {
-        if (initialCountry && COUNTRY_TO_CURRENCY[initialCountry]) {
-          setCurrency(COUNTRY_TO_CURRENCY[initialCountry])
-          setIsLoading(false)
-          return
+        // Fetch country + exchange rate in parallel
+        const countryFetch = initialCountry
+          ? Promise.resolve({ currency: initialCountry.toUpperCase() === 'IN' ? 'INR' : 'USD' })
+          : fetch('/api/country').then(r => r.ok ? r.json() : null)
+
+        const [countryRes, rateRes] = await Promise.allSettled([
+          countryFetch,
+          fetch('/api/exchange-rate').then(r => r.ok ? r.json() : null),
+        ])
+
+        if (countryRes.status === 'fulfilled' && countryRes.value) {
+          const c = countryRes.value.currency
+          if (c === 'USD' || c === 'INR') setCurrency(c)
         }
-        const res = await fetch('/api/country')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.currency && SUPPORTED_CURRENCIES[data.currency as Currency]) {
-            setCurrency(data.currency as Currency)
-          }
+
+        if (rateRes.status === 'fulfilled' && rateRes.value?.rate) {
+          setUsdRate(rateRes.value.rate)
         }
-      } catch { /* stays INR */ } finally { setIsLoading(false) }
+      } catch { /* stays INR + fallback rate */ } finally { setIsLoading(false) }
     }
-    detectCurrency()
+    detectCurrencyAndRate()
   }, [initialCountry])
 
   const formatPrice = (amountInInr: number): string => {
     if (currency === 'INR') return formatAmount(amountInInr, 'INR')
-    return formatAmount(amountInInr * FALLBACK_RATES[currency], currency)
+    return formatAmount(amountInInr * usdRate, 'USD')
   }
 
   const getProductPrice = (product: any) => {
-    const key = currency.toLowerCase()
-    const explicitPrice = product['price_' + key] ?? null
-    const explicitSale = product['sale_price_' + key] ?? null
-    let price; let salePrice
-    if (explicitPrice !== null && explicitPrice > 0) {
-      price = explicitPrice
-      salePrice = (explicitSale && explicitSale > 0) ? explicitSale : null
+    if (!product) return { price: 0, salePrice: null, formatted: '₹0', formattedSale: null }
+    
+    if (currency === 'INR') {
+      const price = product.price_inr ?? product.price ?? 0
+      const salePrice = (product.sale_price_inr !== undefined && product.sale_price_inr !== null)
+        ? product.sale_price_inr
+        : product.sale_price
+      return {
+        price,
+        salePrice: salePrice && salePrice > 0 ? salePrice : null,
+        formatted: formatAmount(price, 'INR'),
+        formattedSale: salePrice && salePrice > 0 ? formatAmount(salePrice, 'INR') : null
+      }
     } else {
-      const base = product.price_inr ?? product.price ?? 0
-      const baseSale = product.sale_price_inr ?? product.sale_price ?? null
-      price = base * FALLBACK_RATES[currency]
-      salePrice = baseSale ? baseSale * FALLBACK_RATES[currency] : null
+      // USD for outside India
+      const explicitUsdPrice = product.price_usd
+      const explicitUsdSale = product.sale_price_usd
+      let price: number
+      let salePrice: number | null
+
+      if (explicitUsdPrice !== undefined && explicitUsdPrice !== null && Number(explicitUsdPrice) > 0) {
+        price = Number(explicitUsdPrice)
+        // If explicit USD sale price set, use it; otherwise convert INR sale price to USD
+        if (explicitUsdSale !== undefined && explicitUsdSale !== null && Number(explicitUsdSale) > 0) {
+          salePrice = Number(explicitUsdSale)
+        } else {
+          const baseSale = product.sale_price_inr ?? product.sale_price ?? null
+          salePrice = (baseSale && Number(baseSale) > 0) ? Number(baseSale) * usdRate : null
+        }
+      } else {
+        // No explicit USD price — convert INR price + INR sale price both to USD using live rate
+        const base = product.price_inr ?? product.price ?? 0
+        const baseSale = product.sale_price_inr ?? product.sale_price ?? null
+        price = base * usdRate
+        salePrice = (baseSale && Number(baseSale) > 0) ? Number(baseSale) * usdRate : null
+      }
+      return {
+        price,
+        salePrice,
+        formatted: formatAmount(price, 'USD'),
+        formattedSale: salePrice ? formatAmount(salePrice, 'USD') : null
+      }
     }
-    return { price, salePrice, formatted: formatAmount(price, currency), formattedSale: salePrice ? formatAmount(salePrice, currency) : null }
   }
 
   return (

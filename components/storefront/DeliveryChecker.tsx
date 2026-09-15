@@ -44,26 +44,15 @@ export function DeliveryChecker() {
       setResult({ type: 'error', message: 'Please select a country.' })
       return
     }
-    const zones: Record<string, { fee: number, days: string }> = {
-      'CA': { fee: 3200, days: '8-12 days' },
-      'AU': { fee: 3500, days: '10-14 days' },
-      'NZ': { fee: 3800, days: '12-16 days' },
-      'US': { fee: 3000, days: '7-10 days' },
-    }
-    
     setLoading(true)
     setTimeout(() => {
-      if (zones[country]) {
-        setResult({
-          type: 'success',
-          message: `Delivery available to ${country}.`,
-          detail: `Expected delivery in ${zones[country].days}. Shipping: ${formatPrice(zones[country].fee)}`
-        })
-      } else {
-        setResult({ type: 'error', message: 'Delivery not available to this country.' })
-      }
+      setResult({
+        type: 'success',
+        message: `Worldwide Express Delivery available.`,
+        detail: `Expected delivery in 7-10 business days.`
+      })
       setLoading(false)
-    }, 500)
+    }, 400)
   }
 
   return (
@@ -120,10 +109,11 @@ export function DeliveryChecker() {
               className="flex-1 px-3 py-2 border border-gray-200 text-sm focus:outline-none focus:border-[#111111] bg-white transition-colors uppercase"
             >
               <option value="">Select Country</option>
+              <option value="US">🇺🇸 United States</option>
               <option value="CA">🇨🇦 Canada</option>
               <option value="AU">🇦🇺 Australia</option>
-              <option value="NZ">🇳🇿 New Zealand</option>
-              <option value="US">🇺🇸 United States</option>
+              <option value="GB">🇬🇧 United Kingdom</option>
+              <option value="OTHER">🌍 Other International</option>
             </select>
             <button 
               onClick={checkInternational}

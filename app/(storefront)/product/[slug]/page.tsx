@@ -102,7 +102,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           {/* Right Column: Product info & Actions */}
           <div className="mt-6 md:mt-12 lg:mt-0">
-            {/* Product JSON-LD Schema */}
+            {/* Product JSON-LD Schema — for Google Shopping & Rich Results */}
             <script
               type="application/ld+json"
               dangerouslySetInnerHTML={{
@@ -111,16 +111,59 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   "@type": "Product",
                   "name": product.name,
                   "image": sortedImages.map((img: any) => img.url),
-                  "description": product.meta_description || product.description?.substring(0, 160) || `Buy ${product.name} at Shahi Boutique`,
+                  "description": product.meta_description || product.description?.substring(0, 5000) || `Buy ${product.name} at Shahi Boutique`,
                   "sku": product.sku || product.id,
+                  "brand": { "@type": "Brand", "name": "Shahi Boutique" },
+                  "seller": { "@type": "Organization", "name": "Shahi Boutique", "url": process.env.NEXT_PUBLIC_SITE_URL },
+                  ...(product.material ? { "material": product.material } : {}),
+                  ...(product.categories ? { "category": product.categories.name } : {}),
                   "offers": {
                     "@type": "Offer",
                     "url": `${process.env.NEXT_PUBLIC_SITE_URL}/product/${product.slug}`,
                     "priceCurrency": "INR",
-                    "price": product.price,
+                    "price": product.sale_price || product.price,
+                    ...(product.sale_price ? {
+                      "priceSpecification": [
+                        { "@type": "PriceSpecification", "price": product.sale_price, "priceCurrency": "INR" },
+                        { "@type": "PriceSpecification", "price": product.price, "priceCurrency": "INR", "priceType": "https://schema.org/ListPrice" }
+                      ]
+                    } : {}),
                     "itemCondition": "https://schema.org/NewCondition",
                     "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
-                  }
+                    "seller": { "@type": "Organization", "name": "Shahi Boutique" },
+                    "shippingDetails": {
+                      "@type": "OfferShippingDetails",
+                      "shippingRate": { "@type": "MonetaryAmount", "value": 0, "currency": "INR" },
+                      "shippingDestination": { "@type": "DefinedRegion", "addressCountry": "IN" },
+                      "deliveryTime": {
+                        "@type": "ShippingDeliveryTime",
+                        "handlingTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2, "unitCode": "DAY" },
+                        "transitTime": { "@type": "QuantitativeValue", "minValue": 3, "maxValue": 7, "unitCode": "DAY" }
+                      }
+                    },
+                    "hasMerchantReturnPolicy": {
+                      "@type": "MerchantReturnPolicy",
+                      "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+                      "merchantReturnDays": 7,
+                      "returnMethod": "https://schema.org/ReturnByMail",
+                      "returnFees": "https://schema.org/FreeReturn"
+                    }
+                  },
+                  ...(reviews && reviews.length > 0 ? {
+                    "aggregateRating": {
+                      "@type": "AggregateRating",
+                      "ratingValue": (reviews.reduce((sum: number, r: any) => sum + (r.rating || 5), 0) / reviews.length).toFixed(1),
+                      "reviewCount": reviews.length,
+                      "bestRating": 5,
+                      "worstRating": 1
+                    },
+                    "review": reviews.slice(0, 5).map((r: any) => ({
+                      "@type": "Review",
+                      "reviewRating": { "@type": "Rating", "ratingValue": r.rating || 5, "bestRating": 5 },
+                      "author": { "@type": "Person", "name": r.profiles?.full_name || "Verified Buyer" },
+                      "reviewBody": r.comment || ""
+                    }))
+                  } : {})
                 })
               }}
             />
