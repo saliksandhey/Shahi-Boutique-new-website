@@ -12,17 +12,17 @@ import {
   createConciergeOrderAction,
   CartInputItem
 } from '@/lib/actions/checkout'
-import { Ticket, X, Gift, ShoppingCart, ChevronDown, Mail, ShieldCheck, CreditCard, Tag, RefreshCw } from 'lucide-react'
+import { Ticket, X, Gift, ShoppingCart, ChevronDown, Mail, ShieldCheck, CreditCard, Tag, RefreshCw, AlertCircle, MessageCircle } from 'lucide-react'
 import { PriceDisplay } from '@/components/storefront/PriceDisplay'
 import { useCurrency, Currency, CURRENCY_TO_COUNTRY_CODE, COUNTRY_CODE_TO_CURRENCY } from '@/lib/contexts/CurrencyContext'
 
-const COUNTRIES: { code: string; currency: Currency; label: string }[] = [
-  { code: 'IN', currency: 'INR', label: '🇮🇳 India — INR ₹' },
-  { code: 'US', currency: 'USD', label: '🇺🇸 United States — USD $' },
-  { code: 'GB', currency: 'GBP', label: '🇬🇧 United Kingdom — GBP £' },
-  { code: 'CA', currency: 'CAD', label: '🇨🇦 Canada — CAD C$' },
-  { code: 'AU', currency: 'AUD', label: '🇦🇺 Australia — AUD A$' },
-  { code: 'NZ', currency: 'NZD', label: '🇳🇿 New Zealand — NZD NZ$' },
+const COUNTRIES: { code: string; currency: Currency; label: string; isAvailable: boolean }[] = [
+  { code: 'IN', currency: 'INR', label: '🇮🇳 India — INR ₹', isAvailable: true },
+  { code: 'US', currency: 'USD', label: '🇺🇸 United States — USD $ (Currently Unavailable)', isAvailable: false },
+  { code: 'GB', currency: 'GBP', label: '🇬🇧 United Kingdom — GBP £ (Currently Unavailable)', isAvailable: false },
+  { code: 'CA', currency: 'CAD', label: '🇨🇦 Canada — CAD C$ (Currently Unavailable)', isAvailable: false },
+  { code: 'AU', currency: 'AUD', label: '🇦🇺 Australia — AUD A$ (Currently Unavailable)', isAvailable: false },
+  { code: 'NZ', currency: 'NZD', label: '🇳🇿 New Zealand — NZD NZ$ (Currently Unavailable)', isAvailable: false },
 ]
 
 const IN_STATES = [
@@ -244,6 +244,10 @@ export function CheckoutClient({
 
       if (!address.firstName || !address.lastName || !address.email || !address.phone || !address.street || !address.city || !address.state || !address.zip) {
         throw new Error('Please fill in all required customer and shipping details')
+      }
+
+      if (address.country !== 'IN') {
+        throw new Error('Online checkout is currently available exclusively within India. Please contact our concierge on WhatsApp for international inquiries.')
       }
 
       const inputItems: CartInputItem[] = items.map(item => ({
@@ -679,6 +683,32 @@ export function CheckoutClient({
                       </select>
                     </div>
 
+                    {/* Non-India Shipping Notice */}
+                    {address.country !== 'IN' && (
+                      <div className="sm:col-span-2 p-5 rounded-2xl bg-amber-50 border-2 border-amber-200 text-amber-900 space-y-3 animate-in fade-in-50 duration-300">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-950">
+                            International Delivery Currently Unavailable via Website Checkout
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                          Automated online checkout is currently available for orders delivered within <strong>India</strong>. For bespoke international bridal couture, custom overseas orders, or worldwide expedited shipping, please connect with our bespoke concierge team.
+                        </p>
+                        <div className="pt-1">
+                          <a
+                            href={`https://wa.me/919041762820?text=${encodeURIComponent('Hello Shahi Boutique! I am reaching out from outside India for an international order/inquiry.')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-xs transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Inquire via WhatsApp Concierge
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Address */}
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Address *</label>
@@ -785,10 +815,14 @@ export function CheckoutClient({
                           setError('Please fill in all required fields')
                           return
                         }
+                        if (address.country !== 'IN') {
+                          setError('Online checkout is currently available exclusively for deliveries within India. Please contact our concierge on WhatsApp for international orders.')
+                          return
+                        }
                         setError(null)
                         setStep(2)
                       }}
-                      className="w-full rounded-full bg-[#1C1C1C] text-white py-4 md:py-5 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 shadow-md"
+                      className="w-full rounded-full bg-[#1C1C1C] text-white py-4 md:py-5 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 shadow-md cursor-pointer"
                     >
                       Continue to Delivery
                     </button>
@@ -803,7 +837,7 @@ export function CheckoutClient({
                   <p className="font-medium mt-1">{address.email} · {address.phone}</p>
                   <button 
                     onClick={() => setStep(1)} 
-                    className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#1C1C1C] transition-colors mt-4"
+                    className="text-[10px] font-bold uppercase tracking-widest text-[#FF7A00] hover:text-[#1C1C1C] transition-colors mt-4 cursor-pointer"
                   >
                     Edit Details
                   </button>
@@ -838,8 +872,15 @@ export function CheckoutClient({
                   
                   <div className="mt-6">
                     <button 
-                      onClick={() => setStep(3)}
-                      className="w-full rounded-full bg-[#1C1C1C] text-white py-4 md:py-5 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 shadow-md"
+                      onClick={() => {
+                        if (address.country !== 'IN') {
+                          setError('Online checkout is currently available exclusively for deliveries within India.')
+                          return
+                        }
+                        setError(null)
+                        setStep(3)
+                      }}
+                      className="w-full rounded-full bg-[#1C1C1C] text-white py-4 md:py-5 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 shadow-md cursor-pointer"
                     >
                       Continue to Payment
                     </button>
@@ -858,14 +899,12 @@ export function CheckoutClient({
             <div className={`border-t border-gray-200 pt-8 md:pt-12 ${step < 3 ? 'opacity-40 pointer-events-none grayscale' : 'transition-opacity duration-500'}`}>
               <h2 className="text-sm font-black uppercase tracking-widest text-gray-900 mb-8 flex items-center">
                 <span className={`w-8 h-8 flex items-center justify-center rounded-full text-xs mr-4 transition-colors shadow-sm ${step === 3 ? 'bg-[#1C1C1C] text-white' : 'bg-gray-200 text-gray-500'}`}>3</span>
-                Payment
+                Payment Options
               </h2>
               {step === 3 && (
-                <div className="space-y-8 md:space-y-10 pl-0 sm:pl-12">
-                  
-                  {/* Payment Methods */}
+                <div className="space-y-6 pl-0 sm:pl-12">
                   <div className="space-y-4">
-                    {/* Primary Online Payment (Cashfree) */}
+                    {/* Primary Online Gateway (UPI, Cards, NetBanking) */}
                     <label 
                       onClick={() => setPaymentMethod('ONLINE')}
                       className={`flex items-start sm:items-center p-4 md:p-6 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${paymentMethod === 'ONLINE' ? 'border-[#FF7A00] bg-white ring-4 ring-[#FF7A00]/10 shadow-sm' : 'border-gray-200 bg-gray-50 hover:bg-white'}`}
@@ -901,7 +940,7 @@ export function CheckoutClient({
                       </div>
                     </label>
 
-                    {/* Secondary COD / WhatsApp (Only if enabled in admin) */}
+                    {/* Secondary COD (Only if enabled in admin) */}
                     {codEnabled && (
                       <label 
                         onClick={() => setPaymentMethod('COD')}
@@ -917,10 +956,10 @@ export function CheckoutClient({
                         />
                         <div className="ml-3 md:ml-4 flex-1">
                           <span className="block text-xs md:text-sm font-bold text-gray-900 uppercase tracking-widest leading-tight">
-                            Concierge WhatsApp / Offline
+                            Cash on Delivery (COD)
                           </span>
                           <span className="block text-[10px] sm:text-xs text-gray-500 font-medium mt-1">
-                            Place order now; our concierge team will reach out on WhatsApp to collect payment.
+                            Pay in cash upon delivery of your order at your doorstep.
                           </span>
                         </div>
                       </label>
