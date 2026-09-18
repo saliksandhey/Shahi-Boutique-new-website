@@ -79,19 +79,25 @@ export function TrackOrderClient() {
     }
   }
 
-  const getStepProgress = (status: string) => {
+  const getStepProgress = (status: string, isIntl = false) => {
     const s = status.toUpperCase()
     if (s === 'DELIVERED') return 4
     if (s === 'SHIPPED' || s === 'DISPATCHED' || s === 'IN_TRANSIT') return 3
     if (s === 'PROCESSING' || s === 'PACKED' || s === 'TAILORING') return 2
-    if (s === 'CONFIRMED' || s === 'PAID' || s === 'PENDING') return 1
+    if (s === 'CONFIRMED' || s === 'PAID') return 2
+    if (s === 'PENDING' || s === 'PENDING_REVIEW' || s === 'QUOTE_SENT') return 1
     return 1
   }
 
-  const currentStep = order ? getStepProgress(order.orderStatus) : 1
+  const currentStep = order ? getStepProgress(order.orderStatus, order.isInternational) : 1
   const isCancelledOrRefunded = order && ['CANCELLED', 'REFUNDED', 'RETURNED'].includes(order.orderStatus)
 
-  const steps = [
+  const steps = order?.isInternational ? [
+    { label: 'Inquiry Received', desc: 'Request logged & reviewing quote', icon: Clock },
+    { label: 'Tailoring & Prep', desc: 'Crafting & premium packaging', icon: Scissors },
+    { label: 'Worldwide Dispatch', desc: 'Dispatched with express courier', icon: Truck },
+    { label: 'Delivered', desc: 'Delivered to your international address', icon: CheckCircle2 }
+  ] : [
     { label: 'Order Confirmed', desc: 'Order verified & in atelier', icon: Sparkles },
     { label: 'Tailoring & Quality', desc: 'Crafting & premium packaging', icon: Scissors },
     { label: 'Dispatched & Shipped', desc: 'Handed to courier partner', icon: Truck },
@@ -110,7 +116,7 @@ export function TrackOrderClient() {
             TRACK YOUR ORDER
           </h1>
           <p className="mt-4 text-gray-500 max-w-xl mx-auto font-medium text-sm sm:text-base leading-relaxed">
-            Follow your handcrafted luxury garments every step of the way — from our master artisans to your doorstep.
+            Live order and bespoke international inquiry tracking — from our master artisans to your doorstep anywhere in the world.
           </p>
         </div>
       </div>
@@ -134,7 +140,7 @@ export function TrackOrderClient() {
                   type="text"
                   value={orderQuery}
                   onChange={(e) => setOrderQuery(e.target.value)}
-                  placeholder="Enter Order ID (e.g. SHAHI-2026-482910)"
+                  placeholder="Enter Order # (e.g. SHAHI-2026-482910 or INT-2026-12345)"
                   className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-900 placeholder:text-gray-400 placeholder:font-normal focus:border-[#FF7A00] focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/10 transition-all uppercase tracking-wider"
                   autoCapitalize="characters"
                 />
@@ -187,15 +193,22 @@ export function TrackOrderClient() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
                 <div>
                   <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Order ID</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest">
+                      {order.isInternational ? 'Inquiry ID' : 'Order ID'}
+                    </span>
                     <span className="text-lg sm:text-xl font-black text-gray-900 tracking-wider">
                       #{order.orderNumber}
                     </span>
+                    {order.isInternational && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#FF7A00] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
+                        🌍 International
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => copyToClipboard(order.orderNumber, 'order')}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-[11px] font-bold transition-colors cursor-pointer"
-                      title="Copy Order ID"
+                      title="Copy ID"
                     >
                       {copiedOrderId ? (
                         <>
@@ -237,7 +250,7 @@ export function TrackOrderClient() {
                         ? 'bg-red-500' 
                         : 'bg-[#FF7A00] animate-pulse'
                     }`}></span>
-                    {order.orderStatus === 'CONFIRMED' ? 'Confirmed & Tailoring' : order.orderStatus}
+                    {order.orderStatus === 'PENDING_REVIEW' ? 'Awaiting Concierge Quote' : order.orderStatus === 'QUOTE_SENT' ? 'Quote Ready · Pay Online' : order.orderStatus === 'CONFIRMED' ? 'Confirmed & Tailoring' : order.orderStatus}
                   </span>
 
                   {/* Payment Badge */}
@@ -246,7 +259,7 @@ export function TrackOrderClient() {
                       ? 'bg-gray-100 text-gray-800 border border-gray-200'
                       : 'bg-orange-50 text-[#FF7A00] border border-orange-200'
                   }`}>
-                    {order.paymentStatus === 'PAID' ? '✓ Paid' : `Payment: ${order.paymentStatus}`}
+                    {order.paymentStatus === 'PAID' ? '✓ Paid' : order.paymentStatus === 'PENDING_QUOTE' ? 'Quote in Progress' : `Payment: ${order.paymentStatus}`}
                   </span>
                 </div>
               </div>
@@ -516,7 +529,7 @@ export function TrackOrderClient() {
                 {/* Order Summary & Pricing Card */}
                 <div className="bg-white rounded-2xl md:rounded-[2rem] shadow-xs border border-gray-100 p-6 space-y-4">
                   <h3 className="text-xs font-black uppercase tracking-widest text-gray-900 border-b border-gray-100 pb-3">
-                    Order Summary
+                    {order.isInternational ? 'Inquiry Summary' : 'Order Summary'}
                   </h3>
 
                   <div className="space-y-2.5 text-xs text-gray-600">
@@ -526,9 +539,15 @@ export function TrackOrderClient() {
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span>Shipping</span>
+                      <span>{order.isInternational ? 'Express Courier' : 'Shipping'}</span>
                       <span className="font-bold text-gray-900">
-                        {order.shippingCost > 0 ? <PriceDisplay amount={order.shippingCost} /> : <span className="text-emerald-700 font-bold">Free</span>}
+                        {order.shippingCost > 0 ? (
+                          <PriceDisplay amount={order.shippingCost} />
+                        ) : order.isInternational ? (
+                          <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded text-[10px] uppercase">Awaiting Quote</span>
+                        ) : (
+                          <span className="text-emerald-700 font-bold">Free</span>
+                        )}
                       </span>
                     </div>
 
@@ -540,11 +559,39 @@ export function TrackOrderClient() {
                     )}
 
                     <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-sm font-black text-gray-900">
-                      <span>Total Paid</span>
+                      <span>Total Payable</span>
                       <span className="text-base text-gray-900"><PriceDisplay amount={order.totalAmount} /></span>
                     </div>
                   </div>
+
+                  {/* Payment Button if quote has payment link and payment is pending */}
+                  {order.paymentLink && order.paymentStatus !== 'PAID' && (
+                    <div className="pt-2">
+                      <a
+                        href={order.paymentLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-md"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Pay Invoice Online Now</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
+
+                {/* Customer Bespoke Fitting Notes Card */}
+                {order.customNotes && (
+                  <div className="bg-amber-50/70 rounded-2xl md:rounded-[2rem] border border-amber-200/80 p-6 space-y-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-900 flex items-center gap-1.5">
+                      <Scissors className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Bespoke Fitting Notes</span>
+                    </h4>
+                    <p className="text-xs text-amber-950 font-medium whitespace-pre-wrap leading-relaxed">
+                      {order.customNotes}
+                    </p>
+                  </div>
+                )}
 
                 {/* Delivery Address Card */}
                 <div className="bg-white rounded-2xl md:rounded-[2rem] shadow-xs border border-gray-100 p-6 space-y-3">

@@ -20,7 +20,8 @@ import {
   PenTool,
   LogOut,
   Search,
-  Layers
+  Layers,
+  Globe
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Calendar } from 'lucide-react'
@@ -30,6 +31,7 @@ import Image from 'next/image'
 const navigation = [
   { name: 'Dashboard', href: '/2010admin', icon: LayoutDashboard },
   { name: 'Orders', href: '/2010admin/orders', icon: ShoppingCart },
+  { name: 'International Orders', href: '/2010admin/international-orders', icon: Globe },
   { name: 'Products', href: '/2010admin/products', icon: Package },
   { name: 'Product Groups', href: '/2010admin/product-groups', icon: Layers },
   { name: 'Customers', href: '/2010admin/customers', icon: Users },

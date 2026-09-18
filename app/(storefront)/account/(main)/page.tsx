@@ -1,9 +1,9 @@
-﻿import { requireAuth } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/server'
 import { Package, Heart, Clock, ChevronRight, User, MapPin, Calendar, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { signout } from '@/lib/actions/auth-email'
-import { PriceDisplay } from '@/components/storefront/PriceDisplay';
+import { PriceDisplay } from '@/components/storefront/PriceDisplay'
 
 export default async function AccountDashboard() {
   const user = await requireAuth()
@@ -12,25 +12,25 @@ export default async function AccountDashboard() {
   const { data: customerProfile } = await supabase
     .from('customer_profiles')
     .select('name')
-    .eq('email', user.email)
-    .single()
+    .ilike('email', user.email)
+    .maybeSingle()
 
   // Fetch counts
   const { count: ordersCount } = await supabase
     .from('orders')
     .select('*', { count: 'exact', head: true })
-    .eq('customer_email', user.email)
+    .ilike('customer_email', user.email)
 
   const { count: wishlistCount } = await supabase
     .from('wishlist')
     .select('*', { count: 'exact', head: true })
-    .eq('user_email', user.email)
+    .ilike('user_email', user.email)
 
   // Fetch recent orders
   const { data: recentOrders } = await supabase
     .from('orders')
     .select('id, order_number, created_at, total_amount, order_status')
-    .eq('customer_email', user.email)
+    .ilike('customer_email', user.email)
     .order('created_at', { ascending: false })
     .limit(3)
 
@@ -188,4 +188,3 @@ export default async function AccountDashboard() {
     </div>
   )
 }
-

@@ -72,26 +72,26 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-5">
       {uniqueColors.length > 0 && (
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-2.5">
             <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Select Color <span className="text-gray-500 font-normal ml-2">{selectedColor}</span></h3>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2.5">
             {uniqueColors.map((color: any) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
                 title={color}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                   selectedColor === color 
                     ? 'ring-2 ring-offset-2 ring-[#FF7A00] scale-110 shadow-md' 
                     : 'ring-1 ring-gray-200 hover:ring-[#FF7A00] hover:scale-105'
                 }`}
               >
                 <span 
-                  className="w-8 h-8 rounded-full border border-gray-100 shadow-inner"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-100 shadow-inner"
                   style={{ backgroundColor: getColorHex(color) }}
                 ></span>
               </button>
@@ -102,16 +102,16 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
 
       {hasSizes && (
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-2.5">
             <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Select Size</h3>
             <button type="button" className="text-xs font-bold text-gray-400 underline uppercase tracking-widest hover:text-[#FF7A00] transition-colors">Size Guide</button>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {product.product_size_guides.map((g: any) => (
               <button
                 key={g.id}
                 onClick={() => setSelectedSize(g.size_name)}
-                className={`min-w-[3.5rem] px-6 py-3 text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 ${
+                className={`min-w-[3.25rem] px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 ${
                   selectedSize === g.size_name 
                     ? 'border-[#FF7A00] bg-[#FF7A00] text-white shadow-md' 
                     : 'border border-gray-200 bg-white text-gray-900 hover:border-[#FF7A00] hover:text-[#FF7A00]'
@@ -124,55 +124,59 @@ export function AddToCart({ product, variants = [] }: { product: any, variants?:
         </div>
       )}
 
-      <div className="fixed lg:static bottom-0 inset-x-0 bg-white lg:bg-transparent p-3 sm:p-6 lg:p-0 border-t lg:border-none border-gray-200 z-50 lg:z-auto shadow-[0_-10px_40px_rgba(0,0,0,0.08)] lg:shadow-none flex flex-row items-center gap-2 sm:gap-3 lg:pt-4 w-full">
+      <div className="fixed lg:static bottom-0 inset-x-0 bg-white/95 backdrop-blur-md lg:bg-transparent px-3 py-2.5 sm:p-4 lg:p-0 border-t lg:border-none border-gray-200/80 z-40 lg:z-auto shadow-[0_-10px_30px_rgba(0,0,0,0.06)] lg:shadow-none flex flex-row items-center gap-2 sm:gap-3 lg:pt-2 w-full pb-[max(0.625rem,env(safe-area-inset-bottom))]">
         {!product.is_enquiry_only && (
-          <div className="flex shrink-0 gap-2 sm:gap-3">
+          <>
             {/* Quantity Selector */}
-            <div className="flex items-center justify-between rounded-full border border-gray-200 h-12 sm:h-14 w-[100px] sm:w-36 bg-gray-50 px-1 sm:px-2">
+            <div className="flex items-center justify-between rounded-full border border-gray-200 h-11 sm:h-12 w-20 sm:w-28 bg-gray-50 px-1 shrink-0">
               <button 
                 type="button" 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 disabled={outOfStock || quantity <= 1}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-sm sm:text-base font-bold"
               >
                 -
               </button>
-              <span className="text-xs sm:text-sm font-bold text-gray-900 w-6 sm:w-8 text-center">{quantity}</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-900 w-4 sm:w-6 text-center">{quantity}</span>
               <button 
                 type="button" 
                 onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
                 disabled={outOfStock || quantity >= currentStock}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-lg sm:text-xl shadow-sm border border-transparent hover:border-gray-100"
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex justify-center items-center text-gray-500 hover:text-[#FF7A00] hover:bg-white disabled:opacity-30 transition-colors text-sm sm:text-base font-bold"
               >
                 +
               </button>
             </div>
 
             {/* Wishlist Button */}
-            <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border border-gray-200 hover:border-[#FF7A00] hover:text-[#FF7A00] hover:bg-[#FF7A00]/5 transition-colors bg-white text-gray-500 shadow-sm">
+            <button 
+              type="button"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border border-gray-200 hover:border-[#FF7A00] hover:text-[#FF7A00] hover:bg-[#FF7A00]/5 transition-colors bg-white text-gray-500 shadow-xs shrink-0"
+            >
               <Heart className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
               <span className="sr-only">Add to Wishlist</span>
             </button>
-          </div>
+          </>
         )}
 
         {/* Action Button */}
         {product.is_enquiry_only ? (
           <Link
             href={`/product/${product.slug}/enquiry`}
-            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-12 sm:h-14 flex items-center justify-center text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-[#1C1C1C] transition-colors duration-300 shadow-sm px-2"
+            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-11 sm:h-12 flex items-center justify-center text-[11px] sm:text-xs font-black uppercase tracking-wider hover:bg-[#D4AF37] hover:text-[#1C1C1C] transition-colors duration-300 shadow-sm px-3 whitespace-nowrap"
           >
-            <MessageSquare className="w-4 h-4 sm:mr-3 mr-2 shrink-0" />
-            <span className="truncate">Enquire Now</span>
+            <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
+            <span>Enquire Now</span>
           </Link>
         ) : (
           <button
+            type="button"
             onClick={handleAddToCart}
             disabled={outOfStock}
-            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-12 sm:h-14 flex items-center justify-center text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-[#FF7A00] transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm px-2"
+            className="flex-1 rounded-full bg-[#1C1C1C] text-white h-11 sm:h-12 flex items-center justify-center text-[11px] sm:text-xs font-black uppercase tracking-wider hover:bg-[#FF7A00] transition-colors duration-300 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm px-3 whitespace-nowrap"
           >
-            <ShoppingBag className="w-4 h-4 sm:mr-3 mr-2 shrink-0" />
-            <span className="truncate">{outOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+            <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 shrink-0" />
+            <span>{outOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
           </button>
         )}
       </div>

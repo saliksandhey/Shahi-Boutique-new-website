@@ -1,161 +1,232 @@
 'use client'
 
-import { useRef } from 'react'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Play, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
-import { FeedVideo } from './FeedVideo'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import Image from 'next/image'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import deliveredCreations from '@/data/delivered-creations.json'
 
-export function HomeFeedSection({ blogs }: { blogs: any[] }) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+export function HomeFeedSection({ blogs = [] }: { blogs?: any[] }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [isPaused, setIsPaused] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, clientWidth } = scrollContainerRef.current
-      const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth
-      scrollContainerRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' })
+  const items = deliveredCreations && deliveredCreations.length > 0 ? deliveredCreations : []
+  // Double list for infinite continuous loop
+  const infiniteList = [...items, ...items]
+
+  // Manual scroll with side arrow buttons
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return
+    const scrollAmount = window.innerWidth < 640 ? 260 : 360
+    scrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    })
+  }
+
+  // Smooth continuous auto-scroll ticker (runs continuously, never stops unless hovered)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    let animationFrameId: number
+    const speed = 0.75 // slow, relaxing glide speed
+
+    const scrollStep = () => {
+      if (!isPaused && lightboxIndex === null && el) {
+        el.scrollLeft += speed
+        // When scrolled halfway (first set completed), seamlessly loop back to start
+        if (el.scrollLeft >= el.scrollWidth / 2) {
+          el.scrollLeft = 0
+        }
+      }
+      animationFrameId = requestAnimationFrame(scrollStep)
     }
-  }
 
-  const isVideoPost = (blog: any) => {
-    const cover = blog.cover_image || ''
-    return cover.match(/\.(mp4|webm|mov)$/i)
-  }
+    animationFrameId = requestAnimationFrame(scrollStep)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [isPaused, lightboxIndex])
 
-  if (!blogs || blogs.length === 0) return null
+  // Keyboard navigation for Lightbox
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (lightboxIndex === null) return
+    if (e.key === 'Escape') setLightboxIndex(null)
+    if (e.key === 'ArrowLeft') {
+      setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : items.length - 1))
+    }
+    if (e.key === 'ArrowRight') {
+      setLightboxIndex((prev) => (prev !== null && prev < items.length - 1 ? prev + 1 : 0))
+    }
+  }, [lightboxIndex, items.length])
+
+  useEffect(() => {
+    if (lightboxIndex !== null) {
+      window.addEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'unset'
+    }
+  }, [lightboxIndex, handleKeyDown])
+
+  if (items.length === 0) return null
 
   return (
-    <section className="py-6 md:py-12 relative bg-[#0A0A0A] mt-6 mb-6">
-      {/* Decorative Highlight Background (contained) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#FF7A00]/[0.05] blur-[120px] rounded-full" />
-        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-[#FF7A00]/[0.03] blur-[120px] rounded-full" />
-      </div>
-
-      {/* Top Zig-Zag Pattern */}
-      <div 
-        className="absolute left-0 right-0 h-[20px] md:h-[40px] z-20"
-        style={{
-          top: '-19px',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L20 0 L40 20 Z' fill='%230A0A0A'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat-x',
-          backgroundSize: 'auto 100%'
-        }}
-      />
-
-      {/* Bottom Zig-Zag Pattern */}
-      <div 
-        className="absolute left-0 right-0 h-[20px] md:h-[40px] z-20"
-        style={{
-          bottom: '-19px',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 L20 20 L40 0 Z' fill='%230A0A0A'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat-x',
-          backgroundSize: 'auto 100%'
-        }}
-      />
-      
-      <div className="mx-auto max-w-[1400px] px-6 sm:px-8 lg:px-12 relative z-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-16 gap-6">
-          <div className="text-left">
-            <h2 className="text-4xl md:text-6xl font-heading font-black text-white mb-4 tracking-tight uppercase">
-              The <span className="text-[#FF7A00]">Journal</span>
-            </h2>
-            <p className="text-gray-400 text-sm md:text-base font-medium max-w-md leading-relaxed">
-              Discover style inspiration, behind the scenes, and our latest updates from the atelier.
-            </p>
+    <section className="pt-10 sm:pt-14 md:pt-16 pb-6 sm:pb-8 md:pb-10 bg-white relative overflow-hidden">
+      <div className="w-full">
+        
+        {/* Brand Header */}
+        <div className="text-center max-w-3xl mx-auto px-4 sm:px-6 mb-8 sm:mb-12 relative z-10">
+          {/* Eyebrow */}
+          <div className="flex items-center justify-center gap-3 mb-2.5">
+            <span className="w-8 h-[1px] bg-[#FF7A00]" />
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-[#FF7A00]">
+              BEHIND THE ATELIER
+            </span>
+            <span className="w-8 h-[1px] bg-[#FF7A00]" />
           </div>
-          <div className="flex items-center gap-4 mx-auto md:mx-0">
-            <Link 
-              href="/feed"
-              className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-black text-sm font-bold uppercase tracking-widest rounded-full hover:bg-[#FF7A00] hover:text-white hover:shadow-[0_0_30px_rgba(255,122,0,0.3)] transition-all shrink-0 w-max"
-            >
-              <span>Explore Feed</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
 
-            {/* Scroll Buttons for Desktop */}
-            <div className="hidden sm:flex items-center gap-3">
-              <button 
-                onClick={() => scroll('left')}
-                className="p-3 rounded-full border border-gray-800 text-gray-400 hover:text-white hover:border-white transition-all focus:outline-none"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => scroll('right')}
-                className="p-3 rounded-full border border-gray-800 text-gray-400 hover:text-white hover:border-white transition-all focus:outline-none"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+          {/* Main Headline */}
+          <h2 className="text-3xl md:text-5xl font-sans font-black text-gray-900 mb-3 tracking-tighter uppercase">
+            DELIVERED <span className="text-[#FF7A00]">ENSEMBLES</span>
+          </h2>
+
+          {/* Subtitle */}
+          <p className="text-gray-500 text-sm md:text-lg font-medium max-w-xl mx-auto leading-relaxed">
+            Custom-tailored & hand-embroidered bespoke suits delivered to our clients worldwide.
+          </p>
         </div>
 
-        {/* Horizontal Scroll Container */}
+        {/* Carousel Container with Side Navigation Arrows */}
         <div 
-          ref={scrollContainerRef}
-          className="flex gap-4 md:gap-6 pb-8 overflow-x-auto snap-x snap-mandatory hide-scrollbar"
+          className="relative w-full group"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setTimeout(() => setIsPaused(false), 2500)}
         >
-          {blogs.map((blog, idx) => {
-            const hasVideo = isVideoPost(blog)
-            
-            return (
-              <motion.div
-                key={blog.id}
-                className="w-[75vw] sm:w-[50vw] md:w-[35vw] lg:w-[25vw] flex-none snap-start"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: idx * 0.1 }}
-              >
-                <Link 
-                  href={`/feed/${blog.slug}`}
-                  className="group relative block w-full aspect-[4/5] bg-[#1A1A1A] rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl"
-                >
-                  {hasVideo ? (
-                    <FeedVideo 
-                      src={blog.cover_image}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
-                    />
-                  ) : (
-                    <img 
-                      src={blog.cover_image || '/placeholder-image.jpg'}
-                      alt={blog.title}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
-                      loading="lazy"
-                    />
-                  )}
-                  
-                  {/* Overlay for readability - Always present on mobile, enhanced on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 md:opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
-                  
-                  {/* Video Indicator */}
-                  {hasVideo && (
-                    <div className="absolute top-4 right-4 w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20">
-                      <Play className="w-4 h-4 ml-0.5" />
-                    </div>
-                  )}
+          {/* Left Arrow Button */}
+          <button
+            type="button"
+            onClick={() => handleScroll('left')}
+            className="absolute left-3 sm:left-6 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-[#FF7A00] text-gray-900 hover:text-white flex items-center justify-center shadow-lg border border-gray-200/80 hover:border-[#FF7A00] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+          </button>
 
-                  {/* Content (Always visible on mobile, animates on hover for desktop) */}
-                  <div className="absolute inset-0 p-5 md:p-8 flex flex-col justify-end">
-                    <div className="transform md:translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <span className="inline-block px-3 py-1.5 bg-[#FF7A00] text-[#111111] text-[9px] font-black uppercase tracking-widest rounded-full w-max mb-4 shadow-lg">
-                        {blog.category || 'Editorial'}
-                      </span>
-                      <h3 className="text-white font-heading font-black text-lg md:text-2xl uppercase tracking-widest line-clamp-3 leading-tight shadow-sm drop-shadow-md">
-                        {blog.title}
-                      </h3>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            )
-          })}
+          {/* Right Arrow Button */}
+          <button
+            type="button"
+            onClick={() => handleScroll('right')}
+            className="absolute right-3 sm:right-6 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 hover:bg-[#FF7A00] text-gray-900 hover:text-white flex items-center justify-center shadow-lg border border-gray-200/80 hover:border-[#FF7A00] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+          </button>
+
+          {/* Smooth Continuous Marquee Scroll Track */}
+          <div
+            ref={scrollRef}
+            className="flex gap-4 sm:gap-6 overflow-x-auto hide-scrollbar py-4 px-4 sm:px-6 cursor-grab active:cursor-grabbing select-none"
+            style={{ scrollBehavior: 'auto' }}
+          >
+            {infiniteList.map((suit, idx) => {
+              const realIndex = idx % items.length
+              return (
+                <div
+                  key={`${suit.id}-${idx}`}
+                  onClick={() => setLightboxIndex(realIndex)}
+                  className="w-[220px] sm:w-[260px] md:w-[290px] lg:w-[320px] aspect-[3/4] flex-shrink-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 bg-gray-100 border border-gray-200/60 cursor-pointer group/card relative"
+                >
+                  {/* Clean High-Resolution Suit Image (100% Text-Free) */}
+                  <Image
+                    src={suit.image}
+                    alt="Custom Stitched Boutique Suit"
+                    fill
+                    className="object-cover object-center group-hover/card:scale-105 transition-transform duration-700 ease-out"
+                    sizes="(max-width: 640px) 220px, (max-width: 1024px) 290px, 320px"
+                  />
+                </div>
+              )
+            })}
+          </div>
         </div>
+
       </div>
+
+      {/* Full-Screen Lightbox on Click */}
+      {lightboxIndex !== null && items[lightboxIndex] && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200 select-none">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between text-white z-10 max-w-5xl mx-auto w-full">
+            <span className="text-xs sm:text-sm font-bold tracking-widest uppercase text-gray-300">
+              {lightboxIndex + 1} / {items.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(null)}
+              className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              title="Close (Esc)"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Main Full-Screen Image */}
+          <div className="relative flex-1 flex items-center justify-center my-auto w-full max-w-4xl mx-auto">
+            <div className="relative aspect-[3/4] w-full max-h-[78vh] rounded-2xl overflow-hidden shadow-2xl bg-[#111]">
+              <Image
+                src={items[lightboxIndex].image}
+                alt="Client Stitched Suit"
+                fill
+                className="object-contain object-center"
+                priority
+                sizes="100vw"
+              />
+            </div>
+
+            {/* Previous Arrow */}
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : items.length - 1)}
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-sm transition-all shadow-lg cursor-pointer"
+              title="Previous Suit"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Next Arrow */}
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(lightboxIndex < items.length - 1 ? lightboxIndex + 1 : 0)}
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center backdrop-blur-sm transition-all shadow-lg cursor-pointer"
+              title="Next Suit"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Bottom Thumbnails Strip */}
+          <div className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-10 max-w-4xl mx-auto w-full hide-scrollbar">
+            {items.map((suit, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setLightboxIndex(idx)}
+                className={`relative w-12 h-14 sm:w-14 sm:h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                  lightboxIndex === idx ? 'border-[#FF7A00] scale-105' : 'border-white/20 opacity-50 hover:opacity-100'
+                }`}
+              >
+                <Image src={suit.image} alt="Thumbnail" fill className="object-cover" sizes="60px" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

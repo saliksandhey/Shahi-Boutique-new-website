@@ -29,11 +29,16 @@ export function ColorGroupVariants({ siblings }: { siblings: Sibling[] }) {
   }
 
   return (
-    <div className="mb-8">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
-        More Colours
-      </p>
-      <div className="flex gap-3 flex-wrap">
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400">
+          Available Shades &amp; Colours ({siblings.length})
+        </p>
+        <span className="text-[9px] text-gray-400 font-medium sm:hidden">Swipe &rarr;</span>
+      </div>
+
+      {/* Horizontal Scroll on Mobile & Wrap on Desktop */}
+      <div className="flex gap-2.5 sm:gap-3.5 overflow-x-auto pb-2 pt-0.5 -mx-1 px-1 hide-scrollbar snap-x sm:flex-wrap">
         {siblings.map((sibling) => {
           const img = getPrimaryImage(sibling.products)
           const price = getPrice(sibling.products)
@@ -42,28 +47,30 @@ export function ColorGroupVariants({ siblings }: { siblings: Sibling[] }) {
             <Link
               key={sibling.products.id}
               href={`/product/${sibling.products.slug}`}
-              className="group flex flex-col items-center gap-1.5 cursor-pointer"
+              className="group flex flex-col items-center gap-1.5 cursor-pointer shrink-0 snap-start"
             >
-              {/* Product Image Card */}
-              <div className="relative w-[72px] h-[72px] rounded-2xl overflow-hidden border-2 border-gray-100 group-hover:border-[#FF7A00] transition-all duration-200 bg-gray-50 shadow-sm">
+              {/* Product Thumbnail Card */}
+              <div className="relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl sm:rounded-2xl overflow-hidden border-2 border-gray-100 group-hover:border-[#FF7A00] transition-all duration-200 bg-gray-50 shadow-xs group-hover:shadow-md group-hover:scale-105">
                 {img ? (
                   <Image
                     src={img}
                     alt={sibling.color_name}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="72px"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 640px) 64px, 72px"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200" />
                 )}
               </div>
-              {/* Color Name */}
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 group-hover:text-[#FF7A00] transition-colors text-center max-w-[72px] leading-tight">
+
+              {/* Color Name (Multi-word wrap, NO truncation) */}
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-800 group-hover:text-[#FF7A00] transition-colors text-center w-16 sm:w-[72px] leading-tight line-clamp-2 min-h-[20px] sm:min-h-[24px] flex items-center justify-center">
                 {sibling.color_name}
               </span>
+
               {/* Price */}
-              <span className="text-[10px] font-bold text-gray-400">
+              <span className="text-[9px] sm:text-[10px] font-bold text-gray-500">
                 <PriceDisplay amount={price} />
               </span>
             </Link>

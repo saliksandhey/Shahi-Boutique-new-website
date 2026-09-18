@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { useCurrency, Currency, SUPPORTED_CURRENCIES } from '@/lib/contexts/CurrencyContext'
 import { Globe, ChevronUp, Check } from 'lucide-react'
 
@@ -8,6 +9,7 @@ export function FloatingCurrencySelector() {
   const { currency, setCurrency } = useCurrency()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
   // Close on outside click
   useEffect(() => {
@@ -22,11 +24,19 @@ export function FloatingCurrencySelector() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen])
 
+  if (pathname?.startsWith('/2010admin') || pathname?.startsWith('/product') || pathname?.startsWith('/login') || pathname?.startsWith('/forgot-password') || pathname?.startsWith('/checkout')) {
+    return null
+  }
+
+  const isProduct = pathname?.startsWith('/product')
   const currentInfo = SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.INR
   const currencyList = Object.values(SUPPORTED_CURRENCIES)
 
   return (
-    <div ref={containerRef} className="fixed bottom-6 left-6 z-40">
+    <div 
+      ref={containerRef} 
+      className={`fixed ${isProduct ? 'bottom-20 sm:bottom-6 left-4 sm:left-6 hidden sm:block' : 'bottom-6 left-4 sm:left-6'} z-30`}
+    >
       {/* Dropdown Menu Popup (Upwards) */}
       {isOpen && (
         <div className="absolute bottom-full left-0 mb-3 w-72 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200">

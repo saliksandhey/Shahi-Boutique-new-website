@@ -9,8 +9,8 @@ export type ProductPayload = {
   name: string
   slug: string
   category_id: string | null
-  short_description: string
-  description: string
+  short_description?: string
+  description?: string
   price: number
   sale_price: number | null
   stock: number
@@ -28,13 +28,41 @@ export type ProductPayload = {
   sale_price_aud?: number | null
   sale_price_nzd?: number | null
   sale_price_usd?: number | null
-  // Details
+  // Specs & Details
+  sku?: string
+  product_type?: string
+  age_group?: string
   fabric?: string
   material?: string
-  care_instructions?: string
+  color?: string
+  work?: string
+  closure?: string
+  handle?: string
+  craft?: string
+  occasion?: string
   country_of_origin?: string
-  weight?: number
+  weight?: number | null
   dimensions?: string
+  height_cm?: number | null
+  length_cm?: number | null
+  // Shipping details
+  processing_time?: string
+  estimated_delivery?: string
+  shipping_availability?: string
+  free_shipping_threshold?: string
+  international_shipping?: string
+  package_includes?: string
+  packaging_type?: string
+  // Returns & Exchange
+  return_policy?: string
+  exchange_policy?: string
+  damaged_policy?: string
+  return_window?: string
+  personalized_policy?: string
+  // Care Instructions
+  care_instructions?: string
+  // Attributes / Metadata JSON
+  attributes?: Record<string, any>
   // SEO
   meta_title?: string
   meta_description?: string
@@ -58,13 +86,75 @@ export type SizeGuidePayload = {
 export async function saveProductDetails(data: ProductPayload) {
   const supabase = createAdminClient()
   
+  // Package extended attributes inside JSON for maximum safety and compatibility
+  const packedAttributes = {
+    ...(data.attributes || {}),
+    product_type: data.product_type,
+    sku: data.sku,
+    age_group: data.age_group,
+    color: data.color,
+    work: data.work,
+    closure: data.closure,
+    handle: data.handle,
+    craft: data.craft,
+    occasion: data.occasion,
+    processing_time: data.processing_time,
+    estimated_delivery: data.estimated_delivery,
+    shipping_availability: data.shipping_availability,
+    free_shipping_threshold: data.free_shipping_threshold,
+    international_shipping: data.international_shipping,
+    package_includes: data.package_includes,
+    packaging_type: data.packaging_type,
+    return_policy: data.return_policy,
+    exchange_policy: data.exchange_policy,
+    damaged_policy: data.damaged_policy,
+    return_window: data.return_window,
+    personalized_policy: data.personalized_policy,
+  }
+
+  const fullPayload = {
+    ...data,
+    attributes: packedAttributes
+  }
+
+  // Attempt direct update/insert first
   if (data.id) {
-    const { error } = await supabase.from('products').update(data).eq('id', data.id)
-    if (error) {
-      if (error.message.includes('products_slug_key')) {
+    let updateResult = await supabase.from('products').update(fullPayload).eq('id', data.id)
+    
+    // If schema cache lacks any new column, gracefully fallback by stripping unmigrated fields
+    if (updateResult.error && updateResult.error.message.includes('column of \'products\' in the schema cache')) {
+      const corePayload: any = {
+        name: data.name,
+        slug: data.slug,
+        category_id: data.category_id,
+        short_description: data.short_description,
+        description: data.description,
+        price: data.price,
+        sale_price: data.sale_price,
+        stock: data.stock,
+        featured: data.featured,
+        status: data.status,
+        fabric: data.fabric,
+        material: data.material,
+        care_instructions: data.care_instructions,
+        country_of_origin: data.country_of_origin,
+        weight: data.weight,
+        dimensions: data.dimensions,
+        height_cm: data.height_cm,
+        length_cm: data.length_cm,
+        meta_title: data.meta_title,
+        meta_description: data.meta_description,
+        keywords: data.keywords,
+        canonical_url: data.canonical_url,
+      }
+      updateResult = await supabase.from('products').update(corePayload).eq('id', data.id)
+    }
+
+    if (updateResult.error) {
+      if (updateResult.error.message.includes('products_slug_key')) {
         return { error: 'A product with this slug already exists. Please choose a different slug.' }
       }
-      return { error: error.message }
+      return { error: updateResult.error.message }
     }
     revalidatePath('/2010admin/products')
     revalidatePath(`/product/${data.slug}`)
@@ -87,15 +177,45 @@ export async function saveProductDetails(data: ProductPayload) {
       }
     }
     
-    const payload = { ...data, slug: uniqueSlug }
-    const { data: newProd, error } = await supabase.from('products').insert([payload]).select('id').single()
-    if (error) return { error: error.message }
+    const insertPayload = { ...fullPayload, slug: uniqueSlug }
+    let insertResult = await supabase.from('products').insert([insertPayload]).select('id').single()
+
+    // Graceful fallback if schema cache lacks new columns
+    if (insertResult.error && insertResult.error.message.includes('column of \'products\' in the schema cache')) {
+      const coreInsertPayload: any = {
+        name: data.name,
+        slug: uniqueSlug,
+        category_id: data.category_id,
+        short_description: data.short_description,
+        description: data.description,
+        price: data.price,
+        sale_price: data.sale_price,
+        stock: data.stock,
+        featured: data.featured,
+        status: data.status,
+        fabric: data.fabric,
+        material: data.material,
+        care_instructions: data.care_instructions,
+        country_of_origin: data.country_of_origin,
+        weight: data.weight,
+        dimensions: data.dimensions,
+        height_cm: data.height_cm,
+        length_cm: data.length_cm,
+        meta_title: data.meta_title,
+        meta_description: data.meta_description,
+        keywords: data.keywords,
+        canonical_url: data.canonical_url,
+      }
+      insertResult = await supabase.from('products').insert([coreInsertPayload]).select('id').single()
+    }
+
+    if (insertResult.error) return { error: insertResult.error.message }
     
     revalidatePath('/2010admin/products')
     revalidatePath(`/product/${uniqueSlug}`)
     revalidatePath('/shop')
     revalidatePath('/')
-    return { success: true, id: newProd.id }
+    return { success: true, id: insertResult.data.id }
   }
 }
 

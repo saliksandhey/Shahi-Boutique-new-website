@@ -71,20 +71,19 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   let { data: profile } = await supabase
     .from('customer_profiles')
     .select('*')
-    .eq('email', user.email)
-    .single()
+    .ilike('email', user.email)
+    .maybeSingle()
 
   // Auto-insert if signing up via OAuth or for the first time and record is missing
-  if (!profile && user.id) {
+  if (!profile) {
     const { data: newProfile, error } = await supabase
       .from('customer_profiles')
-      .insert({ 
-        id: user.id, 
-        email: user.email,
-        name: user.email.split('@')[0] // Provide a default name from email
-      })
+      .insert([{ 
+        email: user.email.toLowerCase().trim(),
+        name: user.email.split('@')[0]
+      }])
       .select()
-      .single()
+      .maybeSingle()
     
     if (!error && newProfile) {
       profile = newProfile

@@ -27,12 +27,8 @@ export async function calculateOrderTotal(items: CartInputItem[], shippingMethod
   let discount = 0
   let shipping = 0
 
-  // India: Free Shipping (0), Outside India: ₹1600 INR flat international shipping
-  if (country === 'IN') {
-    shipping = 0
-  } else {
-    shipping = 1600
-  }
+  // Shipping: Free for India, International shipping is calculated & quoted by concierge
+  shipping = 0
 
   const validatedItems = []
 

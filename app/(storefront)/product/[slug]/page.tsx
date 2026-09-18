@@ -5,9 +5,10 @@ import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { AddToCart } from '@/components/storefront/AddToCart'
 import { DeliveryChecker } from '@/components/storefront/DeliveryChecker'
 import { ProductGrid } from '@/components/storefront/ProductGrid'
-import { ReviewCarousel } from '@/components/storefront/ReviewCarousel'
+import { ProductReviewsSection } from '@/components/storefront/ProductReviewsSection'
 import { PotliShowcase } from '@/components/storefront/PotliShowcase'
 import { ColorGroupVariants } from '@/components/storefront/ColorGroupVariants'
+import { ProductRichDetails } from '@/components/storefront/ProductRichDetails'
 import { getColorSiblings } from '@/lib/actions/product-groups'
 import type { Metadata } from 'next'
 
@@ -78,35 +79,35 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const isOutOfStock = product.status === 'OUT_OF_STOCK' || (typeof product.stock === 'number' && product.stock <= 0 && !product.is_enquiry_only)
 
   return (
-    <div className="bg-white pt-16 md:pt-24 pb-40 md:pb-32">
-      <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
+    <div className="bg-white pt-4 sm:pt-6 md:pt-8 pb-16 sm:pb-24">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-10">
         
-        <nav className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 md:mb-12 pb-2 sm:pb-0">
-          <ol className="flex items-center flex-wrap gap-y-2">
+        <nav className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 sm:mb-6 pb-1 sm:pb-0">
+          <ol className="flex items-center flex-wrap gap-y-1">
             <li><a href="/" className="hover:text-[#FF7A00] transition-colors">Home</a></li>
-            <li><span className="mx-2">/</span></li>
+            <li><span className="mx-2 text-gray-300">/</span></li>
             <li><a href="/shop" className="hover:text-[#FF7A00] transition-colors">Shop</a></li>
             {product.categories && (
               <>
-                <li><span className="mx-2">/</span></li>
+                <li><span className="mx-2 text-gray-300">/</span></li>
                 <li><a href={`/category/${product.categories.slug}`} className="hover:text-[#FF7A00] transition-colors">{product.categories.name}</a></li>
               </>
             )}
-            <li><span className="mx-2">/</span></li>
+            <li><span className="mx-2 text-gray-300">/</span></li>
             <li className="text-gray-900 line-clamp-1 break-all sm:break-normal">{product.name}</li>
           </ol>
         </nav>
 
         {/* 2-Column Product Detail Layout */}
-        <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16 xl:gap-x-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 items-start gap-6 lg:gap-8 xl:gap-10">
           
-          {/* Left Column: Image Gallery */}
-          <div className="flex flex-col-reverse lg:sticky lg:top-32">
+          {/* Left Column: Image Gallery (Anchored with self-start, sticky, and z-30 for zoom flyout) */}
+          <div className="lg:col-span-6 xl:col-span-6 self-start lg:sticky lg:top-24 relative z-30">
             <ProductGallery images={sortedImages} />
           </div>
 
           {/* Right Column: Product info & Actions */}
-          <div className="mt-6 md:mt-12 lg:mt-0">
+          <div className="lg:col-span-6 xl:col-span-6 space-y-4 sm:space-y-4.5">
             {/* Product JSON-LD Schema — for Google Shopping & Rich Results */}
             <script
               type="application/ld+json"
@@ -173,86 +174,130 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               }}
             />
             
-            {isOutOfStock && (
-              <span className="inline-block bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-3 shadow-sm">
-                Out of Stock
-              </span>
-            )}
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-3 md:mb-4 leading-none">
-              {product.name}
-            </h1>
-            
-            <div className="flex items-center gap-4 mb-8">
-              {product.is_enquiry_only ? (
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Starting from</span>
-                  <p className="text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
-                </div>
-              ) : product.sale_price ? (
-                <>
-                  <p className="text-3xl font-black text-[#FF7A00]"><PriceDisplay amount={product.sale_price} /></p>
-                  <p className="text-xl font-bold text-gray-400 line-through decoration-2"><PriceDisplay amount={product.price} /></p>
-                </>
-              ) : (
-                <p className="text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
-              )}
-            </div>
-              
-            <div className="mb-8 md:mb-10">
-              <h3 className="sr-only">Description</h3>
-              <div className="text-sm md:text-base text-gray-500 leading-relaxed font-medium whitespace-pre-wrap">
-                {product.description}
+            {/* Header: Category, SKU & Out of Stock */}
+            <div className="flex items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+              <span className="text-[#FF7A00] font-black">{product.categories?.name || 'Exclusive Collection'}</span>
+              <div className="flex items-center gap-3">
+                {product.sku && <span>SKU: {product.sku}</span>}
+                {isOutOfStock && (
+                  <span className="bg-red-600 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+                    Out of Stock
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="py-8">
-              {/* Color Group Variants — only shows when product is in a group */}
-              <ColorGroupVariants siblings={colorSiblings as any} />
-              <AddToCart product={product} variants={variants || []} />
-              <DeliveryChecker />
+            {/* Product Title */}
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-sans font-black tracking-tight text-gray-900 uppercase leading-snug">
+                {product.name}
+              </h1>
             </div>
 
-            <div className="mt-8 md:mt-12 bg-[#F8F9FA] rounded-[2rem] p-6 md:p-8 border border-gray-100">
-              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Details & Care</h3>
-              <ul className="text-sm text-gray-500 space-y-4 font-medium grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-                <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Category</span> {product.categories?.name || 'Uncategorized'}</li>
-                {product.sku && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">SKU</span> {product.sku}</li>}
-                {product.fabric && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Fabric</span> {product.fabric}</li>}
-                {product.material && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Material</span> {product.material}</li>}
-                {product.country_of_origin && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Origin</span> {product.country_of_origin}</li>}
-                {product.weight && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Weight</span> {product.weight}g</li>}
-                {product.height_cm && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Height</span> {product.height_cm} cm</li>}
-                {product.length_cm && <li><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Length</span> {product.length_cm} cm</li>}
-                {product.dimensions && <li className="sm:col-span-2"><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Dimensions</span> {product.dimensions}</li>}
-                {product.care_instructions && <li className="sm:col-span-2"><span className="font-bold text-gray-400 block uppercase tracking-widest text-[10px] mb-1">Care Instructions</span> {product.care_instructions}</li>}
-              </ul>
+            {/* Artisan & Craft Badges */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-0.5">
+              {(product.craft || product.attributes?.craft) && (
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-[#1C1C1C] text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                  ✨ {product.craft || product.attributes?.craft}
+                </span>
+              )}
+              {(product.product_type || product.attributes?.product_type) && (
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-orange-50 text-[#FF7A00] border border-orange-200/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  👜 {product.product_type || product.attributes?.product_type}
+                </span>
+              )}
+              {(product.occasion || product.attributes?.occasion) && (
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  🎉 {product.occasion || product.attributes?.occasion}
+                </span>
+              )}
+              {(product.color || product.attributes?.color) && (
+                <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-gray-50 border border-gray-200 text-gray-800 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  🎨 {product.color || product.attributes?.color}
+                </span>
+              )}
             </div>
-            
+
+            {/* Pricing Section with Real-Time Discount & Savings */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8F9FA] border border-gray-100">
+              <div className="flex items-baseline flex-wrap gap-2 sm:gap-3">
+                {product.is_enquiry_only ? (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Starting from</span>
+                    <p className="text-2xl sm:text-3xl font-black text-gray-900"><PriceDisplay amount={product.price} /></p>
+                  </div>
+                ) : product.sale_price && Number(product.sale_price) < Number(product.price) ? (
+                  <>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1C1C1C]">
+                      <PriceDisplay amount={product.sale_price} />
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-gray-400 line-through decoration-2">
+                      <PriceDisplay amount={product.price} />
+                    </p>
+                    <span className="bg-[#FF7A00] text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 sm:py-1 rounded-full shadow-xs">
+                      {Math.round(((Number(product.price) - Number(product.sale_price)) / Number(product.price)) * 100)}% OFF
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                      Save ₹{(Number(product.price) - Number(product.sale_price)).toLocaleString('en-IN')}
+                    </span>
+                  </>
+                ) : (
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900">
+                    <PriceDisplay amount={product.price} />
+                  </p>
+                )}
+              </div>
+              <span className="text-[9px] sm:text-[10px] font-medium text-gray-400 block mt-1.5 sm:mt-2">
+                Inclusive of all taxes • Free standard delivery on prepaid orders across India
+              </span>
+            </div>
+
+            {/* Short Description */}
+            {(product.short_description || product.description) && (
+              <div className="text-sm text-gray-600 leading-relaxed font-normal">
+                {product.short_description || (
+                  <p className="line-clamp-3">{product.description}</p>
+                )}
+              </div>
+            )}
+
+            {/* Actions: Variants & Add to Cart */}
+            <div className="space-y-4">
+              <ColorGroupVariants siblings={colorSiblings as any} />
+              <AddToCart product={product} variants={variants || []} />
+            </div>
+
+            {/* Delivery Pincode Checker */}
+            <DeliveryChecker />
+
+            {/* Rich Specifications, Shipping, Returns & Care Details */}
+            <ProductRichDetails product={product} />
+
+            {/* Size Guide Table (if sizes defined) */}
             {product.product_size_guides && product.product_size_guides.length > 0 && (
-              <div className="mt-6 md:mt-8 bg-[#F8F9FA] rounded-[2rem] p-6 md:p-8 border border-gray-100">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-6">Size Specifications</h3>
+              <div className="mt-6 bg-[#F8F9FA] rounded-2xl p-4 sm:p-6 border border-gray-100">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">Size Specifications</h3>
                 <div className="overflow-x-auto rounded-xl border border-gray-200">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-white text-gray-900 uppercase text-[10px] font-bold tracking-widest border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-4">Size</th>
-                        <th className="px-6 py-4">Chest</th>
-                        <th className="px-6 py-4">Length</th>
-                        <th className="px-6 py-4">Shoulder</th>
-                        <th className="px-6 py-4">Sleeve</th>
-                        <th className="px-6 py-4">Waist</th>
+                        <th className="px-4 py-3">Size</th>
+                        <th className="px-4 py-3">Chest</th>
+                        <th className="px-4 py-3">Length</th>
+                        <th className="px-4 py-3">Shoulder</th>
+                        <th className="px-4 py-3">Sleeve</th>
+                        <th className="px-4 py-3">Waist</th>
                       </tr>
                     </thead>
                     <tbody className="text-xs font-medium text-gray-500 divide-y divide-gray-200">
                       {product.product_size_guides.map((g: any, idx: number) => (
                         <tr key={idx} className="bg-white hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 font-bold text-gray-900 uppercase">{g.size_name}</td>
-                          <td className="px-6 py-4">{g.chest || '-'}</td>
-                          <td className="px-6 py-4">{g.length || '-'}</td>
-                          <td className="px-6 py-4">{g.shoulder || '-'}</td>
-                          <td className="px-6 py-4">{g.sleeve || '-'}</td>
-                          <td className="px-6 py-4">{g.waist || '-'}</td>
+                          <td className="px-4 py-3 font-bold text-gray-900 uppercase">{g.size_name}</td>
+                          <td className="px-4 py-3">{g.chest || '-'}</td>
+                          <td className="px-4 py-3">{g.length || '-'}</td>
+                          <td className="px-4 py-3">{g.shoulder || '-'}</td>
+                          <td className="px-4 py-3">{g.sleeve || '-'}</td>
+                          <td className="px-4 py-3">{g.waist || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -266,22 +311,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Full-Width Sections Below Main Grid */}
         {relatedProducts && relatedProducts.length > 0 && (
-          <div className="mt-20 md:mt-32 pt-16 border-t border-gray-100">
-            <h2 className="text-2xl md:text-4xl font-sans font-black uppercase tracking-tighter text-gray-900 mb-8 md:mb-12">
+          <div className="mt-12 md:mt-16 pt-8 md:pt-10 border-t border-gray-100">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-sans font-black uppercase tracking-tight text-gray-900 mb-6 md:mb-8">
               You May Also Like
             </h2>
             <ProductGrid products={relatedProducts} />
           </div>
         )}
         
-        {reviews && reviews.length > 0 && (
-          <div className="mt-20 md:mt-32 pt-16 border-t border-gray-100">
-            <h2 className="text-2xl md:text-4xl font-sans font-black uppercase tracking-tighter text-gray-900 mb-8 md:mb-12">
-              Customer Reviews
-            </h2>
-            <ReviewCarousel reviews={reviews} />
-          </div>
-        )}
+        {/* Patron Reviews Section */}
+        <ProductReviewsSection product={product} initialReviews={reviews || []} />
 
       </div>
     </div>

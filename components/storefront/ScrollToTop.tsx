@@ -28,20 +28,20 @@ export function ScrollToTop() {
     return () => window.removeEventListener('scroll', toggleVisibility)
   }, [])
 
-  if (!isVisible) {
+  if (!isVisible || pathname?.startsWith('/product')) {
     return null
   }
 
-  const isShop = pathname === '/shop'
-  const bottomClass = isShop ? 'bottom-24 lg:bottom-6' : 'bottom-6'
+  const isProductOrShop = pathname === '/shop' || pathname?.startsWith('/product')
+  const bottomClass = isProductOrShop ? 'bottom-20 sm:bottom-6 right-4 sm:right-6' : 'bottom-6 right-4 sm:right-6'
 
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed ${bottomClass} right-4 sm:right-6 z-50 p-3 rounded-full bg-[#1C1C1C] text-white shadow-lg hover:bg-[#FF7A00] transition-colors duration-300 focus:outline-none`}
+      className={`fixed ${bottomClass} z-30 p-2.5 sm:p-3 rounded-full bg-[#1C1C1C]/90 backdrop-blur-md text-white shadow-lg hover:bg-[#FF7A00] transition-all duration-300 focus:outline-none`}
       aria-label="Scroll to top"
     >
-      <ArrowUp className="w-5 h-5" />
+      <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
     </button>
   )
 }

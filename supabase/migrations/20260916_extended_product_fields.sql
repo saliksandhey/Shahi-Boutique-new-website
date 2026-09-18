@@ -1,0 +1,25 @@
+-- Migration: Add extended fields to products table for rich specifications, craftsmanship, shipping & returns
+
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS sku VARCHAR,
+ADD COLUMN IF NOT EXISTS product_type VARCHAR,
+ADD COLUMN IF NOT EXISTS age_group VARCHAR,
+ADD COLUMN IF NOT EXISTS color VARCHAR,
+ADD COLUMN IF NOT EXISTS work VARCHAR,
+ADD COLUMN IF NOT EXISTS closure VARCHAR,
+ADD COLUMN IF NOT EXISTS handle VARCHAR,
+ADD COLUMN IF NOT EXISTS craft VARCHAR,
+ADD COLUMN IF NOT EXISTS occasion VARCHAR,
+ADD COLUMN IF NOT EXISTS processing_time VARCHAR,
+ADD COLUMN IF NOT EXISTS estimated_delivery VARCHAR,
+ADD COLUMN IF NOT EXISTS shipping_availability VARCHAR,
+ADD COLUMN IF NOT EXISTS free_shipping_threshold VARCHAR,
+ADD COLUMN IF NOT EXISTS international_shipping VARCHAR,
+ADD COLUMN IF NOT EXISTS package_includes TEXT,
+ADD COLUMN IF NOT EXISTS packaging_type VARCHAR,
+ADD COLUMN IF NOT EXISTS return_policy TEXT,
+ADD COLUMN IF NOT EXISTS exchange_policy TEXT,
+ADD COLUMN IF NOT EXISTS damaged_policy TEXT,
+ADD COLUMN IF NOT EXISTS return_window VARCHAR,
+ADD COLUMN IF NOT EXISTS personalized_policy TEXT,
+ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '{}'::jsonb;

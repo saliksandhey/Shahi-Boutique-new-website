@@ -30,7 +30,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-12 pb-12">
+    <div className="max-w-7xl mx-auto space-y-12 pb-12">
       <div className="flex items-center gap-4">
         <Link href="/2010admin/products" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
           <ArrowLeft className="h-5 w-5 text-gray-600" />

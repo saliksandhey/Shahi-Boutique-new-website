@@ -55,8 +55,8 @@ export function FloatingAppointmentButton() {
     return null
   }
 
-  const isShop = pathname === '/shop' || pathname?.startsWith('/product')
-  const bottomClass = isShop ? 'bottom-40 lg:bottom-20' : 'bottom-20'
+  const isProduct = pathname?.startsWith('/product')
+  const bottomClass = isProduct ? 'bottom-20 right-4 sm:right-6 hidden sm:flex' : 'bottom-20 right-4 sm:right-6 flex'
 
   return (
     <AnimatePresence>
@@ -66,7 +66,7 @@ export function FloatingAppointmentButton() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.9 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className={`fixed ${bottomClass} right-4 sm:right-6 z-[90] flex items-center justify-end`}
+          className={`fixed ${bottomClass} z-40 items-center justify-end`}
           onMouseEnter={() => !hasManuallyClosed && setIsExpanded(true)}
           onMouseLeave={() => !hasManuallyClosed && setIsExpanded(false)}
         >

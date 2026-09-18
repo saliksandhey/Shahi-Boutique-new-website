@@ -3,6 +3,9 @@
 import { render } from '@react-email/render'
 import nodemailer from 'nodemailer'
 import OrderEmail from '@/components/emails/OrderEmail'
+import InternationalOrderEmail from '@/components/emails/InternationalOrderEmail'
+import PasswordResetEmail from '@/components/emails/PasswordResetEmail'
+import LoginOTPEmail from '@/components/emails/LoginOTPEmail'
 import { createAdminClient } from '@/lib/supabase/server'
 
 async function getEmailTransporter() {
@@ -155,6 +158,206 @@ export async function sendOrderStatusEmail(
     return { success: true, messageId: info.messageId }
   } catch (error: any) {
     console.error(`Failed to send order status email to ${customerEmail}:`, error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function sendInternationalOrderRequestEmail(
+  customerEmail: string,
+  customerName: string,
+  orderNumber: string,
+  items: { name: string; quantity: number; price: number }[],
+  totals: { subtotal: number; shipping: number; discount: number; total: number },
+  shippingAddress: string,
+  country: string = 'International',
+  currency: string = 'USD',
+  customNotes?: string
+) {
+  try {
+    if (!customerEmail || !customerEmail.includes('@')) {
+      return { success: false, error: 'Invalid customer email' }
+    }
+
+    const mailer = await getEmailTransporter()
+    if (!mailer) {
+      console.warn('Email configuration missing. Skipping international order email.')
+      return { success: false, error: 'Email configuration missing.' }
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.shahiboutique.com'
+    const websiteTrackingUrl = `${siteUrl}/track-order?orderId=${encodeURIComponent(orderNumber)}`
+
+    const emailHtml = await render(
+      InternationalOrderEmail({
+        orderNumber,
+        customerName,
+        emailType: 'INQUIRY_RECEIVED',
+        orderStatus: 'PENDING_REVIEW',
+        items,
+        totals,
+        shippingAddress,
+        country,
+        currency,
+        customNotes,
+        websiteTrackingUrl
+      })
+    )
+
+    const options = {
+      from: mailer.from,
+      to: customerEmail.trim(),
+      subject: `International Inquiry Received - #${orderNumber} | Shahi Boutique Concierge`,
+      html: emailHtml,
+    }
+
+    const info = await mailer.transporter.sendMail(options)
+    console.log(`International order inquiry email sent to ${customerEmail}:`, info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error: any) {
+    console.error(`Failed to send international inquiry email to ${customerEmail}:`, error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function sendInternationalQuoteEmail(
+  customerEmail: string,
+  customerName: string,
+  orderNumber: string,
+  items: { name: string; quantity: number; price: number }[],
+  totals: { subtotal: number; shipping: number; discount: number; total: number },
+  shippingAddress: string,
+  courierName: string,
+  paymentLink?: string,
+  country: string = 'International',
+  currency: string = 'USD',
+  trackingNumber?: string,
+  trackingUrl?: string
+) {
+  try {
+    if (!customerEmail || !customerEmail.includes('@')) {
+      return { success: false, error: 'Invalid customer email' }
+    }
+
+    const mailer = await getEmailTransporter()
+    if (!mailer) {
+      return { success: false, error: 'Email configuration missing.' }
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.shahiboutique.com'
+    const websiteTrackingUrl = `${siteUrl}/track-order?orderId=${encodeURIComponent(orderNumber)}`
+
+    const emailHtml = await render(
+      InternationalOrderEmail({
+        orderNumber,
+        customerName,
+        emailType: 'QUOTE_READY',
+        items,
+        totals,
+        shippingAddress,
+        courierName,
+        paymentLink,
+        country,
+        currency,
+        trackingNumber,
+        trackingUrl,
+        websiteTrackingUrl
+      })
+    )
+
+    const options = {
+      from: mailer.from,
+      to: customerEmail.trim(),
+      subject: `Official Shipping Quote & Invoice - #${orderNumber} | Shahi Boutique`,
+      html: emailHtml,
+    }
+
+    const info = await mailer.transporter.sendMail(options)
+    console.log(`International quote email sent to ${customerEmail}:`, info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error: any) {
+    console.error(`Failed to send international quote email to ${customerEmail}:`, error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function sendPasswordResetOTPEmail(
+  customerEmail: string,
+  otpCode: string,
+  customerName: string = 'Valued Customer',
+  expiryMinutes: number = 10
+) {
+  try {
+    if (!customerEmail || !customerEmail.includes('@')) {
+      return { success: false, error: 'Invalid email address' }
+    }
+
+    const mailer = await getEmailTransporter()
+    if (!mailer) {
+      console.warn('Email configuration missing. Skipping OTP email send.')
+      return { success: false, error: 'Email configuration missing.' }
+    }
+
+    const emailHtml = await render(
+      PasswordResetEmail({
+        customerName,
+        otpCode,
+        expiryMinutes
+      })
+    )
+
+    const options = {
+      from: mailer.from,
+      to: customerEmail.trim(),
+      subject: `${otpCode} is your Password Reset Code — Shahi Boutique`,
+      html: emailHtml,
+    }
+
+    const info = await mailer.transporter.sendMail(options)
+    console.log(`Password reset OTP email sent to ${customerEmail}:`, info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error: any) {
+    console.error(`Failed to send password reset OTP to ${customerEmail}:`, error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function sendLoginOTPEmail(
+  customerEmail: string,
+  otpCode: string,
+  customerName: string = 'Valued Customer',
+  expiryMinutes: number = 5
+) {
+  try {
+    if (!customerEmail || !customerEmail.includes('@')) {
+      return { success: false, error: 'Invalid email address' }
+    }
+
+    const mailer = await getEmailTransporter()
+    if (!mailer) {
+      console.warn('Email configuration missing. Skipping Login OTP email send.')
+      return { success: false, error: 'Email configuration missing.' }
+    }
+
+    const emailHtml = await render(
+      LoginOTPEmail({
+        customerName,
+        otpCode,
+        expiryMinutes
+      })
+    )
+
+    const options = {
+      from: mailer.from,
+      to: customerEmail.trim(),
+      subject: `${otpCode} is your Shahi Boutique Sign-In Code`,
+      html: emailHtml,
+    }
+
+    const info = await mailer.transporter.sendMail(options)
+    console.log(`Login OTP email sent to ${customerEmail}:`, info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error: any) {
+    console.error(`Failed to send Login OTP email to ${customerEmail}:`, error)
     return { success: false, error: error.message }
   }
 }

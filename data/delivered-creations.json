@@ -1,0 +1,186 @@
+[
+  {
+    "id": "client-creation-1",
+    "image": "/delivered-creations/suit-01.webp",
+    "title": "Emerald Green Hand-Embroidered Velvet Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-3",
+    "image": "/delivered-creations/suit-03.jpg",
+    "title": "Ivory Silk Dabka & Pearl Work Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-8",
+    "image": "/delivered-creations/suit-08.jpg",
+    "title": "Deep Plum Organza Festive Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-12",
+    "image": "/delivered-creations/suit-12.jpg",
+    "title": "Champagne Gold Handwork Crepe Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-17",
+    "image": "/delivered-creations/suit-17.jpg",
+    "title": "Opal White Pure Chiffon Embroidered Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-20",
+    "image": "/delivered-creations/suit-20.jpg",
+    "title": "Forest Green Velvet Handwork Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-2",
+    "image": "/delivered-creations/suit-02.webp",
+    "title": "Royal Maroon Velvet Zari Stitch Ensemble",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-4",
+    "image": "/delivered-creations/suit-04.jpg",
+    "title": "Rose Blush Hand-Cutwork Festive Kurta",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-9",
+    "image": "/delivered-creations/suit-09.webp",
+    "title": "Crimson Red Bridal Heavy Handwork Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-13",
+    "image": "/delivered-creations/suit-13.jpg",
+    "title": "Sapphire Blue Gota Kinari Festive Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-18",
+    "image": "/delivered-creations/suit-18.jpg",
+    "title": "Terracotta Rust Handloom Silk Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-21",
+    "image": "/delivered-creations/suit-21.jpg",
+    "title": "Bespoke Potli Combo Bridal Suit Set",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-5",
+    "image": "/delivered-creations/suit-05.jpg",
+    "title": "Golden Mustard Raw Silk Bridal Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-10",
+    "image": "/delivered-creations/suit-10.webp",
+    "title": "Mint Green Mirror & Threadwork Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-14",
+    "image": "/delivered-creations/suit-14.jpg",
+    "title": "Lilac Lavender Pearl Embellished Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-19",
+    "image": "/delivered-creations/suit-19.jpg",
+    "title": "Blush Peach Zari Cutwork Designer Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-22",
+    "image": "/delivered-creations/suit-22.jpg",
+    "title": "Signature Hand-Stitched Heirloom Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-6",
+    "image": "/delivered-creations/suit-06.jpg",
+    "title": "Midnight Navy Velvet Zardozi Suit Set",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-11",
+    "image": "/delivered-creations/suit-11.webp",
+    "title": "Burgundy Velvet Gotta Patti Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-15",
+    "image": "/delivered-creations/suit-15.jpg",
+    "title": "Peacock Teal Threadwork Designer Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-23",
+    "image": "/delivered-creations/suit-23.jpg",
+    "title": "Exclusive Atelier Bespoke Stitched Ensemble",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-7",
+    "image": "/delivered-creations/suit-07.jpg",
+    "title": "Dusty Rose Resham Embroidered Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  },
+  {
+    "id": "client-creation-16",
+    "image": "/delivered-creations/suit-16.jpg",
+    "title": "Mustard Yellow Haldi Special Suit",
+    "category": "Stitched & Delivered",
+    "badge": "Verified Client Order",
+    "status": "Delivered"
+  }
+]

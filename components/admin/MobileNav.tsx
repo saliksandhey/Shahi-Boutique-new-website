@@ -19,7 +19,8 @@ import {
   Calendar, 
   MessageSquare, 
   PenTool, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Globe
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,7 @@ const mainTabs = [
 ]
 
 const moreTabs = [
+  { name: 'International Orders', href: '/2010admin/international-orders', icon: Globe },
   { name: 'Customers', href: '/2010admin/customers', icon: Users },
   { name: 'Payments', href: '/2010admin/payments', icon: Ticket },
   { name: 'Categories', href: '/2010admin/categories', icon: Tags },

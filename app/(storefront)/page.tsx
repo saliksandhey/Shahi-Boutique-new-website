@@ -9,7 +9,6 @@ import { WhyChooseUs } from '@/components/storefront/WhyChooseUs'
 import { WorldwideDelivery } from '@/components/storefront/WorldwideDelivery'
 import { CustomerReviews } from '@/components/storefront/CustomerReviews'
 import { AppointmentBanner } from '@/components/storefront/AppointmentBanner'
-import { StoreLocationSection } from '@/components/storefront/StoreLocationSection'
 
 export const revalidate = 60
 
@@ -44,6 +43,14 @@ export default async function HomePage() {
     .order('published_at', { ascending: false })
     .limit(8)
 
+  // Fetch Featured Reviews for Homepage
+  const { data: featuredReviews } = await supabase.from('reviews')
+    .select('*, products(name, product_images(url))')
+    .eq('approved', true)
+    .eq('is_featured_home', true)
+    .order('created_at', { ascending: false })
+    .limit(10)
+
   return (
     <div className="flex flex-col w-full">
 
@@ -63,23 +70,20 @@ export default async function HomePage() {
       {/* Section 4: All Products / New Arrivals */}
       <CollectionSlider products={newArrivals} />
 
-      {/* Section 4.5: Feed */}
+      {/* Section 4.5: Feed / Delivered Ensembles */}
       <HomeFeedSection blogs={recentBlogs || []} />
 
-      {/* Section 5: Why Choose Us */}
-      <WhyChooseUs />
-
-      {/* Section 6: Worldwide Delivery */}
-      <WorldwideDelivery />
-
-      {/* Section 7: Store Location */}
-      <StoreLocationSection />
-
-      {/* Section 8: Book Appointment Banner */}
+      {/* Section 5: Book Appointment Banner */}
       <AppointmentBanner />
 
-      {/* Section 9: Customer Reviews */}
-      <CustomerReviews />
+      {/* Section 6: Why Choose Us */}
+      <WhyChooseUs />
+
+      {/* Section 7: Worldwide Delivery */}
+      <WorldwideDelivery />
+
+      {/* Section 8: Customer Reviews */}
+      <CustomerReviews dbReviews={featuredReviews || []} />
 
     </div>
   )

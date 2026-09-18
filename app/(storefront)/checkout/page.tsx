@@ -29,14 +29,19 @@ export default async function CheckoutPage() {
     .then(({ data }) => data || []) : []
   
   return (
-    <div className="bg-white min-h-screen pb-16 md:pb-32">
-      <div className="bg-[#F8F9FA] py-8 md:py-16 px-4 text-center rounded-b-3xl md:rounded-b-[3rem] mb-6 md:mb-16 shadow-sm md:shadow-none">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-sans font-black tracking-tighter text-gray-900 uppercase mb-1 md:mb-4 leading-none">
-          SECURE CHECKOUT
+    <div className="bg-[#FAFAFA] min-h-screen pb-16 md:pb-28">
+      {/* Sleek Compact Header */}
+      <div className="bg-white border-b border-gray-100 py-5 sm:py-8 md:py-10 px-4 text-center mb-4 sm:mb-8 md:mb-10">
+        <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#FF7A00] mb-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          256-Bit Encrypted &amp; Secure
+        </div>
+        <h1 className="text-xl sm:text-3xl md:text-4xl font-serif font-black tracking-tight text-gray-900 uppercase">
+          Express Checkout
         </h1>
       </div>
       
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 space-y-6">
+      <div className="mx-auto max-w-7xl px-3.5 sm:px-8 lg:px-12 space-y-5 sm:space-y-6">
         {checkoutNotice && (
           <div className="bg-[#FF7A00]/10 border border-[#FF7A00]/20 p-4 md:p-6 rounded-2xl flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div>
